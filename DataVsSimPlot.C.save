@@ -7,19 +7,23 @@ void DataVsSimPlot() {
     TStopwatch timer;
 
     // ==== FILES ====
+    //TFile *fSim  = new TFile("hms_29p05deg_1p531_lh2_rsidis.root");
+    //TFile *fSim  = new TFile("/w/hallc-scshelf2102/c-rsidis/rparvez/single_arm_worksim/hms_29p05deg_1p531gev_hyd_rsidis.root");
+    //TFile *fData = new TFile("../hallc_replay_rsidis/Rsidis_ROOTfiles/hms_coin_replay_production_24118_-1.root");
+
     TFile *fSim  = new TFile("./single_arm_worksim/hms_29p05deg_1p531gev_hyd_rsidis.root");
     TFile *fData = new TFile("./Rsidis_ROOTfiles/hms_coin_replay_production_24118_-1.root");
 
-    // Show error if files are not found
+
     if (!fSim || !fSim->IsOpen()) { 
         Error("DataVsSimPlot_general","Simulation file not found!"); return; 
     }
     if (!fData || !fData->IsOpen()) { 
         Error("DataVsSimPlot_general","Data file not found!"); return; 
     }
+
     std::cout << "Found the files" << std::endl;
 
-    // grab the trees
     TTree *simTree  = (TTree*) fSim->Get("h10");
     TTree *dataTree = (TTree*) fData->Get("T");
 
@@ -91,15 +95,15 @@ void DataVsSimPlot() {
     TH1D *hSimDelta  = new TH1D("hSimDelta",  "HMS delta;Delta;Counts", nbins, xmin, xmax);
     TH1D *hDataDelta = new TH1D("hDataDelta", "HMS delta;Delta;Counts", nbins, xmin, xmax);
 
-    //TH1D *hSimXfp  = new TH1D("hSimXfp",  "HMS Xfp;Xfp;Counts", nbins, xmin, xmax);
-    //TH1D *hDataXfp  = new TH1D("hDataXfp",  "HMS Xfp;Xfp;Counts", nbins, xmin, xmax);
+    TH1D *hSimXfp  = new TH1D("hSimXfp",  "HMS Xfp;Xfp;Counts", nbins, xmin, xmax);
+    TH1D *hDataXfp  = new TH1D("hDataXfp",  "HMS Xfp;Xfp;Counts", nbins, xmin, xmax);
 
     // If any value falls outside current bin range, extend the axes.
     hSimDelta->SetCanExtend(TH1::kAllAxes);
     hDataDelta->SetCanExtend(TH1::kAllAxes);
 
-    //hSimXfp->SetCanExtend(TH1::kAllAxes);
-    //hDataXfp->SetCanExtend(TH1::kAllAxes);
+    hSimXfp->SetCanExtend(TH1::kAllAxes);
+    hDataXfp->SetCanExtend(TH1::kAllAxes);
 
     // ==== LOOP OVER SIMULATION ====
     Long64_t nSim = simTree->GetEntries();
@@ -114,15 +118,15 @@ void DataVsSimPlot() {
         }
 
         // CUTS
-        //if (hsxpfp > -35.0 && hsxpfp < 35.0 && stop_id==0) {
-            //hSimXfp->Fill(hsxpfp, normfac * sweight);  // weighted filling
-        //}
+        if (hsxpfp > -35.0 && hsxpfp < 35.0 && stop_id==0) {
+            hSimXfp->Fill(hsxpfp, normfac * sweight);  // weighted filling
+        }
 
     }
 
     // Number of filled Sim entries
     std::cout << "Number of filled Sim delta entries: " << hSimDelta -> GetEntries() << std::endl; 
-    //std::cout << "Number of filled Sim xfp entries: " << hSimXfp -> GetEntries() << std::endl; 
+    std::cout << "Number of filled Sim xfp entries: " << hSimXfp -> GetEntries() << std::endl; 
 
 
     // ==== LOOP OVER DATA ====
@@ -140,21 +144,21 @@ void DataVsSimPlot() {
         }
 
         // CUTS
-        //if (H_dc_xp_fp > -35.0 && H_dc_xp_fp < 35.0 &&
-            //H_cal_etottracknorm > 0.7 &&
-            //H_cer_npeSum > 2) {
-            //hDataXfp->Fill(H_dc_xp_fp);
-        //}
+        if (H_dc_xp_fp > -35.0 && H_dc_xp_fp < 35.0 &&
+            H_cal_etottracknorm > 0.7 &&
+            H_cer_npeSum > 2) {
+            hDataXfp->Fill(H_dc_xp_fp);
+        }
 
     }
 
     // Number of filled Data entries 
     std::cout << "Number of filled Data delta entries: " << hDataDelta -> GetEntries() << std::endl; 
-    //std::cout << "Number of filled Data xfp entries: " << hDataXfp -> GetEntries() << std::endl;
+    std::cout << "Number of filled Data xfp entries: " << hDataXfp -> GetEntries() << std::endl;
 
     // Normalize data by charge*hms_eff
     hDataDelta->Scale(1.0/(charge * hms_eff));
-    //hDataXfp->Scale(1.0/(charge * hms_eff));
+    hDataXfp->Scale(1.0/(charge * hms_eff));
 
     // ==== STYLE ====
     hSimDelta->SetLineColor(kBlue+2);
@@ -163,11 +167,21 @@ void DataVsSimPlot() {
     hDataDelta->SetLineColor(kBlack);
     hDataDelta->SetLineWidth(2);
 
-    //hSimXfp->SetLineColor(kBlue+2);
-    //hSimXfp->SetLineWidth(2);
+    hSimXfp->SetLineColor(kBlue+2);
+    hSimXfp->SetLineWidth(2);
 
-    //hDataXfp->SetLineColor(kBlack);
-    //hDataXfp->SetLineWidth(2);
+    hDataXfp->SetLineColor(kBlack);
+    hDataXfp->SetLineWidth(2);
+
+
+
+
+
+
+
+
+
+
 
 
     //Stop the timer
@@ -190,18 +204,17 @@ void DataVsSimPlot() {
 
     // For saving to PNG
     // c1->SaveAs("Data_vs_Sim.png");
-    c1->Update(); // Show the plot interactively
 
 
 
-    //TCanvas *c2 = new TCanvas("c2","Data vs Simulation: Xfp",900,700);
-    //hSimXfp->Draw("hist");
-    //hDataXfp->Draw("hist same");
+    TCanvas *c2 = new TCanvas("c2","Data vs Simulation: Xfp",900,700);
+    hSimXfp->Draw("hist");
+    hDataXfp->Draw("hist same");
 
-    //auto legend1 = new TLegend(0.6,0.7,0.85,0.85);
-    //legend1->AddEntry(hSimXfp,"Sim","l");
-    //legend1->AddEntry(hDataXfp,"Data","l");
-    //legend1->Draw();
+    auto legend1 = new TLegend(0.6,0.7,0.85,0.85);
+    legend1->AddEntry(hSimXfp,"Sim","l");
+    legend1->AddEntry(hDataXfp,"Data","l");
+    legend1->Draw();
 
     // For log scale
     // c2->SetLogy();
@@ -209,7 +222,7 @@ void DataVsSimPlot() {
     // For saving to PNG
     // c2->SaveAs("Data_vs_Sim.png");
 
-    //c2->Update(); // Show the plot interactively
+    c2->Update(); // Show the plot interactively
 
 
 
@@ -225,5 +238,6 @@ void DataVsSimPlot() {
     // For saving to PNG
     // c1->SaveAs("Data_vs_Sim.png");
 
+    c1->Update(); // Show the plot interactively
 
 }
