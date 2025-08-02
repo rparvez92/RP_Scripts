@@ -32,9 +32,9 @@ void DataVsSimPlot_project() {
 
     // ==== NORMALIZATION FACTORS ====
     double normfac = 10.96;      // sim normalization
-    double charge_data  = 15.210096; // mC
-    double hms_eff_data = 0.9986;
-    double charge_dummy  = 457.099476; // mC
+    double charge_data  = 447.088; // mC
+    double hms_eff_data = 0.9985;
+    double charge_dummy  = 457.099; // mC
     double hms_eff_dummy = 0.9988;
 
     //Cuts
@@ -44,10 +44,19 @@ void DataVsSimPlot_project() {
 
     //Project()
     simTree->Project("hSimDelta", "hsdelta", mc_delta_cuts * mc_norm_cuts);
-    dataTree->Project("hDataDelta", "H.gtr.dp", data_delta_cuts * "1.0/(18.585*0.9995*0.9985)");
-    dummyTree->Project("hDummyDelta", "H.gtr.dp", data_delta_cuts * "2.0/(28.597)");
+    //dataTree->Project("hDataDelta", "H.gtr.dp", data_delta_cuts * "1.0/(18.585*0.9995*0.9985)");
+    //dataTree->Project("hDataDelta", "H.gtr.dp", data_delta_cuts * "1.0/(447.088 * 0.9985)");
+    dataTree->Project("hDataDelta", "H.gtr.dp", data_delta_cuts);
+    //dummyTree->Project("hDummyDelta", "H.gtr.dp", data_delta_cuts * "2.0/(28.597)");
+    //dummyTree->Project("hDummyDelta", "H.gtr.dp", data_delta_cuts * "1.0/(457.099*0.9988)");
+    dummyTree->Project("hDummyDelta", "H.gtr.dp", data_delta_cuts);
+
+    // Scale Data
+    hDataDelta->Scale(1.0/(charge_data * hms_eff_data));
+    hDummyDelta->Scale(1.0/(charge_dummy * hms_eff_dummy));
 
     //Data - Dummy
+    //hDataSubDummyDelta -> Add(hDataDelta, hDummyDelta, 1.0, -1.0/3.550);
     hDataSubDummyDelta -> Add(hDataDelta, hDummyDelta, 1.0, -1.0/3.550);
 
 
