@@ -11,6 +11,8 @@ void DataVsSimPlot_ratio() {
     //TFile *fData = new TFile("./Rsidis_ROOTfiles/hms_coin_replay_production_24118_-1.root");
     TFile *fData = new TFile("./Rsidis_ROOTfiles/coin_replay_production_23909_-1.root");
     TFile *fDummy = new TFile("./Rsidis_ROOTfiles/hms_coin_replay_production_23925_-1.root");
+    //TFile *fData = new TFile("./Rsidis_ROOTfiles/hms_coin_replay_production_24544_-1.root");
+    //TFile *fDummy = new TFile("./Rsidis_ROOTfiles/hms_coin_replay_production_24546_-1.root");
     std::cout << "Found the files" << std::endl;
 
 
@@ -21,7 +23,7 @@ void DataVsSimPlot_ratio() {
 
     // ==== HISTOGRAMS ====
     int nbins = 100;
-    double xmin = -35.0, xmax = 35.0;
+    double xmin = -9.0, xmax = 9.0;
     TH1D *hSimDelta  = new TH1D("hSimDelta",  "HMS delta;Delta;Counts", nbins, xmin, xmax);
     TH1D *hDataDelta = new TH1D("hDataDelta", "HMS delta;Delta;Counts", nbins, xmin, xmax);
     TH1D *hDummyDelta = new TH1D("hDummyDelta", "HMS delta;Delta;Counts", nbins, xmin, xmax);
@@ -32,28 +34,32 @@ void DataVsSimPlot_ratio() {
 
     // ==== NORMALIZATION FACTORS ====
     double normfac = 10.96;      // sim normalization
-    double charge_data  = 447.088; // mC
-    double hms_eff_data = 0.9985;
-    double charge_dummy  = 457.099; // mC
-    double hms_eff_dummy = 0.9988;
+    double charge_data  = 18.585; //447.088; // mC
+    //double charge_data  = 49.262; // for HMSDIS run 24544 //mC
+    double hms_eff_data = 0.9957;
+    double charge_dummy  = 28.597; //457.099; // mC
+    //double charge_dummy  = 28.948; // for HMSDIS run 24546 // mC
+    double hms_eff_dummy = 0.9964;
 
     //Cuts
     TCut mc_delta_cuts = "((hsdelta>-8.0) && (hsdelta<8) && (stop_id==0))";
     TCut mc_norm_cuts = Form("weight * %f", normfac);
     TCut data_delta_cuts = "((H.gtr.dp>-8.0) && (H.gtr.dp<8.0) && H.cal.etottracknorm>0.7 && H.cer.npeSum>2.0)";
+    TCut data_scale = Form("1.0 / (%f * %f)", charge_data, hms_eff_data);
+    TCut dummy_scale = Form("2.0 / (%f * %f)", charge_dummy, hms_eff_dummy);
+
 
     //Project()
     simTree->Project("hSimDelta", "hsdelta", mc_delta_cuts * mc_norm_cuts);
-    dataTree->Project("hDataDelta", "H.gtr.dp", data_delta_cuts * "1.0/(18.585*0.9995*0.9985)");
-    //dataTree->Project("hDataDelta", "H.gtr.dp", data_delta_cuts * "1.0/(447.088 * 0.9985)");
+    dataTree->Project("hDataDelta", "H.gtr.dp", data_delta_cuts * data_scale);
+    //dataTree->Project("hDataDelta", "H.gtr.dp", data_delta_cuts * "1.0/(18.0)");
+    //dataTree->Project("hDataDelta", "H.gtr.dp", data_delta_cuts * "1.0/(18.585*0.9995*0.9985)");
     //dataTree->Project("hDataDelta", "H.gtr.dp", data_delta_cuts);
-    dummyTree->Project("hDummyDelta", "H.gtr.dp", data_delta_cuts * "2.0/(28.597)");
-    //dummyTree->Project("hDummyDelta", "H.gtr.dp", data_delta_cuts * "1.0/(457.099*0.9988)");
+    //dummyTree->Project("hDummyDelta", "H.gtr.dp", data_delta_cuts * "2.0/(28.0)");
+    //dummyTree->Project("hDummyDelta", "H.gtr.dp", data_delta_cuts * "2.0/(28.597)");
+    dummyTree->Project("hDummyDelta", "H.gtr.dp", data_delta_cuts * dummy_scale);
     //dummyTree->Project("hDummyDelta", "H.gtr.dp", data_delta_cuts);
 
-    // Scale Data
-    //hDataDelta->Scale(1.0/(charge_data * hms_eff_data));
-    //hDummyDelta->Scale(1.0/(charge_dummy * hms_eff_dummy));
 
     //Data - Dummy
     hDataSubDummyDelta -> Add(hDataDelta, hDummyDelta, 1.0, -1.0/3.550);
@@ -90,30 +96,34 @@ void DataVsSimPlot_ratio() {
 
     TPad *pad_u = (TPad*)c1->cd(1);
     pad_u->SetPad(0.0, 0.3, 1.0, 1.0);  // top 70% for histograms
-    pad_u->SetBottomMargin(0.02);       // no x-axis labels
+    pad_u->SetTopMargin(0.1);
+    pad_u->SetBottomMargin(0.0);
+    pad_u->SetRightMargin(0.05);
+    pad_u->SetLeftMargin(0.1);
 
     TPad *pad_d = (TPad*)c1->cd(2);
-    pad_d->SetPad(0.0, 0.0, 1.0, 0.3);  // bottom 30% for ratio
-    pad_d->SetTopMargin(0.05);
-    pad_d->SetBottomMargin(0.3);        // leave space for x-axis labels
+    pad_d->SetPad(0.0, 0.0, 1.0, 0.3); // bottom 30% for ratio
+    pad_d->SetTopMargin(0.0);
+    pad_d->SetBottomMargin(0.35); // leave space for x-axis labels
+    pad_d->SetRightMargin(0.05);
+    pad_d->SetLeftMargin(0.1);
 
 
     pad_u->cd();
-    hSimDelta->SetMaximum(ymax);    // Set the y-axis range of the first-drawn histogram
-    hSimDelta->GetXaxis()->SetRangeUser(-35, 35);
+    hSimDelta->SetMaximum(ymax); // Set the y-axis range of the first-drawn histogram
+    //hSimDelta->GetXaxis()->SetRangeUser(xmin, xmax);
     hSimDelta->SetLineColor(kBlue);
-    hSimDelta->Draw("HIST");
     hSimDelta->GetXaxis()->SetLabelSize(0);
     hSimDelta->GetXaxis()->SetTitleSize(0);
-    hDataSubDummyDelta->GetXaxis()->SetRangeUser(-35, 35);
+    hSimDelta->Draw("HIST");
+    //hDataSubDummyDelta->GetXaxis()->SetRangeUser(xmin, xmax);
+    hDataSubDummyDelta->SetLineColor(kRed);
     hDataSubDummyDelta->GetXaxis()->SetLabelSize(0);
     hDataSubDummyDelta->GetXaxis()->SetTitleSize(0);
-    hDataSubDummyDelta->SetLineColor(kRed);
     hDataSubDummyDelta->Draw("HIST SAME");
 
     auto legend = new TLegend(0.6,0.7,0.8,0.8);
     legend->AddEntry(hSimDelta,"Sim","l");
-    //legend->AddEntry(hDataDelta,"Data","l");
     legend->AddEntry(hDataSubDummyDelta,"Data-Dummy","l");
     legend->Draw();
 
@@ -121,30 +131,34 @@ void DataVsSimPlot_ratio() {
 
 
     pad_d->cd();
+    TH1D *hRatio = (TH1D*)hSimDelta->Clone("hRatio"); // Clone to avoid modifying original
+    hRatio->Divide(hDataSubDummyDelta); // Sim / (Data - Dummy)
 
-    // Clone to avoid modifying original
-    TH1D *hRatio = (TH1D*)hSimDelta->Clone("hRatio");
-    hRatio->Divide(hDataSubDummyDelta);  // Sim / (Data - Dummy)
-    hRatio->SetMinimum(0.5);
-    hRatio->SetMaximum(0.5);
-
-    hRatio->GetXaxis()->SetRangeUser(-12, 12);
     hRatio->SetLineColor(kBlack);
+    hRatio->SetStats(0);
     hRatio->SetTitle("");
+
     hRatio->GetYaxis()->SetTitle("Ratio");
-    hRatio->GetYaxis()->SetTitleSize(0.08);
+    hRatio->GetYaxis()->SetTitleSize(0.10);
     hRatio->GetYaxis()->SetTitleOffset(0.5);
-    hRatio->GetYaxis()->SetLabelSize(0.08);
+    hRatio->GetYaxis()->SetLabelSize(0.10);
     hRatio->GetYaxis()->SetNdivisions(500);
-    hRatio->GetXaxis()->SetLabelSize(0.08);
+    //hRatio->GetXaxis()->SetRangeUser(-12, 12);
+    hRatio->GetXaxis()->SetTitle("Delta");
     hRatio->GetXaxis()->SetTitleSize(0.10);
     hRatio->GetXaxis()->SetTitleOffset(1.0);
-    hRatio->GetXaxis()->SetTitle("Delta");
-    hRatio->SetStats(0);
+    hRatio->GetXaxis()->SetLabelSize(0.10);
+    hRatio->GetXaxis()->SetNdivisions(505);
 
     hRatio->SetMinimum(0.5);
     hRatio->SetMaximum(1.5);
     hRatio->Draw("E1");  // Error bars
+
+    // Fix for invisible y-axis tick labels
+    gPad->Update(); // Forces ROOT to layout the frame
+    hRatio->GetYaxis()->SetLabelOffset(0.01); // Small offset
+    hRatio->GetYaxis()->SetNdivisions(505); // 5 major ticks, 5 minor
+    gPad->RedrawAxis(); // Redraws ticks and labels properly
 
 
     c1->cd();
