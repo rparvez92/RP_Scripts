@@ -51,14 +51,13 @@ void DataVsSimPlot_ratio() {
 
     //Project()
     simTree->Project("hSimDelta", "hsdelta", mc_delta_cuts * mc_norm_cuts);
+    //simTree->Project("hSimDelta", "hsytar", mc_delta_cuts * mc_norm_cuts);
     dataTree->Project("hDataDelta", "H.gtr.dp", data_delta_cuts * data_scale);
-    //dataTree->Project("hDataDelta", "H.gtr.dp", data_delta_cuts * "1.0/(18.0)");
+    //dataTree->Project("hDataDelta", "H.gtr.y", data_delta_cuts * data_scale);
     //dataTree->Project("hDataDelta", "H.gtr.dp", data_delta_cuts * "1.0/(18.585*0.9995*0.9985)");
-    //dataTree->Project("hDataDelta", "H.gtr.dp", data_delta_cuts);
-    //dummyTree->Project("hDummyDelta", "H.gtr.dp", data_delta_cuts * "2.0/(28.0)");
-    //dummyTree->Project("hDummyDelta", "H.gtr.dp", data_delta_cuts * "2.0/(28.597)");
     dummyTree->Project("hDummyDelta", "H.gtr.dp", data_delta_cuts * dummy_scale);
-    //dummyTree->Project("hDummyDelta", "H.gtr.dp", data_delta_cuts);
+    //dummyTree->Project("hDummyDelta", "H.gtr.y", data_delta_cuts * dummy_scale);
+    //dummyTree->Project("hDummyDelta", "H.gtr.dp", data_delta_cuts * "2.0/(28.597)");
 
 
     //Data - Dummy
