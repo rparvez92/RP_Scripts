@@ -1,3 +1,6 @@
+// This code entails the plotting of simulation and data of one variable (hsdelta)
+// using SetBranchAddress (instead of Project() method) to grab the branches.
+
 #include <iostream>
 #include <TStopwatch.h>
 

@@ -11,7 +11,12 @@
 inline std::string SimToDataMap(const std::string& simVar) {
     static const std::map<std::string, std::string> stdMap = {
         {"hsdelta", "H.gtr.dp"},
-        {"hsytar",  "H.gtr.y"}
+        {"hsytar",  "H.gtr.y"},
+        {"hsxptar",  "H.gtr.th"},
+        {"hsyptar",  "H.gtr.ph"},
+        {"xb", "H.kin.primary.x_bj"}, //        {"xb", "H.kin.x_bj"},
+        {"q2", "H.kin.primary.Q2"}, //        {"q2", "H.kin.Q2"},
+        {"w", "H.kin.primary.W"} //        {"w", "H.kin.W"},
     }; //stdMap = Sim To Data Map
 
     auto it = stdMap.find(simVar); //it=iterator
