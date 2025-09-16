@@ -124,7 +124,7 @@ void PlotComparisonAndRatio(TH1D* h1, TH1D* h2, std::string varName) {
     hRatio->GetYaxis()->SetNdivisions(505); //5 major, 5 minor ticks
     gPad->RedrawAxis();
 
-    // Draw a dashed line at y=1 
+    // Draw a dashed line at y=1
     TLine* line = new TLine(hRatio->GetXaxis()->GetXmin(), 1.0, hRatio->GetXaxis()->GetXmax(), 1.0);
     line->SetLineStyle(2);
     line->Draw();

@@ -14,9 +14,9 @@ inline std::string SimToDataMap(const std::string& simVar) {
         {"hsytar",  "H.gtr.y"},
         {"hsxptar",  "H.gtr.th"},
         {"hsyptar",  "H.gtr.ph"},
-        {"xb", "H.kin.primary.x_bj"}, //        {"xb", "H.kin.x_bj"},
-        {"q2", "H.kin.primary.Q2"}, //        {"q2", "H.kin.Q2"},
-        {"w", "H.kin.primary.W"} //        {"w", "H.kin.W"},
+        {"xb", "H.kin.x_bj"}, //        {"xb", "H.kin.primary.x_bj"},
+        {"q2", "H.kin.Q2"}, //        {"q2", "H.kin.primary.Q2"},
+        {"w", "H.kin.W"} //        {"w", "H.kin.primary.W"},
     }; //stdMap = Sim To Data Map
 
     auto it = stdMap.find(simVar); //it=iterator
