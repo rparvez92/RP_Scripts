@@ -64,10 +64,12 @@ static std::unique_ptr<TH1D> ProjectOneDnDRun(int run,
     // Keep the error info
     h->Sumw2(true);
 
-    // Apply Coincidence Time Configuration: (defaults: [30,70] ns, RF=4 ns, ±1 ns coin window)
+    // Apply Coinincedence Time configurations:
     CoincidenceConfig ctCfg;
     // Fill random-subtracted histogram for this run
-    FillRandomSubtractedHistogram(tDnD, TString(dnd_delta_cuts.GetTitle()), dndVar.c_str(), h.get(), ctCfg);
+    FillRandomSubtractedHistogram(tDnD, dnd_delta_cuts, VarExprFromKey(varKey), hOut, ctCfg);
+
+    tDnD->Project(h->GetName(), dndVar.c_str(), dnd_delta_cuts * dnd_scale);
 
     // Because ROOT attaches any newly created histogram to the current directory or file,
     // when that file gets closed, ROOT will delete everything that file owned. Therefore,
@@ -92,11 +94,6 @@ static std::unique_ptr<TH1D> BuildSim(const std::string& simVar,
     auto h = std::make_unique<TH1D>(Form("hSim_%s", simVar.c_str()), "", nbins, xmin, xmax);
     h->Sumw2(true);
     tSim->Project(h->GetName(), simVar.c_str(), sim_delta_cuts * sim_norm_cuts);
-
-    // Scale by total generated events
-    const Long64_t nGenSim = tSim->GetEntries();
-    cout << "Total generated events for Simulation: " << nGenSim << endl;
-    h->Scale(1.0 / double(nGenSim));
 
     //Detach ownership from current directory
     h->SetDirectory(nullptr);
@@ -264,28 +261,17 @@ void DataVsSimPlot_MultiDataMultiDummy() {
     double normfac = 0.842205E+11; //10.96;
     //TCut sim_delta_cuts = "((hsdelta>-8.0) && (hsdelta<8) && (stop_id==0))";
     TCut sim_delta_cuts = "((hsdelta>-8.0) && (hsdelta<8))";
-    TCut sim_norm_cuts  = Form("Weight * %f", normfac);
-    TCut dnd_delta_cuts = "((H.gtr.dp>-8.0) && (H.gtr.dp<8.0) && H.cal.etottracknorm>0.7 && H.cer.npeSum>2.0)";
+    TCut sim_norm_cuts  = Form("Weight * %f", normfac/100000);
+    TCut dnd_delta_cuts = "((H.gtr.dp>-8.0) && (H.gtr.dp<8.0) && H.cal.etottracknorm>0.7 && H.cer.npeSum>2.0) && (CTime.ePiCoinTime_ROC1 > 30) && (CTime.ePiCoinTime_ROC1 < 70)";
 
     // Plot each variable
-    // HMS Variables
-    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "hsdelta", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
+    PlotVariablesMultiRuns(dataRuns, dummyRuns, "hsdelta", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
     //PlotVariablesMultiRuns(dataRuns, dummyRuns, "hsytar", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
     //PlotVariablesMultiRuns(dataRuns, dummyRuns, "hsxptar", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
     //PlotVariablesMultiRuns(dataRuns, dummyRuns, "hsyptar", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    // SHMS Variables
-    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "ssdelta", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "ssytar", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "ssxptar", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "ssyptar", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    // Kinematic Variables
-    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "xbj", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "Q2", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "W", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "nu", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "epsilon", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "thetapq", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    PlotVariablesMultiRuns(dataRuns, dummyRuns, "phipq", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
+    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "xb", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
+    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "q2", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
+    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "w", tSim, nbins, xmin, xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
 
 }
 
