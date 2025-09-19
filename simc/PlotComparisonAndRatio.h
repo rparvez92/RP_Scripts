@@ -10,7 +10,7 @@
 #include <TROOT.h>
 #include <iostream>
 #include <string>
-
+#include "SimToDataMap.h" // To call BranchToPhysicsMap to give proper title
 
 // Plotting function
 // Use h1 and h2 as hSim and hDataSubDummy respectively
@@ -24,7 +24,7 @@ void PlotComparisonAndRatio(TH1D* h1, TH1D* h2, std::string varName) {
     double ymax = std::max(max1, max2) * 1.1;
 
     //Draw the canvas
-    TCanvas* c1 = new TCanvas(Form("c_%s", varName.c_str()), Form("Simulation vs Data: %s", varName.c_str()), 900, 700);
+    TCanvas* c1 = new TCanvas(Form("c_%s", varName.c_str()), Form("Data Vs Simulation: %s", varName.c_str()), 900, 700);
     c1->Divide(1, 2);
 
     // Upper pad: comparison plot
@@ -108,7 +108,7 @@ void PlotComparisonAndRatio(TH1D* h1, TH1D* h2, std::string varName) {
     hRatio->GetYaxis()->SetLabelSize(0.1);
     hRatio->GetYaxis()->SetNdivisions(500);
 
-    hRatio->GetXaxis()->SetTitle(varName.c_str());
+    hRatio->GetXaxis()->SetTitle(BranchToPhysicsMap(varName).c_str());
     hRatio->GetXaxis()->SetTitleSize(0.12);
     hRatio->GetXaxis()->SetTitleOffset(1.0);
     hRatio->GetXaxis()->SetLabelSize(0.1);
@@ -129,7 +129,7 @@ void PlotComparisonAndRatio(TH1D* h1, TH1D* h2, std::string varName) {
     line->SetLineStyle(2);
     line->Draw();
 
-    c1->SaveAs(Form("./PDFs/compare_%s.pdf", varName.c_str()));
+    c1->SaveAs(Form("./PDFs/%s_comparison.pdf", varName.c_str()));
     // Show the plots interactively
     /*c1->Update();
     gSystem->ProcessEvents();
