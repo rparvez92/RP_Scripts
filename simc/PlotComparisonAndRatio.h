@@ -10,7 +10,7 @@
 #include <TROOT.h>
 #include <iostream>
 #include <string>
-#include "SimToDataMap.h" // To call BranchToPhysicsMap to give proper title
+#include "Mapping.h" // To call BranchToPhysicsMap to give proper title
 
 // Plotting function
 // Use h1 and h2 as hSim and hDataSubDummy respectively

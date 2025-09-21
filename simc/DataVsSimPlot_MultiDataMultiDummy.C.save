@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <typeinfo> //For typeid function
-#include "SimToDataMap.h"
+#include "Mapping.h"
 #include "ReportParser.h"
 #include "PlotComparisonAndRatio.h"
 #include "CoincidenceRandomSubtraction.h"

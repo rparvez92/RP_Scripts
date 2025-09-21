@@ -1,7 +1,8 @@
-// SimToDataMap.h
-// Header-only implementation of SimToDataMap() function for mapping simulation variable to data variable
-#ifndef SIM_TO_DATA_MAP_H
-#define SIM_TO_DATA_MAP_H
+// Mapping.h
+// SimToDataMap() and BranchToPhysicsMap() function for mapping
+
+#ifndef MAPPING_H
+#define MAPPING_H
 
 #include <string>
 #include <map>

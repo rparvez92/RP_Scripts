@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <typeinfo> //For typeid function
-#include "SimToDataMap.h"
+#include "Mapping.h"
 #include "ReportParser.h"
 #include "PlotComparisonAndRatio.h"
 #include "CoincidenceRandomSubtraction.h" // For coincidence time and random subtraction
@@ -34,7 +34,7 @@ static std::unique_ptr<TH1D> ProjectOneDnDRun(int run,
 						int nbins,
 						double xmin,
 						double xmax,
-						const TCut& dnd_delta_cuts,
+						TCut& dnd_delta_cuts,
 						double& Qsum_mC) {
 
     // Get the data or dummy file
@@ -64,7 +64,13 @@ static std::unique_ptr<TH1D> ProjectOneDnDRun(int run,
     // Keep the error info
     h->Sumw2(true);
 
-    // Apply Coincidence Time Configuration: (defaults: [30,70] ns, RF=4 ns, ±1 ns coin window)
+    // When z variable is passed, dndVar is P.gtr.p/H.kin.primary.nu
+    // We need to make sure that denominator is not 0
+    if (dndVar.find("P.gtr.p/H.kin.primary.nu") != std::string::npos) {
+        dnd_delta_cuts = dnd_delta_cuts && "(H.kin.primary.nu>0)";
+    }
+
+    // Apply Coincidence Time Configuration: (defaults: [20,80] ns, RF=4 ns, ±1 ns coin window)
     CoincidenceConfig ctCfg;
     // Fill random-subtracted histogram for this run
     FillRandomSubtractedHistogram(tDnD, TString(dnd_delta_cuts.GetTitle()), dndVar.c_str(), h.get(), ctCfg);
@@ -111,7 +117,7 @@ static std::unique_ptr<TH1D> BuildDataAvg(const std::vector<int>& dataRuns,
 						int nbins,
 						double xmin,
 						double xmax,
-						const TCut& dnd_delta_cuts) {
+						TCut& dnd_delta_cuts) {
 
     // Create a smart pointer for averaged histogram
     std::unique_ptr<TH1D> hAvgData;
@@ -153,7 +159,7 @@ static std::unique_ptr<TH1D> BuildDummyAvg(const std::vector<int>& dummyRuns,
 						int nbins,
 						double xmin,
 						double xmax,
-						const TCut& dnd_delta_cuts) {
+						TCut& dnd_delta_cuts) {
 
     // Create a smart pointer for averaged histogram
     std::unique_ptr<TH1D> hAvgDummy;
@@ -270,9 +276,9 @@ void DataVsSimPlot_MultiDataMultiDummy() {
     struct VarBinning { int nbins; double xmin; double xmax; }; //Declaring a Structure
     // Creating a map of variable to bin paramtervalues
     std::unordered_map<std::string, VarBinning> binsFor = {
-      {"hsdelta", {100, -8.0, 8.0}},	{"hsytar", {100, -8.0, 8.0}},
+      {"hsdelta", {100, -12.0, 12.0}},	{"hsytar", {100, -12.0, 12.0}},
       {"hsxptar", {100, -1.0, 1.0}},	{"hsyptar", {100, -1.0, 1.0}},
-      {"ssdelta", {100, -8.0, 8.0}},	{"ssytar", {100, -8.0, 8.0}},
+      {"ssdelta", {100, -20.0, 20.0}},	{"ssytar", {100, -20.0, 20.0}},
       {"ssxptar", {100, -1.0, 1.0}},	{"ssyptar", {100, -1.0, 1.0}},
       {"z", {100, 0.0, 1.0}},		{"xbj", {100, 0.0, 1.0}},
       {"Q2", {100, 0.0, 8.0}},		{"W", {100, 0.0, 8.0}},
@@ -284,22 +290,22 @@ void DataVsSimPlot_MultiDataMultiDummy() {
     // HMS Variables
     PlotVariablesMultiRuns(dataRuns, dummyRuns, "hsdelta", tSim, binsFor["hsdelta"].nbins, binsFor["hsdelta"].xmin, binsFor["hsdelta"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
     PlotVariablesMultiRuns(dataRuns, dummyRuns, "hsytar", tSim, binsFor["hsytar"].nbins, binsFor["hsytar"].xmin, binsFor["hsytar"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    PlotVariablesMultiRuns(dataRuns, dummyRuns, "hsxptar", tSim, binsFor["hsxptar"].nbins, binsFor["hsxptar"].xmin, binsFor["hsxptar"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    PlotVariablesMultiRuns(dataRuns, dummyRuns, "hsyptar", tSim, binsFor["hsyptar"].nbins, binsFor["hsyptar"].xmin, binsFor["hsyptar"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
+    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "hsxptar", tSim, binsFor["hsxptar"].nbins, binsFor["hsxptar"].xmin, binsFor["hsxptar"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
+    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "hsyptar", tSim, binsFor["hsyptar"].nbins, binsFor["hsyptar"].xmin, binsFor["hsyptar"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
     // SHMS Variables
     PlotVariablesMultiRuns(dataRuns, dummyRuns, "ssdelta", tSim, binsFor["ssdelta"].nbins, binsFor["ssdelta"].xmin, binsFor["ssdelta"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
     PlotVariablesMultiRuns(dataRuns, dummyRuns, "ssytar", tSim, binsFor["ssytar"].nbins, binsFor["ssytar"].xmin, binsFor["ssytar"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    PlotVariablesMultiRuns(dataRuns, dummyRuns, "ssxptar", tSim, binsFor["ssxptar"].nbins, binsFor["ssxptar"].xmin, binsFor["ssxptar"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    PlotVariablesMultiRuns(dataRuns, dummyRuns, "ssyptar", tSim, binsFor["ssyptar"].nbins, binsFor["ssyptar"].xmin, binsFor["ssyptar"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
+    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "ssxptar", tSim, binsFor["ssxptar"].nbins, binsFor["ssxptar"].xmin, binsFor["ssxptar"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
+    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "ssyptar", tSim, binsFor["ssyptar"].nbins, binsFor["ssyptar"].xmin, binsFor["ssyptar"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
     // Kinematic Variables
     PlotVariablesMultiRuns(dataRuns, dummyRuns, "z", tSim, binsFor["z"].nbins, binsFor["z"].xmin, binsFor["z"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    PlotVariablesMultiRuns(dataRuns, dummyRuns, "xbj", tSim, binsFor["xbj"].nbins, binsFor["xbj"].xmin, binsFor["xbj"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    PlotVariablesMultiRuns(dataRuns, dummyRuns, "Q2", tSim, binsFor["Q2"].nbins, binsFor["Q2"].xmin, binsFor["Q2"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    PlotVariablesMultiRuns(dataRuns, dummyRuns, "W", tSim, binsFor["W"].nbins, binsFor["W"].xmin, binsFor["W"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
+    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "xbj", tSim, binsFor["xbj"].nbins, binsFor["xbj"].xmin, binsFor["xbj"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
+    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "Q2", tSim, binsFor["Q2"].nbins, binsFor["Q2"].xmin, binsFor["Q2"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
+    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "W", tSim, binsFor["W"].nbins, binsFor["W"].xmin, binsFor["W"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
     PlotVariablesMultiRuns(dataRuns, dummyRuns, "nu", tSim, binsFor["nu"].nbins, binsFor["nu"].xmin, binsFor["nu"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    PlotVariablesMultiRuns(dataRuns, dummyRuns, "epsilon", tSim, binsFor["epsilon"].nbins, binsFor["epsilon"].xmin, binsFor["epsilon"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    PlotVariablesMultiRuns(dataRuns, dummyRuns, "thetapq", tSim, binsFor["thetapq"].nbins, binsFor["thetapq"].xmin, binsFor["thetapq"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
-    PlotVariablesMultiRuns(dataRuns, dummyRuns, "phipq", tSim, binsFor["phipq"].nbins, binsFor["phipq"].xmin, binsFor["phipq"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
+    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "epsilon", tSim, binsFor["epsilon"].nbins, binsFor["epsilon"].xmin, binsFor["epsilon"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
+    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "thetapq", tSim, binsFor["thetapq"].nbins, binsFor["thetapq"].xmin, binsFor["thetapq"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
+    //PlotVariablesMultiRuns(dataRuns, dummyRuns, "phipq", tSim, binsFor["phipq"].nbins, binsFor["phipq"].xmin, binsFor["phipq"].xmax, wall_thickness_ratio, sim_delta_cuts, sim_norm_cuts, dnd_delta_cuts);
 
 }
 
