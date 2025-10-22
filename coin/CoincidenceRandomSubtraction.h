@@ -12,7 +12,7 @@
 
 struct CoincidenceConfig {
   // Branch name for coincidence-time
-  TString CtBranchName = "CTime.ePiCoinTime_ROC1";
+  TString CtBranchName = "CTime.ePiCoinTime_ROC2";
 
   // Step 1: wide time gate you want to enforce, e.g. (30,70) ns
   double WideWindowMinNs = 20.0;
