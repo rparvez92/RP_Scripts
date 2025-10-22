@@ -84,11 +84,17 @@ static std::vector<int> ParseRunsList(const std::string &CsvLike) {
 static TCut BuildCuts(const TString &Spec) {
   TCut HmsPid = "(H.dc.ntrack>0) && (H.gtr.dp>-8) && (H.gtr.dp<8) && (H.gtr.beta>0) && (H.gtr.beta<1.2) && (H.cal.etottracknorm>0.7) && (H.cer.npeSum>2.0)";
 
-  TCut ShmsBase = "(P.dc.ntrack>0) && (P.gtr.dp>-8) && (P.gtr.dp<8) && (P.gtr.beta>0) && (P.gtr.beta<1.2) && (P.cal.etottracknorm<0.8)";
+  TCut ShmsBase = "(P.dc.ntrack>0) && (P.gtr.dp>-10) && (P.gtr.dp<22) && (P.gtr.beta>0) && (P.gtr.beta<1.2) && (P.cal.etottracknorm<0.8)";
 
-  TCut ShmsPidMomentumLogic = "((P.gtr.p<2.84 && P.aero.npeSum>2) || (P.gtr.p>2.7 && P.gtr.p<9.5 && P.hgcer.npeSum>1))";//HGCER and Aerogel is momentum dependent
+  //TCut ShmsNGC = "(P.gtr.p>3.5) && (P.gtr.p<9.5) && (P.ngcer.npeSum>2)";
+  TCut ShmsAero = "(P.gtr.p<2.7) && (P.aero.npeSum>2)";
+  TCut ShmsHGC = "(P.gtr.p>=2.7) && (P.hgcer.npeSum>1) && (P.aero.npeSum>2)";
 
+  //TCut ShmsPidMomentumLogic = "((P.gtr.p<2.84 && P.aero.npeSum>2) || (P.gtr.p>2.7 && P.gtr.p<9.5 && P.hgcer.npeSum>1))";//HGCER and Aerogel is momentum dependent
+
+  TCut ShmsPidMomentumLogic = (ShmsAero || ShmsHGC);
   TCut ShmsPid = ShmsBase && ShmsPidMomentumLogic;
+  //TCut ShmsPid = ShmsBase && ShmsNGC;
 
   if (Spec == "hms")  return HmsPid;
   if (Spec == "shms") return ShmsPid;
@@ -110,7 +116,7 @@ static void SetBranchStatusesForSpec(TTree *T, const TString &Spec) {
     for (auto v : Vars) T->SetBranchStatus(v, 1);
   } else if (Spec == "shms") {
     const char* Vars[] = {
-      "P.dc.ntrack","P.gtr.dp","P.gtr.beta","P.cal.etottracknorm","P.hgcer.npeSum","P.aero.npeSum","P.gtr.p","P.dc.x_fp"
+      "P.dc.ntrack","P.gtr.dp","P.gtr.beta","P.cal.etottracknorm","P.ngcer.npeSum","P.hgcer.npeSum","P.aero.npeSum","P.gtr.p","P.dc.x_fp"
     };
     for (auto v : Vars) T->SetBranchStatus(v, 1);
   } else if (Spec == "coin") {
@@ -118,7 +124,7 @@ static void SetBranchStatusesForSpec(TTree *T, const TString &Spec) {
       // HMS
       "H.dc.ntrack","H.gtr.dp","H.gtr.beta","H.cal.etottracknorm","H.cer.npeSum","H.dc.x_fp",
       // SHMS
-      "P.dc.ntrack","P.gtr.dp","P.gtr.beta","P.cal.etottracknorm","P.hgcer.npeSum","P.aero.npeSum","P.gtr.p","P.dc.x_fp",
+      "P.dc.ntrack","P.gtr.dp","P.gtr.beta","P.cal.etottracknorm","P.ngcer.npeSum","P.hgcer.npeSum","P.aero.npeSum","P.gtr.p","P.dc.x_fp",
       // Coin time
       "CTime.ePiCoinTime_ROC2"
     };

@@ -29,7 +29,10 @@ inline std::string SimToDataMap(const std::string& simVar) {
         {"epsilon", "H.kin.primary.epsilon"},
         {"nu", "H.kin.primary.nu"},
         {"thetapq", "P.kin.secondary.th_xq"},
-        {"phipq", "P.kin.secondary.ph_xq"}
+        //{"phipq", "P.kin.secondary.ph_xq"}
+	{"phipq", "(P.kin.secondary.ph_xq < 0 ? P.kin.secondary.ph_xq + 2*TMath::Pi() : P.kin.secondary.ph_xq)"}//This ensures phipq of both simc and hcana will be mapped to range [0, 2pi].This line maps hcana variable to [0, 2pi]
+
+
     }; //stdMap = Sim To Data Map
 
     auto it1 = stdMap.find(simVar); //it1=iterator1
