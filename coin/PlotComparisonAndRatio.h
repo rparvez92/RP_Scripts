@@ -129,7 +129,8 @@ void PlotComparisonAndRatio(TH1D* h1, TH1D* h2, std::string varName) {
     line->SetLineStyle(2);
     line->Draw();
 
-    c1->SaveAs(Form("./PDFs/%s_comparison.pdf", varName.c_str()));
+    //c1->SaveAs(Form("./PDFs/%s_comparison.pdf", varName.c_str()));
+    c1->SaveAs(Form("./PNGs/%s_comparison.png", varName.c_str()));
     // Show the plots interactively
     /*c1->Update();
     gSystem->ProcessEvents();
