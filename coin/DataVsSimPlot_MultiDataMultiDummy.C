@@ -65,7 +65,7 @@ static std::unique_ptr<TH1D> ProjectOneDnDRun(int run,
     h->Sumw2(true);
 
     // When z variable is passed, dndVar is P.gtr.p/H.kin.primary.nu
-    // We need to make sure that denominator is not 0
+    // safe guard: making sure denominator is not 0
     if (dndVar.find("P.gtr.p/H.kin.primary.nu") != std::string::npos) {
         dnd_delta_cuts = dnd_delta_cuts && "(H.kin.primary.nu>0)";
     }

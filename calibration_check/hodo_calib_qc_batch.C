@@ -1,9 +1,9 @@
 // hodo_calib_qc_batch.C
 //
 // Plots per Spec:
-//   HMS  : (1) H.gtr.beta vs H.dc.x_fp; (2) beta_mean & beta_sigma vs run
-//   SHMS : (1) P.gtr.beta vs P.dc.x_fp; (2) beta_mean & beta_sigma vs run
-//   COIN : (1) H.gtr.beta vs H.dc.x_fp; (2) P.gtr.beta vs P.dc.x_fp; (3) 1D CTime.ePiCoinTime_ROC2;
+//   HMS  : (1) H_gtr_beta vs H_dc_x_fp; (2) beta_mean & beta_sigma vs run
+//   SHMS : (1) P_gtr_beta vs P_dc_x_fp; (2) beta_mean & beta_sigma vs run
+//   COIN : (1) H_gtr_beta vs H_dc_x_fp; (2) P_gtr_beta vs P_dc_x_fp; (3) 1D CTime_ePiCoinTime_ROC2;
 //          (4) coin_mean & coin_sigma vs run (from ROC2 peak)
 //
 // Notes:
@@ -41,14 +41,22 @@
 #include <algorithm>
 #include <cmath>
 
+#include "runs_vec_hms.hh" // HMS run numbers listed in a vector
+#include "runs_vec_coin.hh" // COIN run numbers listed in a vector
+
 //-------------------------------------------------
 // MakeFileName: build file name from Spec and Run
 //-------------------------------------------------
 static TString MakeFileName(const char* Spec, int RunNumber) {
   TString s(Spec ? Spec : "");
-  if (s == "hms")  return TString::Format("hms_coin_replay_production_%d_-1.root",  RunNumber);
-  if (s == "shms") return TString::Format("shms_coin_replay_production_%d_-1.root", RunNumber);
-  if (s == "coin") return TString::Format("coin_replay_production_%d_-1.root",      RunNumber);
+  //if (s == "hms")  return TString::Format("hms_coin_replay_production_%d_-1.root",  RunNumber);
+  //if (s == "shms") return TString::Format("shms_coin_replay_production_%d_-1.root", RunNumber);
+  //if (s == "coin") return TString::Format("coin_replay_production_%d_-1.root",      RunNumber);
+
+  if (s == "hms")  return TString::Format("skimmed_hms_coin_replay_production_%d_-1.root",  RunNumber);
+  if (s == "shms") return TString::Format("skimmed_shms_coin_replay_production_%d_-1.root", RunNumber);
+  if (s == "coin") return TString::Format("skimmed_coin_replay_production_%d_-1.root",	RunNumber);
+
   return "";
 }
 
@@ -82,15 +90,15 @@ static std::vector<int> ParseRunsList(const std::string &CsvLike) {
 //   Spec = "coin" → HMS && SHMS PID
 //--------------------------------------------------
 static TCut BuildCuts(const TString &Spec) {
-  TCut HmsPid = "(H.dc.ntrack>0) && (H.gtr.dp>-8) && (H.gtr.dp<8) && (H.gtr.beta>0) && (H.gtr.beta<1.2) && (H.cal.etottracknorm>0.7) && (H.cer.npeSum>2.0)";
+  TCut HmsPid = "(H_gtr_dp>-8) && (H_gtr_dp<8) && (H_gtr_beta>0) && (H_gtr_beta<1.2) && (H_cal_etottracknorm>0.7) && (H_cer_npeSum>2.0)";
 
-  TCut ShmsBase = "(P.dc.ntrack>0) && (P.gtr.dp>-10) && (P.gtr.dp<22) && (P.gtr.beta>0) && (P.gtr.beta<1.2) && (P.cal.etottracknorm<0.8)";
+  TCut ShmsBase = "(P_gtr_dp>-10) && (P_gtr_dp<22) && (P_gtr_beta>0) && (P_gtr_beta<1.2) && (P_cal_etottracknorm<0.8)";
 
-  //TCut ShmsNGC = "(P.gtr.p>3.5) && (P.gtr.p<9.5) && (P.ngcer.npeSum>2)";
-  TCut ShmsAero = "(P.gtr.p<2.7) && (P.aero.npeSum>2)";
-  TCut ShmsHGC = "(P.gtr.p>=2.7) && (P.hgcer.npeSum>1) && (P.aero.npeSum>2)";
+  //TCut ShmsNGC = "(P_gtr_p>3.5) && (P_gtr_p<9.5) && (P_ngcer_npeSum>2)";
+  TCut ShmsAero = "(P_gtr_p<2.7) && (P_aero_npeSum>2)";
+  TCut ShmsHGC = "(P_gtr_p>=2.7) && (P_hgcer_npeSum>1) && (P_aero_npeSum>2)";
 
-  //TCut ShmsPidMomentumLogic = "((P.gtr.p<2.84 && P.aero.npeSum>2) || (P.gtr.p>2.7 && P.gtr.p<9.5 && P.hgcer.npeSum>1))";//HGCER and Aerogel is momentum dependent
+  //TCut ShmsPidMomentumLogic = "((P_gtr_p<2.84 && P_aero_npeSum>2) || (P_gtr_p>2.7 && P_gtr_p<9.5 && P_hgcer_npeSum>1))";//HGCER and Aerogel is momentum dependent
 
   TCut ShmsPidMomentumLogic = (ShmsAero || ShmsHGC);
   TCut ShmsPid = ShmsBase && ShmsPidMomentumLogic;
@@ -110,23 +118,23 @@ static void SetBranchStatusesForSpec(TTree *T, const TString &Spec) {
   T->SetBranchStatus("*", 0); // disable everything
   if (Spec == "hms") {
     const char* Vars[] = {
-      "H.dc.ntrack","H.gtr.dp","H.gtr.beta","H.cal.etottracknorm","H.cer.npeSum",
-      "H.dc.x_fp"
+      "H_gtr_dp","H_gtr_beta","H_cal_etottracknorm","H_cer_npeSum",
+      "H_dc_x_fp"
     };
     for (auto v : Vars) T->SetBranchStatus(v, 1);
   } else if (Spec == "shms") {
     const char* Vars[] = {
-      "P.dc.ntrack","P.gtr.dp","P.gtr.beta","P.cal.etottracknorm","P.ngcer.npeSum","P.hgcer.npeSum","P.aero.npeSum","P.gtr.p","P.dc.x_fp"
+      "P_gtr_dp","P_gtr_beta","P_cal_etottracknorm","P_ngcer_npeSum","P_hgcer_npeSum","P_aero_npeSum","P_gtr_p","P_dc_x_fp"
     };
     for (auto v : Vars) T->SetBranchStatus(v, 1);
   } else if (Spec == "coin") {
     const char* Vars[] = {
       // HMS
-      "H.dc.ntrack","H.gtr.dp","H.gtr.beta","H.cal.etottracknorm","H.cer.npeSum","H.dc.x_fp",
+      "H_gtr_dp","H_gtr_beta","H_cal_etottracknorm","H_cer_npeSum","H_dc_x_fp",
       // SHMS
-      "P.dc.ntrack","P.gtr.dp","P.gtr.beta","P.cal.etottracknorm","P.ngcer.npeSum","P.hgcer.npeSum","P.aero.npeSum","P.gtr.p","P.dc.x_fp",
+      "P_gtr_dp","P_gtr_beta","P_cal_etottracknorm","P_ngcer_npeSum","P_hgcer_npeSum","P_aero_npeSum","P_gtr_p","P_dc_x_fp",
       // Coin time
-      "CTime.ePiCoinTime_ROC2"
+      "CTime_ePiCoinTime_ROC2"
     };
     for (auto v : Vars) T->SetBranchStatus(v, 1);
   }
@@ -137,9 +145,9 @@ static void SetBranchStatusesForSpec(TTree *T, const TString &Spec) {
 //------------------------------------------------------------------
 static void DrawBetaVsXfp(TTree *T, const TString &Spec, int Run) {
   const char *Expr = nullptr;
-  if      (Spec == "hms")  Expr = "H.gtr.beta:H.dc.x_fp";
-  else if (Spec == "shms") Expr = "P.gtr.beta:P.dc.x_fp";
-  else if (Spec == "coin") Expr = "H.gtr.beta:H.dc.x_fp";
+  if      (Spec == "hms")  Expr = "H_gtr_beta:H_dc_x_fp";
+  else if (Spec == "shms") Expr = "P_gtr_beta:P_dc_x_fp";
+  else if (Spec == "coin") Expr = "H_gtr_beta:H_dc_x_fp";
   // HMS view; here coin run is getting the HMS plot. For SHMS plot, we added necessary lines at function call site.
   else { std::cerr << "[WARN] Unknown Spec in DrawBetaVsXfp: " << Spec << ""; return; }
 
@@ -177,8 +185,8 @@ static void DrawBetaVsXfp(TTree *T, const TString &Spec, int Run) {
 //----------------------------------
 static void DrawCoinTime1D(TTree *T, int Run){
   TCut Cuts = BuildCuts("coin");
-  const char *Ct = "CTime.ePiCoinTime_ROC2";
-  TH1D *H1 = new TH1D("H1_CTime","Coincidence Time (ROC2);CTime.ePiCoinTime_ROC2 (ns);Counts",400,0,100);
+  const char *Ct = "CTime_ePiCoinTime_ROC2";
+  TH1D *H1 = new TH1D("H1_CTime","Coincidence Time (ROC2);CTime_ePiCoinTime_ROC2 (ns);Counts",400,0,100);
   H1->Sumw2();
   T->Project("H1_CTime", Ct, Cuts);
 
@@ -209,7 +217,7 @@ static void DrawCoinTime1D(TTree *T, int Run){
 //------------------------------------------------------------------------------
 static bool ComputeBetaMetrics(TTree *T, const TString &Spec, double &Mean, double &Sigma, double &NEntries){
   Mean = Sigma = NEntries = std::nan("");
-  const char *Var = (Spec=="shms")?"P.gtr.beta":"H.gtr.beta";
+  const char *Var = (Spec=="shms")?"P_gtr_beta":"H_gtr_beta";
   TCut Cuts = BuildCuts(Spec);
 
   TH1D *H = new TH1D("H1_Beta",";#beta;Counts",200,0.2,1.2);
@@ -238,8 +246,8 @@ static bool ComputeBetaMetrics(TTree *T, const TString &Spec, double &Mean, doub
 static bool ComputeCoinTimeMetrics(TTree *T, double &Mean, double &Sigma, double &NEntries){
   Mean = Sigma = NEntries = std::nan("");
   TCut Cuts = BuildCuts("coin");
-  const char *Ct = "CTime.ePiCoinTime_ROC2";
-  TH1D *H = new TH1D("H1_CtFit",";CTime.ePiCoinTime_ROC2 (ns);Counts",400,0,100);
+  const char *Ct = "CTime_ePiCoinTime_ROC2";
+  TH1D *H = new TH1D("H1_CtFit",";CTime_ePiCoinTime_ROC2 (ns);Counts",400,0,100);
   H->Sumw2();
   T->Project("H1_CtFit", Ct, Cuts);
   H->SetDirectory(nullptr);
@@ -282,10 +290,18 @@ static void DrawBetaTrends(const std::vector<int> &Runs,
   TH1F *frame = new TH1F("frame_beta_trend",
                          TString::Format("%s: #beta mean / sigma vs run;Run;#beta mean", Spec.Data()),
                          N, 0.0, (double)N);
+
+  // Show only every 'step'-th run label:
+  int step = 5;  // try 5, 10, 20 depending on N
+  for (int i = 0; i < N; ++i) {
+    if ((i % step) == 0) frame->GetXaxis()->SetBinLabel(i+1, Form("%d", Runs[i]));
+    else                 frame->GetXaxis()->SetBinLabel(i+1, "");
+  }
+
   frame->SetMinimum(y1Min);
   frame->SetMaximum(y1Max);
-  for (int i = 1; i <= N; ++i) frame->GetXaxis()->SetBinLabel(i, Form("%d", Runs[i-1]));
-  frame->GetXaxis()->LabelsOption("h");
+  //for (int i = 1; i <= N; ++i) frame->GetXaxis()->SetBinLabel(i, Form("%d", Runs[i-1]));
+  frame->GetXaxis()->LabelsOption("v"); // v for veritical, h for horizontal
   frame->GetXaxis()->SetLabelSize(0.035);
   frame->GetYaxis()->SetTitleOffset(1.2);
   frame->Draw("HIST");
@@ -347,10 +363,18 @@ static void DrawCoinTimeTrends(const std::vector<int> &Runs,
   TH1F *frame = new TH1F("frame_ct_trend",
                          "COIN: CTime (ROC2) mean / sigma vs run;Run;CTime mean (ns)",
                          N, 0.0, (double)N);
+
+  // Show only every 'step'-th run label:
+  int step = 10;  // try 5, 10, 20 depending on N
+  for (int i = 0; i < N; ++i) {
+    if ((i % step) == 0) frame->GetXaxis()->SetBinLabel(i+1, Form("%d", Runs[i]));
+    else                 frame->GetXaxis()->SetBinLabel(i+1, "");
+  }
+
   frame->SetMinimum(y1Min);
   frame->SetMaximum(y1Max);
-  for (int i = 1; i <= N; ++i) frame->GetXaxis()->SetBinLabel(i, Form("%d", Runs[i-1]));
-  frame->GetXaxis()->LabelsOption("h");
+  //for (int i = 1; i <= N; ++i) frame->GetXaxis()->SetBinLabel(i, Form("%d", Runs[i-1]));
+  frame->GetXaxis()->LabelsOption("v");
   frame->GetXaxis()->SetLabelSize(0.035);
   frame->GetYaxis()->SetTitleOffset(1.2);
   frame->Draw("HIST");
@@ -425,9 +449,9 @@ static void ProcessOneRun(const TString &Spec, const TString &RootDir, int Run,
     // Enable SHMS view explicitly by re-projecting with SHMS expression and coin cuts
     // Quick way: temporarily enable SHMS branches already on in coin
     {
-      TH2D *H2 = new TH2D("H2_BetaVsXfp_SHMS","#beta vs x_{fp} (SHMS);x_{fp} (cm);#beta",80,-45,45,120,0.2,1.2);
+      TH2D *H2 = new TH2D("H2_BetaVsXfp_SHMS","#beta vs x_{fp};x_{fp} (cm);#beta",80,-45,45,120,0.2,1.2);
       H2->Sumw2();
-      T->Project("H2_BetaVsXfp_SHMS", "P.gtr.beta:P.dc.x_fp", BuildCuts("coin"));
+      T->Project("H2_BetaVsXfp_SHMS", "P_gtr_beta:P_dc_x_fp", BuildCuts("coin"));
       H2->SetDirectory(nullptr);
 
       TCanvas *C = new TCanvas("C_BetaVsXfp_SHMS","C_BetaVsXfp_SHMS",900,700);
@@ -466,7 +490,10 @@ void hodo_calib_qc_batch(const char *Spec="", const char *RootDir="", const char
   TString S(Spec?Spec:"");
   if (!(S=="hms" || S=="shms" || S=="coin")) { std::cerr << "[ERROR] Spec must be 'hms', 'shms', or 'coin'" << std::endl; return; }
 
-  std::vector<int> Runs = ParseRunsList(RunsList?RunsList:"");
+  //std::vector<int> Runs = ParseRunsList(RunsList?RunsList:"");
+  //std::vector<int> Runs = HMSRuns;
+  //std::vector<int> Runs = SHMSRuns;
+  std::vector<int> Runs = COINRuns;
   if (Runs.empty()) { std::cerr << "[INFO] No runs provided. Exiting."; return; }
 
   std::vector<int> TrendRuns; TrendRuns.reserve(Runs.size());
