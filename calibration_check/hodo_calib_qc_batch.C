@@ -15,6 +15,9 @@
 //   root -l -b -q 'hodo_calib_qc_batch.C+("hms","./ROOTfiles","6126,6128-6130")'
 //   root -l -b -q 'hodo_calib_qc_batch.C+("shms","./ROOTfiles","24017-24025")'
 //   root -l -b -q 'hodo_calib_qc_batch.C+("coin","./ROOTfiles","6126,6127")'
+// Run command example for using run lists
+//   root -l -b -q 'hodo_calib_qc_batch.C+("coin","./Skimmed_ROOTfiles")'
+//   root -l -b -q 'hodo_calib_qc_batch.C+("hms","./Skimmed_ROOTfiles")'
 
 #include <TROOT.h>
 #include <TFile.h>
@@ -42,7 +45,7 @@
 #include <cmath>
 
 #include "runs_vec_hms.hh" // HMS run numbers listed in a vector
-#include "runs_vec_coin.hh" // COIN run numbers listed in a vector
+#include "runs_vec_coin_minus_heep_minus_positron.hh" // COIN run numbers listed in a vector
 
 //-------------------------------------------------
 // MakeFileName: build file name from Spec and Run
@@ -153,7 +156,8 @@ static void DrawBetaVsXfp(TTree *T, const TString &Spec, int Run) {
 
   TCut Cuts = BuildCuts(Spec);
 
-  TH2D *H2 = new TH2D("H2_BetaVsXfp","#beta vs x_{fp};x_{fp} (cm);#beta",80,-45,45,120,0.2,1.2);
+  TH2D *H2 = new TH2D("H2_BetaVsXfp","#beta vs x_{fp}(HMS);x_{fp} (cm);#beta",80,-45,45,120,0.2,1.2);
+  //TH2D *H2 = new TH2D("H2_BetaVsXfp","#beta vs x_{fp}(SHMS);x_{fp} (cm);#beta",80,-45,45,120,0.2,1.2);
   H2->Sumw2();
   T->Project("H2_BetaVsXfp", Expr, Cuts);
   H2->SetDirectory(nullptr);
@@ -449,7 +453,7 @@ static void ProcessOneRun(const TString &Spec, const TString &RootDir, int Run,
     // Enable SHMS view explicitly by re-projecting with SHMS expression and coin cuts
     // Quick way: temporarily enable SHMS branches already on in coin
     {
-      TH2D *H2 = new TH2D("H2_BetaVsXfp_SHMS","#beta vs x_{fp};x_{fp} (cm);#beta",80,-45,45,120,0.2,1.2);
+      TH2D *H2 = new TH2D("H2_BetaVsXfp_SHMS","#beta vs x_{fp}(SHMS);x_{fp} (cm);#beta",80,-45,45,120,0.2,1.2);
       H2->Sumw2();
       T->Project("H2_BetaVsXfp_SHMS", "P_gtr_beta:P_dc_x_fp", BuildCuts("coin"));
       H2->SetDirectory(nullptr);
