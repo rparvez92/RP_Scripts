@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.2",
+  "generated_utc": "2025-12-15T04:02:30.178165+00:00",
+  "bigtable": {
+    "path": "/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v2/bigtable/rsidis_bigtable_pass0.csv",
+    "filename": "rsidis_bigtable_pass0.csv",
+    "boil_corr_column": "boil_corr"
+  },
+  "setting": {
+    "pass": "pass5",
+    "ebeam_key": "E10p6716",
+    "run_type": "PI-SIDIS",
+    "target": "LH2",
+    "z": "z0p5",
+    "x": "x0p25",
+    "Q2": "Q2_3p3",
+    "setting_id": "hmsP3p642_shmsPneg3p632_hmsTh16p75_shmsTh13p515_thpq5p2",
+    "path": "/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v2/settings/pass5_E10p6716/PI-SIDIS/LH2/z0p5/x0p25/Q2_3p3/hmsP3p642_shmsPneg3p632_hmsTh16p75_shmsTh13p515_thpq5p2"
+  },
+  "pairing": {
+    "lepton_species": "POSITRON",
+    "hadron_charge": "PI-",
+    "abs_hms_p_3": 3.642,
+    "abs_shms_p_3": 3.632
+  },
+  "selection": {
+    "text": "pass=pass5, ebeam=E10p6716, run_type=PI-SIDIS, target=LH2, z0p5, x0p25, Q2_3p3, setting_id=hmsP3p642_shmsPneg3p632_hmsTh16p75_shmsTh13p515_thpq5p2\nCase-insensitive matching used for categorical fields. Placeholders (-999) excluded.\n",
+    "counts": {
+      "signal": 1,
+      "dummy": 0,
+      "positron": 0
+    }
+  },
+  "runs": {
+    "signal": [
+      25462
+    ],
+    "dummy": [],
+    "positron": []
+  },
+  "files": {
+    "runs_signal": "runs_signal.txt",
+    "runs_dummy": "runs_dummy.txt",
+    "runs_positron": "runs_positron.txt",
+    "run_metadata": "run_metadata.csv",
+    "readme": "README.txt"
+  },
+  "corrections": {
+    "available": [
+      "comp_livetime",
+      "h_esing_Eff",
+      "ps_factor",
+      "fan_mean",
+      "boil_corr",
+      "electr_deadtime"
+    ]
+  },
+  "warnings": []
+}

@@ -1,0 +1,87 @@
+{
+  "schema_version": "1.2",
+  "generated_utc": "2025-12-15T04:02:29.342786+00:00",
+  "bigtable": {
+    "path": "/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v2/bigtable/rsidis_bigtable_pass0.csv",
+    "filename": "rsidis_bigtable_pass0.csv",
+    "boil_corr_column": "boil_corr"
+  },
+  "setting": {
+    "pass": "pass4",
+    "ebeam_key": "E8p5831",
+    "run_type": "PI+SIDIS",
+    "target": "LH2",
+    "z": "z0p36",
+    "x": "x0p25",
+    "Q2": "Q2_3p3",
+    "setting_id": "hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2p0",
+    "path": "/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v2/settings/pass4_E8p5831/PI+SIDIS/LH2/z0p36/x0p25/Q2_3p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2p0"
+  },
+  "pairing": {
+    "lepton_species": "ELECTRON",
+    "hadron_charge": "PI+",
+    "abs_hms_p_3": 1.531,
+    "abs_shms_p_3": 2.615
+  },
+  "selection": {
+    "text": "pass=pass4, ebeam=E8p5831, run_type=PI+SIDIS, target=LH2, z0p36, x0p25, Q2_3p3, setting_id=hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2p0\nCase-insensitive matching used for categorical fields. Placeholders (-999) excluded.\n",
+    "counts": {
+      "signal": 18,
+      "dummy": 7,
+      "positron": 2
+    }
+  },
+  "runs": {
+    "signal": [
+      24442,
+      24443,
+      24444,
+      24445,
+      24446,
+      24447,
+      24448,
+      24449,
+      24450,
+      24451,
+      24452,
+      24453,
+      24454,
+      24508,
+      24509,
+      24510,
+      24511,
+      24512
+    ],
+    "dummy": [
+      24460,
+      24461,
+      24463,
+      24464,
+      24513,
+      24514,
+      24515
+    ],
+    "positron": [
+      24566,
+      24609
+    ]
+  },
+  "files": {
+    "runs_signal": "runs_signal.txt",
+    "runs_dummy": "runs_dummy.txt",
+    "runs_positron": "runs_positron.txt",
+    "run_metadata": "run_metadata.csv",
+    "readme": "README.txt"
+  },
+  "corrections": {
+    "available": [
+      "comp_livetime",
+      "h_esing_Eff",
+      "ps_factor",
+      "fan_mean",
+      "boil_corr",
+      "electr_deadtime"
+    ]
+  },
+  "warnings": []
+}

@@ -1,0 +1,102 @@
+{
+  "schema_version": "1.2",
+  "generated_utc": "2025-12-15T04:02:29.661048+00:00",
+  "bigtable": {
+    "path": "/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v2/bigtable/rsidis_bigtable_pass0.csv",
+    "filename": "rsidis_bigtable_pass0.csv",
+    "boil_corr_column": "boil_corr"
+  },
+  "setting": {
+    "pass": "pass4",
+    "ebeam_key": "E8p5831",
+    "run_type": "PI-SIDIS",
+    "target": "LH2",
+    "z": "z0p5",
+    "x": "x0p25",
+    "Q2": "Q2_3p3",
+    "setting_id": "hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p075_thpq5p2",
+    "path": "/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v2/settings/pass4_E8p5831/PI-SIDIS/LH2/z0p5/x0p25/Q2_3p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p075_thpq5p2"
+  },
+  "pairing": {
+    "lepton_species": "ELECTRON",
+    "hadron_charge": "PI-",
+    "abs_hms_p_3": 1.531,
+    "abs_shms_p_3": 3.632
+  },
+  "selection": {
+    "text": "pass=pass4, ebeam=E8p5831, run_type=PI-SIDIS, target=LH2, z0p5, x0p25, Q2_3p3, setting_id=hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p075_thpq5p2\nCase-insensitive matching used for categorical fields. Placeholders (-999) excluded.\n",
+    "counts": {
+      "signal": 30,
+      "dummy": 8,
+      "positron": 4
+    }
+  },
+  "runs": {
+    "signal": [
+      24690,
+      24691,
+      24692,
+      24693,
+      24694,
+      24695,
+      24696,
+      24697,
+      24698,
+      24699,
+      24701,
+      24702,
+      24703,
+      24713,
+      24714,
+      24715,
+      24716,
+      24717,
+      24718,
+      24719,
+      24720,
+      24721,
+      24722,
+      24723,
+      24724,
+      24725,
+      24726,
+      24727,
+      24728,
+      24729
+    ],
+    "dummy": [
+      24707,
+      24708,
+      24709,
+      24710,
+      24730,
+      24731,
+      24732,
+      24733
+    ],
+    "positron": [
+      24861,
+      24862,
+      24863,
+      24864
+    ]
+  },
+  "files": {
+    "runs_signal": "runs_signal.txt",
+    "runs_dummy": "runs_dummy.txt",
+    "runs_positron": "runs_positron.txt",
+    "run_metadata": "run_metadata.csv",
+    "readme": "README.txt"
+  },
+  "corrections": {
+    "available": [
+      "comp_livetime",
+      "h_esing_Eff",
+      "ps_factor",
+      "fan_mean",
+      "boil_corr",
+      "electr_deadtime"
+    ]
+  },
+  "warnings": []
+}
