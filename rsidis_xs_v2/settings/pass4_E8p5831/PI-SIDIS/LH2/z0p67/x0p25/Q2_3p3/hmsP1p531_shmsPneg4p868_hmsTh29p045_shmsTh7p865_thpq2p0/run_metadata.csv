@@ -1,4 +1,0 @@
-run,category,target_raw,run_type_raw,BCM4A_Q,h_esing_Eff,comp_livetime,electr_deadtime,fan_mean,boil_corr,ps5,ps6,ps_choice,ps_factor
-24584,signal,LH2,PI-SIDIS,63.381,0.9973,1.0,99.9566,33.9122,1.027064,-1.0,1.0,ps6,1.0
-24585,dummy,Dummy,PI-SIDIS,32.227,0.9965,1.0,99.9673,31.821,1.0,-1.0,1.0,ps6,1.0
-24587,dummy,Dummy,PI-SIDIS,23.834,0.9964,1.0,99.9673,32.3701,1.0,-1.0,1.0,ps6,1.0

@@ -1,5 +1,0 @@
-run,category,target_raw,run_type_raw,BCM4A_Q,h_esing_Eff,comp_livetime,electr_deadtime,fan_mean,boil_corr,ps5,ps6,ps_choice,ps_factor
-24558,signal,LD2,PI+SIDIS,34.88,0.9949,1.0,99.9529,31.8798,1.005233,-1.0,1.0,ps6,1.0
-24602,signal,LD2,PI+SIDIS,34.896,0.9972,1.0,99.953,33.2232,1.005288,-1.0,1.0,ps6,1.0
-24560,dummy,Dummy,PI+SIDIS,91.795,0.9969,1.0,99.9555,31.5162,1.0,-1.0,1.0,ps6,1.0
-24601,dummy,Dummy,PI+SIDIS,92.221,0.9952,1.0,99.9551,32.3389,1.0,-1.0,1.0,ps6,1.0

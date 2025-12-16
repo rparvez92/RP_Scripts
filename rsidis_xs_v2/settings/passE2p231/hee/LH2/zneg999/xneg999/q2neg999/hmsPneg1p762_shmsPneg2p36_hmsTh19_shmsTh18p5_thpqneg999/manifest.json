@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "bigtable": "/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v2/bigtable/rsidis_bigtable_pass0.csv",
+  "path_keys": {
+    "pass": "passE2p231",
+    "run_type": "hee",
+    "target": "LH2",
+    "z": "zneg999",
+    "x": "xneg999",
+    "q2": "q2neg999",
+    "setting_id": "hmsPneg1p762_shmsPneg2p36_hmsTh19_shmsTh18p5_thpqneg999"
+  },
+  "pairing_keys": {
+    "abs_hms_p_3": 1.762,
+    "shms_p": -2.36,
+    "run_type": "HEE"
+  },
+  "selection_counts": {
+    "signal": 1,
+    "dummy": 0,
+    "positron": 0,
+    "positron_dummy": 0
+  },
+  "files": {
+    "runs_signal": "runs_signal.txt",
+    "runs_dummy": "runs_dummy.txt",
+    "runs_positron": "runs_positron.txt",
+    "runs_positron_dummy": "runs_positron_dummy.txt",
+    "run_metadata": "run_metadata.csv"
+  }
+}
