@@ -1,13 +1,8 @@
 // PlotCoinRatio.C
 //
 // Run commands:
-//   root -l -q PlotCoinRatio.C
-//   root -l -b -q 'PlotCoinRatio.C("PATH/TO/manifest.json","PATH/TO/output_dir")'
-//
-// Purpose:
-//   Coincidence ratio plotting with dummy and positron subtraction:
-//     (Data - PositronSignal) - (Dummy - PositronDummy)
-//   Runlists and run_metadata.csv are read from the setting directory.
+//   cd /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v2
+//   root -l -b -q -I./include 'macros/PlotCoinRatio.C("/full/path/to/setting/manifest.json","/full/path/to/rsidis_xs_v2/results/test_one_setting")'
 //
 // Inputs expected in the setting directory:
 //   manifest.json
@@ -17,10 +12,9 @@
 //   runs_positron_dummy.txt
 //   run_metadata.csv
 //
-// Notes:
-//   - Positron selection uses HMS momentum sign (hms_p > 0).
-//   - Prescale selection uses ps5 or ps6 (whichever is 1.0).
-//   - BaseCuts stays boolean; per-run weight is passed separately to random subtraction.
+// Output:
+//   Writes log.txt into outputDir
+//   Writes plots into outputDir/PNGs
 
 #include <iostream>
 #include <fstream>
@@ -31,7 +25,6 @@
 #include <memory>
 #include <algorithm>
 #include <cstdio>
-#include <map>
 #include <cmath>
 #include <cctype>
 
@@ -142,9 +135,11 @@ namespace {
     double w = 1.0;
 
     if (HasEnabled(enabled, "ps_factor")) w *= info.ps_factor;
+
     if (HasEnabled(enabled, "h_esing_Eff")) {
       if (info.hms_eff > 0.0) w /= info.hms_eff;
     }
+
     if (HasEnabled(enabled, "comp_livetime")) {
       if (info.comp_livetime > 0.0) w /= info.comp_livetime;
     }
@@ -188,20 +183,20 @@ namespace {
     while (std::getline(f, line)) {
       if (line.empty()) continue;
       auto fields = SplitCSVLine(line);
-      if ((int)fields.size() <= std::max({i_run, i_charge, i_eff})) continue;
 
+      if (i_run >= (int)fields.size()) continue;
       int run = std::stoi(fields[i_run]);
 
       RunNormInfo info;
-      info.charge_mC     = (i_charge >= 0 && i_charge < (int)fields.size()) ? ToDoubleSafe(fields[i_charge], 0.0) : 0.0;
-      info.hms_eff       = (i_eff    >= 0 && i_eff    < (int)fields.size()) ? ToDoubleSafe(fields[i_eff], 1.0)    : 1.0;
-      info.comp_livetime = (i_live   >= 0 && i_live   < (int)fields.size()) ? ToDoubleSafe(fields[i_live], 1.0)   : 1.0;
-      info.ps5           = (i_ps5    >= 0 && i_ps5    < (int)fields.size()) ? ToDoubleSafe(fields[i_ps5], 0.0)    : 0.0;
-      info.ps6           = (i_ps6    >= 0 && i_ps6    < (int)fields.size()) ? ToDoubleSafe(fields[i_ps6], 0.0)    : 0.0;
-      info.ps_choice     = (i_ps_choice>=0 && i_ps_choice<(int)fields.size()) ? fields[i_ps_choice] : "";
-      info.ps_factor     = (i_ps_factor>=0 && i_ps_factor<(int)fields.size()) ? ToDoubleSafe(fields[i_ps_factor], 1.0) : 1.0;
-      info.fan_mean      = (i_fan  >= 0 && i_fan  < (int)fields.size()) ? ToDoubleSafe(fields[i_fan], 1.0) : 1.0;
-      info.boil_corr     = (i_boil >= 0 && i_boil < (int)fields.size()) ? ToDoubleSafe(fields[i_boil], 1.0) : 1.0;
+      info.charge_mC       = (i_charge >= 0 && i_charge < (int)fields.size()) ? ToDoubleSafe(fields[i_charge], 0.0) : 0.0;
+      info.hms_eff         = (i_eff    >= 0 && i_eff    < (int)fields.size()) ? ToDoubleSafe(fields[i_eff], 1.0)    : 1.0;
+      info.comp_livetime   = (i_live   >= 0 && i_live   < (int)fields.size()) ? ToDoubleSafe(fields[i_live], 1.0)   : 1.0;
+      info.ps5             = (i_ps5    >= 0 && i_ps5    < (int)fields.size()) ? ToDoubleSafe(fields[i_ps5], 0.0)    : 0.0;
+      info.ps6             = (i_ps6    >= 0 && i_ps6    < (int)fields.size()) ? ToDoubleSafe(fields[i_ps6], 0.0)    : 0.0;
+      info.ps_choice       = (i_ps_choice>=0 && i_ps_choice<(int)fields.size()) ? fields[i_ps_choice] : "";
+      info.ps_factor       = (i_ps_factor>=0 && i_ps_factor<(int)fields.size()) ? ToDoubleSafe(fields[i_ps_factor], 1.0) : 1.0;
+      info.fan_mean        = (i_fan  >= 0 && i_fan  < (int)fields.size()) ? ToDoubleSafe(fields[i_fan], 1.0) : 1.0;
+      info.boil_corr       = (i_boil >= 0 && i_boil < (int)fields.size()) ? ToDoubleSafe(fields[i_boil], 1.0) : 1.0;
       info.electr_deadtime = (i_edead>=0 && i_edead<(int)fields.size()) ? ToDoubleSafe(fields[i_edead], 0.0) : 0.0;
 
       if (!std::isfinite(info.ps_factor) || info.ps_factor <= 0.0) {
@@ -231,7 +226,6 @@ namespace {
       double& totalCharge_mC,
       const std::unordered_map<int, RunNormInfo>& infoMap,
       const std::vector<std::string>& enabled,
-      const std::string& outDir,
       std::ofstream& log)
   {
     auto it = infoMap.find(run);
@@ -276,7 +270,7 @@ namespace {
     TString weightExpr = Form("%g", w);
 
     FillRandomSubtractedHistogram(T,
-                                  baseCutsBool.GetTitle(),
+                                  TString(baseCutsBool.GetTitle()),
                                   weightExpr,
                                   dataVarExpr.c_str(),
                                   h.get(),
@@ -296,7 +290,6 @@ namespace {
       double& totalCharge_mC,
       const std::unordered_map<int, RunNormInfo>& infoMap,
       const std::vector<std::string>& enabled,
-      const std::string& outDir,
       std::ofstream& log)
   {
     totalCharge_mC = 0.0;
@@ -396,8 +389,6 @@ namespace {
 
 void PlotCoinRatio(const char* manifestPath, const char* outputDir)
 {
-  //gSystem->AddIncludePath("-I./include");
-
   gROOT->SetBatch(kTRUE);
 
   std::string manifest = manifestPath ? manifestPath : "";
@@ -420,10 +411,10 @@ void PlotCoinRatio(const char* manifestPath, const char* outputDir)
   }
   log << "\n";
 
-  std::vector<int> runsSignal        = ReadRunListTxt(settingDir + "/runs_signal.txt");
-  std::vector<int> runsDummy         = ReadRunListTxt(settingDir + "/runs_dummy.txt");
-  std::vector<int> runsPosSignal     = ReadRunListTxt(settingDir + "/runs_positron.txt");
-  std::vector<int> runsPosDummy      = ReadRunListTxt(settingDir + "/runs_positron_dummy.txt");
+  std::vector<int> runsSignal    = ReadRunListTxt(settingDir + "/runs_signal.txt");
+  std::vector<int> runsDummy     = ReadRunListTxt(settingDir + "/runs_dummy.txt");
+  std::vector<int> runsPosSignal = ReadRunListTxt(settingDir + "/runs_positron.txt");
+  std::vector<int> runsPosDummy  = ReadRunListTxt(settingDir + "/runs_positron_dummy.txt");
 
   log << "runs_signal_n=" << runsSignal.size() << "\n";
   log << "runs_dummy_n=" << runsDummy.size() << "\n";
@@ -431,7 +422,7 @@ void PlotCoinRatio(const char* manifestPath, const char* outputDir)
   log << "runs_positron_dummy_n=" << runsPosDummy.size() << "\n";
 
   if (!runsPosSignal.empty() && runsPosDummy.empty()) {
-    log << "WARNING missing runs_positron_dummy.txt. Dummy positron subtraction skipped.\n";
+    log << "WARNING runs_positron_dummy.txt is empty. Dummy positron subtraction will be skipped.\n";
   }
 
   std::unordered_map<int, RunNormInfo> infoMap;
@@ -466,14 +457,30 @@ void PlotCoinRatio(const char* manifestPath, const char* outputDir)
 
   double wall_thickness_ratio = 3.82;
 
-  int nbins = 20;
+  int nbins = 30;
   double xmin = 1.0;
-  double xmax = 4.0;
+  double xmax = 6.0;
 
   log << "plot_var=Q2 nbins=" << nbins << " xmin=" << xmin << " xmax=" << xmax << "\n";
+  log << "plot_var=W nbins=" << nbins << " xmin=" << xmin << " xmax=" << xmax << "\n";
+  log << "plot_var=xbj nbins=" << 30 << " xmin=" << 0.0 << " xmax=" << 1.0 << "\n";
 
   PlotVariable(runsSignal, runsDummy, runsPosSignal, runsPosDummy,
                "Q2", tSim, nbins, xmin, xmax,
+               wall_thickness_ratio,
+               sim_delta_cuts, sim_norm_cuts,
+               data_base_cuts,
+               infoMap, enabled, outDir, log);
+
+  PlotVariable(runsSignal, runsDummy, runsPosSignal, runsPosDummy,
+               "W", tSim, nbins, xmin, xmax,
+               wall_thickness_ratio,
+               sim_delta_cuts, sim_norm_cuts,
+               data_base_cuts,
+               infoMap, enabled, outDir, log);
+
+  PlotVariable(runsSignal, runsDummy, runsPosSignal, runsPosDummy,
+               "xbj", tSim, 30, 0.0, 1.0,
                wall_thickness_ratio,
                sim_delta_cuts, sim_norm_cuts,
                data_base_cuts,
@@ -485,5 +492,5 @@ void PlotCoinRatio(const char* manifestPath, const char* outputDir)
 
 void PlotCoinRatio()
 {
-  std::cout << "Manual mode loaded. Use PlotCoinRatio(\"path/manifest.json\",\"path/outdir\") for settings-tree mode.\n";
+  std::cout << "Loaded PlotCoinRatio. Use PlotCoinRatio(\"manifest.json\",\"outputDir\")\n";
 }

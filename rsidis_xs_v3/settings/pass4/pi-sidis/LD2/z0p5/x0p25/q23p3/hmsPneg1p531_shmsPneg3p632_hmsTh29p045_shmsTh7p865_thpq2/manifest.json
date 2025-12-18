@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "bigtable": "/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v3/bigtable/rsidis_bigtable_pass0.csv",
+  "path_keys": {
+    "pass": "pass4",
+    "run_type": "pi-sidis",
+    "target": "LD2",
+    "z": "z0p5",
+    "x": "x0p25",
+    "q2": "q23p3",
+    "setting_id": "hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2"
+  },
+  "pairing_keys": {
+    "abs_hms_p_3": 1.531,
+    "shms_p": -3.632,
+    "run_type": "PI-SIDIS"
+  },
+  "selection_counts": {
+    "signal": 16,
+    "dummy": 4,
+    "positron": 2,
+    "positron_dummy": 1
+  },
+  "files": {
+    "runs_signal": "runs_signal.txt",
+    "runs_dummy": "runs_dummy.txt",
+    "runs_positron": "runs_positron.txt",
+    "runs_positron_dummy": "runs_positron_dummy.txt",
+    "run_metadata": "run_metadata.csv"
+  }
+}
