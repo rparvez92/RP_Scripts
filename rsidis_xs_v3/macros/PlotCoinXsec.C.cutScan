@@ -44,6 +44,185 @@ namespace {
 
   std::vector<std::unique_ptr<TH1>> g_keep_hists;
 
+  // -----------------------------
+  // Cut configuration (data + sim)
+  // -----------------------------
+  struct CutParams {
+    // HMS acceptance / PID
+    double hms_dp_min   = -8.0;
+    double hms_dp_max   =  8.0;
+    double hms_beta_min =  0.0;
+    double hms_beta_max =  1.2;
+    double hms_cal_min  =  0.7;
+    double hms_cer_min  =  2.0;
+
+    // SHMS acceptance / PID
+    double shms_dp_min   = -10.0;
+    double shms_dp_max   =  22.0;
+    double shms_beta_min =  0.0;
+    double shms_beta_max =  1.2;
+    double shms_cal_max  =  0.8;   // reject electrons in SHMS
+
+    // SHMS pion PID thresholds
+    double shms_hgc_pivot_p = 2.7; // GeV
+    double shms_aero_min    = 2.0;
+    double shms_hgc_min     = 1.0;
+
+    // If true, require HGC only above pivot; if false, require (HGC && Aerogel) above pivot.
+    bool   shms_hgc_only_above_pivot = true;
+
+    // SIMC acceptance cuts (use same dp window by default)
+    double sim_hsdelta_min = -8.0;
+    double sim_hsdelta_max =  8.0;
+    double sim_ssdelta_min = -10.0;
+    double sim_ssdelta_max =  22.0;
+  };
+
+  std::string SanitizeTag(std::string s) {
+    // Make safe for filenames
+    for (char& c : s) {
+      if (c == '.') c = 'p';
+      else if (c == '-') c = 'm';
+      else if (!(std::isalnum((unsigned char)c) || c=='_' )) c = '_';
+    }
+    return s;
+  }
+
+  std::vector<double> ParseNumberList(const std::string& s) {
+    // Accept: "2,3,4" or "2 3 4" or "2|3|4" etc.
+    std::vector<double> out;
+    std::string tmp = s;
+    for (char& c : tmp) {
+      if (c=='|' || c==';' || c==' ' || c=='\t') c = ',';
+    }
+    std::stringstream ss(tmp);
+    std::string tok;
+    while (std::getline(ss, tok, ',')) {
+      if (tok.empty()) continue;
+      try {
+        out.push_back(std::stod(tok));
+      } catch (...) {
+        // ignore
+      }
+    }
+    return out;
+  }
+
+  bool ParseBoolLoose(const std::string& v, bool fallback) {
+    if (v.empty()) return fallback;
+    std::string s = v;
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c){ return std::tolower(c); });
+    if (s=="1" || s=="true" || s=="yes" || s=="y" || s=="on")  return true;
+    if (s=="0" || s=="false" || s=="no"  || s=="n" || s=="off") return false;
+    return fallback;
+  }
+
+  struct CutScanConfig {
+    std::vector<double> aeroList; // values for P.aero.npeSum threshold
+    std::vector<double> hgcList;  // values for P.hgcer.npeSum threshold
+    bool hasHgcOnlyOverride = false;
+    bool hgcOnlyAbovePivot = true;
+  };
+
+  CutScanConfig ParseCutScanSpec(const std::string& spec, const CutParams& base) {
+    // Format example:
+    //   "aero=2,3,4;hgc=0.5,1,2;hgcOnly=1"
+    CutScanConfig cfg;
+    cfg.hgcOnlyAbovePivot = base.shms_hgc_only_above_pivot;
+
+    if (spec.empty()) return cfg;
+
+    std::stringstream ss(spec);
+    std::string item;
+    while (std::getline(ss, item, ';')) {
+      auto eq = item.find('=');
+      if (eq == std::string::npos) continue;
+      std::string key = item.substr(0, eq);
+      std::string val = item.substr(eq + 1);
+
+      // normalize key
+      key.erase(std::remove_if(key.begin(), key.end(), ::isspace), key.end());
+      std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c){ return std::tolower(c); });
+
+      if (key == "aero" || key == "aeromin" || key == "aero_npe") {
+        cfg.aeroList = ParseNumberList(val);
+      } else if (key == "hgc" || key == "hgcmin" || key == "hgc_npe") {
+        cfg.hgcList = ParseNumberList(val);
+      } else if (key == "hgconly" || key == "hgc_only" || key == "hgconlyabovepivot") {
+        cfg.hasHgcOnlyOverride = true;
+        cfg.hgcOnlyAbovePivot = ParseBoolLoose(val, base.shms_hgc_only_above_pivot);
+      }
+    }
+    return cfg;
+  }
+
+  TCut BuildCoinCut(const CutParams& p) {
+    // Electron PID in HMS
+    TCut HmsPid = Form(
+      "(H.gtr.dp>%g) && (H.gtr.dp<%g) && "
+      "(H.gtr.beta>%g) && (H.gtr.beta<%g) && "
+      "(H.cal.etottracknorm>%g) && (H.cer.npeSum>%g)",
+      p.hms_dp_min, p.hms_dp_max,
+      p.hms_beta_min, p.hms_beta_max,
+      p.hms_cal_min, p.hms_cer_min);
+
+    // Base SHMS kinematics + hadron/electron separation
+    TCut ShmsBase = Form(
+      "(P.gtr.dp>%g) && (P.gtr.dp<%g) && "
+      "(P.gtr.beta>%g) && (P.gtr.beta<%g) && "
+      "(P.cal.etottracknorm<%g)",
+      p.shms_dp_min, p.shms_dp_max,
+      p.shms_beta_min, p.shms_beta_max,
+      p.shms_cal_max);
+
+    // Momentum-dependent pion PID in SHMS
+    TCut ShmsBelowPivot = Form(
+      "(P.gtr.p<%g) && (P.aero.npeSum>%g)",
+      p.shms_hgc_pivot_p, p.shms_aero_min);
+
+    TCut ShmsAbovePivot;
+    if (p.shms_hgc_only_above_pivot) {
+      ShmsAbovePivot = Form(
+        "(P.gtr.p>=%g) && (P.hgcer.npeSum>%g)",
+        p.shms_hgc_pivot_p, p.shms_hgc_min);
+    } else {
+      ShmsAbovePivot = Form(
+        "(P.gtr.p>=%g) && (P.hgcer.npeSum>%g) && (P.aero.npeSum>%g)",
+        p.shms_hgc_pivot_p, p.shms_hgc_min, p.shms_aero_min);
+    }
+
+    TCut ShmsPid = ShmsBase && (ShmsBelowPivot || ShmsAbovePivot);
+    return (HmsPid && ShmsPid);
+  }
+
+  TCut BuildSimDeltaCuts(double simNormalizationFactor, const CutParams& p)
+  {
+    // Apply acceptance cuts consistent with data dp windows (by default) and weight normalization.
+    TCut sim_delta = Form(
+      "((hsdelta>%g) && (hsdelta<%g) && (ssdelta>%g) && (ssdelta<%g))",
+      p.sim_hsdelta_min, p.sim_hsdelta_max,
+      p.sim_ssdelta_min, p.sim_ssdelta_max);
+    TCut sim_norm  = Form("Weight * %e", simNormalizationFactor);
+    return sim_delta * sim_norm; // cut * weight
+  }
+
+  void LogCutParams(std::ofstream& log, const CutParams& p) {
+    log << "CUTS: HMS dp[" << p.hms_dp_min << "," << p.hms_dp_max << "]"
+        << " beta[" << p.hms_beta_min << "," << p.hms_beta_max << "]"
+        << " cal>" << p.hms_cal_min
+        << " cer>" << p.hms_cer_min << "\n";
+    log << "CUTS: SHMS dp[" << p.shms_dp_min << "," << p.shms_dp_max << "]"
+        << " beta[" << p.shms_beta_min << "," << p.shms_beta_max << "]"
+        << " cal<" << p.shms_cal_max
+        << " aero>" << p.shms_aero_min
+        << " hgc>" << p.shms_hgc_min
+        << " pivot_p=" << p.shms_hgc_pivot_p
+        << " hgcOnlyAbovePivot=" << (p.shms_hgc_only_above_pivot ? "true" : "false")
+        << "\n";
+    log << "CUTS: SIM delta hs[" << p.sim_hsdelta_min << "," << p.sim_hsdelta_max
+        << "] ss[" << p.sim_ssdelta_min << "," << p.sim_ssdelta_max << "]\n";
+  }
+
   struct RunNormInfo {
     double charge_mC = 0.0;
     double hms_eff = 1.0;
@@ -347,11 +526,13 @@ namespace {
       TTree* simTree,
       const std::string& name,
       int nbins, double xmin, double xmax,
-      const TCut& simCuts)
+      const TCut& simDeltaCuts,
+      const TCut& simNormCuts)
   {
     auto h = std::make_unique<TH1D>(name.c_str(), name.c_str(), nbins, xmin, xmax);
     h->Sumw2(true);
 
+    TCut simCuts = simDeltaCuts * simNormCuts;
     TString drawCmd = TString::Format("%s>>%s(%d,%f,%f)", simVar.c_str(), name.c_str(), nbins, xmin, xmax);
 
     Long64_t ngen = simTree->GetEntries();
@@ -523,87 +704,54 @@ namespace {
     return ys;
   }
 
-  // Cuts
-  TCut BuildCoinCut()
-  {
-    TCut HmsPid =
-      "(H.gtr.dp>-8) && (H.gtr.dp<8) && "
-      "(H.cal.etottracknorm>0.7) && "
-      "(H.cer.npeSum>2.0)";
-
-    TCut ShmsBase =
-      "(P.gtr.dp>-10) && (P.gtr.dp<22) && "
-      "(P.cal.etottracknorm<0.8)";
-
-    TCut ShmsAero = "(P.gtr.p<2.7) && (P.aero.npeSum>2)";
-    TCut ShmsHGC  = "(P.gtr.p>=2.7) && (P.hgcer.npeSum>1) && (P.aero.npeSum>2)";
-
-    TCut ShmsPid = ShmsBase && (ShmsAero || ShmsHGC);
-
-    return (HmsPid && ShmsPid);
-  }
-
-  TCut BuildSimDeltaCuts(double simNormalizationFactor)
-  {
-    TCut sim_delta = "((hsdelta>-8.0) && (hsdelta<8.0) && (ssdelta>-10.0) && (ssdelta<22.0))";
-    TCut sim_norm  = Form("Weight * %e", simNormalizationFactor);
-    return sim_delta * sim_norm; // cut * weight
-  }
 
 } // namespace
 
 
+// Optional cut-scan spec:
+//   aero=<list>;hgc=<list>;hgcOnly=<0|1>
+// Example:
+//   root -l -b -q 'macros/PlotCoinXsec.C+("manifest.json","out",true,true,"aero=2,3,4;hgc=0.5,1,2;hgcOnly=1")'
 void PlotCoinXsec(const char* manifestPath,
                   const char* outputDir,
                   bool makeComparisonRatio = true,
-                  bool makeXsec = true)
+                  bool makeXsec = true,
+                  const char* cutScanSpec = nullptr)
 {
   gROOT->SetBatch(kTRUE);
 
   std::string manifest = manifestPath ? manifestPath : "";
-  std::string outDir = outputDir ? outputDir : "";
+  std::string outDirRoot = outputDir ? outputDir : "";
   std::string settingDir = gSystem->DirName(manifest.c_str());
+  std::string scanSpec = cutScanSpec ? cutScanSpec : "";
 
-  gSystem->mkdir(outDir.c_str(), true);
-  std::ofstream log(outDir + "/log.txt");
+  gSystem->mkdir(outDirRoot.c_str(), true);
 
-  log << "PlotCoinXsec\n";
-  log << "manifest=" << manifest << "\n";
-  log << "setting_dir=" << settingDir << "\n";
-  log << "output_dir=" << outDir << "\n";
-
-  std::vector<std::string> enabled = ReadCorrectionsEnabledFromOutputMeta(outDir);
-  log << "corrections_enabled=";
-  for (size_t i = 0; i < enabled.size(); ++i) {
-    log << enabled[i];
-    if (i + 1 < enabled.size()) log << ",";
-  }
-  log << "\n";
+  // Read enabled corrections once from the *root* outputDir (so cut-scan subdirs don't lose it).
+  std::vector<std::string> enabled = ReadCorrectionsEnabledFromOutputMeta(outDirRoot);
 
   std::vector<int> runsSignal    = ReadRunListTxt(settingDir + "/runs_signal.txt");
   std::vector<int> runsDummy     = ReadRunListTxt(settingDir + "/runs_dummy.txt");
   std::vector<int> runsPosSignal = ReadRunListTxt(settingDir + "/runs_positron.txt");
   std::vector<int> runsPosDummy  = ReadRunListTxt(settingDir + "/runs_positron_dummy.txt");
 
-  log << "runs_signal_n=" << runsSignal.size() << "\n";
-  log << "runs_dummy_n=" << runsDummy.size() << "\n";
-  log << "runs_positron_signal_n=" << runsPosSignal.size() << "\n";
-  log << "runs_positron_dummy_n=" << runsPosDummy.size() << "\n";
-
-  if (!runsPosSignal.empty() && runsPosDummy.empty()) {
-    log << "WARNING runs_positron_dummy.txt is empty. Dummy positron subtraction will be skipped.\n";
-  }
-
   std::unordered_map<int, RunNormInfo> infoMap;
   if (!LoadRunMetadataCSV(settingDir + "/run_metadata.csv", infoMap)) {
+    std::ofstream log(outDirRoot + "/log.txt");
     log << "ERROR cannot read run_metadata.csv\n";
     return;
   }
 
-  double sigma_model_ub = ReadSigmaModelUb(settingDir, log);
-  if (!(sigma_model_ub > 0.0)) {
-    log << "ERROR sigma_model_ub is not valid. Stop.\n";
-    return;
+  // We'll read sigma_model with a temporary log (it also prints useful debug).
+  {
+    std::ofstream tmpLog(outDirRoot + "/log_tmp_sigma_model.txt");
+    double sigma_model_ub = ReadSigmaModelUb(settingDir, tmpLog);
+    // Overwrite later in each scan-run after we open that run's log.
+    if (!(sigma_model_ub > 0.0)) {
+      std::ofstream log(outDirRoot + "/log.txt");
+      log << "ERROR sigma_model_ub is not valid. Stop.\n";
+      return;
+    }
   }
 
   std::string simFilePath = "./simc_worksim/coin_7p87deg_3p632gev_hyd_rsidis.root";
@@ -611,6 +759,7 @@ void PlotCoinXsec(const char* manifestPath,
 
   TFile* fSim = TFile::Open(simFilePath.c_str(), "READ");
   if (!fSim || fSim->IsZombie()) {
+    std::ofstream log(outDirRoot + "/log.txt");
     log << "ERROR cannot open SIM file " << simFilePath << "\n";
     if (fSim) fSim->Close();
     return;
@@ -618,91 +767,146 @@ void PlotCoinXsec(const char* manifestPath,
 
   TTree* tSim = dynamic_cast<TTree*>(fSim->Get("h10"));
   if (!tSim) {
+    std::ofstream log(outDirRoot + "/log.txt");
     log << "ERROR missing SIM tree h10\n";
     fSim->Close();
     return;
   }
 
-  //TCut sim_delta_cuts = "((hsdelta>-8.0) && (hsdelta<8.0))";
-  //TCut sim_norm_cuts  = Form("Weight * %e", simNormalizationFactor);
-
-  /*TCut data_base_cuts =
-      "((H.gtr.dp>-8.0) && (H.gtr.dp<8.0) && "
-      "(H.cal.etottracknorm>0.7) && (H.cer.npeSum>2.0))";*/
-  TCut data_base_cuts = BuildCoinCut();
-  TCut simCuts = BuildSimDeltaCuts(simNormalizationFactor);
-
   double wall_thickness_ratio = 3.82;
   std::vector<VarConfig> vars;
-  //vars.push_back({"Q2", 30, 1.0, 6.0});
-  //vars.push_back({"W",  30, 1.0, 6.0});
-  //vars.push_back({"xbj",30, 0.0, 1.0});
   vars.push_back({"phipq",16, 0.0, 7.0});
   //vars.push_back({"hsdelta",30, -15.0, 15.0});
 
+  // Base cut params (defaults defined in CutParams).
+  CutParams baseCuts;
 
-  for (const auto& v : vars) {
-    log << "plot_var=" << v.simVar << " nbins=" << v.nbins << " xmin=" << v.xmin << " xmax=" << v.xmax << "\n";
-  }
+  // Parse scan spec (if any). If lists are empty, we run a single point at the base thresholds.
+  CutScanConfig scanCfg = ParseCutScanSpec(scanSpec, baseCuts);
+  std::vector<double> aeroList = scanCfg.aeroList.empty() ? std::vector<double>{baseCuts.shms_aero_min} : scanCfg.aeroList;
+  std::vector<double> hgcList  = scanCfg.hgcList.empty()  ? std::vector<double>{baseCuts.shms_hgc_min}  : scanCfg.hgcList;
 
-  std::unordered_map<int, CoincidenceResult> coinCache;
+  bool doScan = !scanSpec.empty();
 
-  YieldSet ys = BuildAllYields(runsSignal, runsDummy, runsPosSignal, runsPosDummy,
-                              vars,
-                              data_base_cuts,
-                              infoMap, enabled,
-                              coinCache,
-                              log);
+  for (double aeroThr : aeroList) {
+    for (double hgcThr : hgcList) {
 
-  std::unordered_map<std::string, std::unique_ptr<TH1D>> hSimMap;
-  for (const auto& v : vars) {
-    std::string name = "hSim_" + v.simVar;
-    auto hsim = BuildSimHist(v.simVar, tSim, name, v.nbins, v.xmin, v.xmax, simCuts);
-    if (hsim) {
-      hsim->SetDirectory(nullptr);
+      CutParams cuts = baseCuts;
+      cuts.shms_aero_min = aeroThr;
+      cuts.shms_hgc_min  = hgcThr;
+      if (scanCfg.hasHgcOnlyOverride) cuts.shms_hgc_only_above_pivot = scanCfg.hgcOnlyAbovePivot;
+
+      std::string tag = Form("aero%.3g_hgc%.3g_hgcOnly%d",
+                             cuts.shms_aero_min,
+                             cuts.shms_hgc_min,
+                             cuts.shms_hgc_only_above_pivot ? 1 : 0);
+
+      std::string outDirRun = outDirRoot;
+      if (doScan) {
+        outDirRun = outDirRoot + "/cutscan/" + SanitizeTag(tag);
+        gSystem->mkdir(outDirRun.c_str(), true);
+      }
+
+      std::ofstream log(outDirRun + "/log.txt");
+      log << "PlotCoinXsec\n";
+      log << "manifest=" << manifest << "\n";
+      log << "setting_dir=" << settingDir << "\n";
+      log << "output_dir=" << outDirRun << "\n";
+      log << "cutScanSpec=" << scanSpec << "\n";
+      log << "cutTag=" << tag << "\n";
+
+      log << "corrections_enabled=";
+      for (size_t i = 0; i < enabled.size(); ++i) {
+        log << enabled[i];
+        if (i + 1 < enabled.size()) log << ",";
+      }
+      log << "\n";
+
+      log << "runs_signal_n=" << runsSignal.size() << "\n";
+      log << "runs_dummy_n=" << runsDummy.size() << "\n";
+      log << "runs_positron_signal_n=" << runsPosSignal.size() << "\n";
+      log << "runs_positron_dummy_n=" << runsPosDummy.size() << "\n";
+      if (!runsPosSignal.empty() && runsPosDummy.empty()) {
+        log << "WARNING runs_positron_dummy.txt is empty. Dummy positron subtraction will be skipped.\n";
+      }
+
+      LogCutParams(log, cuts);
+
+      double sigma_model_ub = ReadSigmaModelUb(settingDir, log);
+      if (!(sigma_model_ub > 0.0)) {
+        log << "ERROR sigma_model_ub is not valid. Stop.\n";
+        continue;
+      }
+
+      // Cuts
+      TCut data_base_cuts = BuildCoinCut(cuts);
+
+      // SIM: BuildSimDeltaCuts returns (delta cuts) * (Weight * normFactor)
+      TCut sim_delta_cuts = BuildSimDeltaCuts(simNormalizationFactor, cuts);
+      TCut sim_norm_cuts  = "1";
+
+      log << "data_base_cuts=" << data_base_cuts.GetTitle() << "\n";
+      log << "sim_cuts=" << sim_delta_cuts.GetTitle() << "\n";
+      for (const auto& v : vars) {
+        log << "plot_var=" << v.simVar << " nbins=" << v.nbins << " xmin=" << v.xmin << " xmax=" << v.xmax << "\n";
+      }
+
+      std::unordered_map<int, CoincidenceResult> coinCache;
+
+      YieldSet ys = BuildAllYields(runsSignal, runsDummy, runsPosSignal, runsPosDummy,
+                                  vars,
+                                  data_base_cuts,
+                                  infoMap, enabled,
+                                  coinCache,
+                                  log);
+
+      std::unordered_map<std::string, std::unique_ptr<TH1D>> hSimMap;
+      for (const auto& v : vars) {
+        std::string name = "hSim_" + v.simVar;
+        auto hsim = BuildSimHist(v.simVar, tSim, name, v.nbins, v.xmin, v.xmax,
+                                 sim_delta_cuts, sim_norm_cuts);
+        if (hsim) hsim->SetDirectory(nullptr);
+        hSimMap[v.simVar] = std::move(hsim);
+      }
+
+      gSystem->mkdir((outDirRun + "/PNGs").c_str(), true);
+
+      for (const auto& v : vars) {
+        TH1D* hSim = hSimMap[v.simVar].get();
+        TH1D* hSig = ys.hSig[v.simVar].get();
+        TH1D* hDum = ys.hDum[v.simVar].get();
+        TH1D* hPosSig = ys.hPosSig[v.simVar].get();
+        TH1D* hPosDum = ys.hPosDum[v.simVar].get();
+
+        auto hSigMinusPos = std::make_unique<TH1D>(*hSig);
+        hSigMinusPos->SetName(("hSigMinusPos_" + v.simVar).c_str());
+        if (!runsPosSignal.empty()) hSigMinusPos->Add(hPosSig, -1.0);
+
+        auto hDumMinusPos = std::make_unique<TH1D>(*hDum);
+        hDumMinusPos->SetName(("hDumMinusPos_" + v.simVar).c_str());
+        if (!runsPosDummy.empty()) hDumMinusPos->Add(hPosDum, -1.0);
+
+        auto hFinal = std::make_unique<TH1D>(*hSigMinusPos);
+        hFinal->SetName(("hFinal_" + v.simVar).c_str());
+        hFinal->Add(hDumMinusPos.get(), -(1.0 / wall_thickness_ratio));
+
+        if (makeComparisonRatio) PlotComparisonAndRatio(hFinal.get(), hSim, v.simVar, outDirRun.c_str());
+        if (makeXsec)            PlotXsec(hFinal.get(), hSim, sigma_model_ub, v.simVar, outDirRun.c_str());
+
+        g_keep_hists.push_back(std::move(hSigMinusPos));
+        g_keep_hists.push_back(std::move(hDumMinusPos));
+        g_keep_hists.push_back(std::move(hFinal));
+      }
+
+      log << "DONE\n";
     }
-    hSimMap[v.simVar] = std::move(hsim);
-  }
-
-  gSystem->mkdir((outDir + "/PNGs").c_str(), true);
-
-  for (const auto& v : vars) {
-    TH1D* hSim = hSimMap[v.simVar].get();
-    TH1D* hSig = ys.hSig[v.simVar].get();
-    TH1D* hDum = ys.hDum[v.simVar].get();
-    TH1D* hPosSig = ys.hPosSig[v.simVar].get();
-    TH1D* hPosDum = ys.hPosDum[v.simVar].get();
-
-    auto hSigMinusPos = std::make_unique<TH1D>(*hSig);
-    hSigMinusPos->SetName(("hSigMinusPos_" + v.simVar).c_str());
-    if (!runsPosSignal.empty()) hSigMinusPos->Add(hPosSig, -1.0);
-
-    auto hDumMinusPos = std::make_unique<TH1D>(*hDum);
-    hDumMinusPos->SetName(("hDumMinusPos_" + v.simVar).c_str());
-    if (!runsPosDummy.empty()) hDumMinusPos->Add(hPosDum, -1.0);
-
-    auto hFinal = std::make_unique<TH1D>(*hSigMinusPos);
-    hFinal->SetName(("hFinal_" + v.simVar).c_str());
-    hFinal->Add(hDumMinusPos.get(), -(1.0 / wall_thickness_ratio));
-
-    if (makeComparisonRatio) {
-      PlotComparisonAndRatio(hFinal.get(), hSim, v.simVar, outDir.c_str());
-    }
-    if (makeXsec) {
-      PlotXsec(hFinal.get(), hSim, sigma_model_ub, v.simVar, outDir.c_str());
-    }
-
-    g_keep_hists.push_back(std::move(hSigMinusPos));
-    g_keep_hists.push_back(std::move(hDumMinusPos));
-    g_keep_hists.push_back(std::move(hFinal));
   }
 
   fSim->Close();
-  log << "DONE\n";
-
 }
 
 void PlotCoinXsec()
 {
   std::cout << "Loaded PlotCoinXsec. Use PlotCoinXsec(\"manifest.json\",\"outputDir\")\n";
+  std::cout << "Optional: PlotCoinXsec(\"manifest.json\",\"outputDir\",true,true,\"aero=2,3,4;hgc=1,2;hgcOnly=1\")\n";
 }

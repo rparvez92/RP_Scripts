@@ -1,22 +1,21 @@
 PlotCoinXsec
 manifest=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v3/settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/manifest.json
 setting_dir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v3/settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2
-output_dir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v3/results/test_one_setting
-cutScanSpec=
-cutTag=aero2_hgc1_hgcOnly1
+output_dir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v3/results/test_one_setting/cutscan/aero1_hgc2_hgcOnly1
+cutScanSpec=aero=1,2,3,4;hgc=0.5,1,1.5,2;hgcOnly=1
+cutTag=aero1_hgc2_hgcOnly1
 corrections_enabled=
 runs_signal_n=25
 runs_dummy_n=8
 runs_positron_signal_n=2
 runs_positron_dummy_n=2
 CUTS: HMS dp[-8,8] beta[0,1.2] cal>0.7 cer>2
-CUTS: SHMS dp[-10,22] beta[0,1.2] cal<0.8 aero>2 hgc>1 pivot_p=2.7 hgcOnlyAbovePivot=true
+CUTS: SHMS dp[-10,22] beta[0,1.2] cal<0.8 aero>1 hgc>2 pivot_p=2.7 hgcOnlyAbovePivot=true
 CUTS: SIM delta hs[-8,8] ss[-10,22]
 sigma_model_ub=0.00259622
-data_base_cuts=((H.gtr.dp>-8) && (H.gtr.dp<8) && (H.gtr.beta>0) && (H.gtr.beta<1.2) && (H.cal.etottracknorm>0.7) && (H.cer.npeSum>2))&&(((P.gtr.dp>-10) && (P.gtr.dp<22) && (P.gtr.beta>0) && (P.gtr.beta<1.2) && (P.cal.etottracknorm<0.8))&&(((P.gtr.p<2.7) && (P.aero.npeSum>2))||((P.gtr.p>=2.7) && (P.hgcer.npeSum>1))))
+data_base_cuts=((H.gtr.dp>-8) && (H.gtr.dp<8) && (H.gtr.beta>0) && (H.gtr.beta<1.2) && (H.cal.etottracknorm>0.7) && (H.cer.npeSum>2))&&(((P.gtr.dp>-10) && (P.gtr.dp<22) && (P.gtr.beta>0) && (P.gtr.beta<1.2) && (P.cal.etottracknorm<0.8))&&(((P.gtr.p<2.7) && (P.aero.npeSum>1))||((P.gtr.p>=2.7) && (P.hgcer.npeSum>2))))
 sim_cuts=(((hsdelta>-8) && (hsdelta<8) && (ssdelta>-10) && (ssdelta<22)))*(Weight * 8.422050e+10)
 plot_var=phipq nbins=16 xmin=0 xmax=7
-plot_var=hsdelta nbins=30 xmin=-15 xmax=15
 Accumulating signal runs
 RUN 24322 charge_mC=51.2 ps_choice=ps6 ps_factor=1 hms_eff=0.9985 comp_livetime=1 per_run_weight=1
 RUN 24323 charge_mC=30.489 ps_choice=ps5 ps_factor=1 hms_eff=0.9986 comp_livetime=1 per_run_weight=1

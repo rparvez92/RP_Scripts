@@ -30,14 +30,14 @@ inline void SetCommonAxisStyle(TH1* h)
   if (!h) return;
   h->SetStats(0);
 
-  h->GetXaxis()->SetTitleSize(0.045);
+  h->GetXaxis()->SetTitleSize(0.05);
   h->GetXaxis()->SetTitleOffset(0.95);
-  h->GetXaxis()->SetLabelSize(0.045);
+  h->GetXaxis()->SetLabelSize(0.05);
   h->GetXaxis()->SetNdivisions(506);
 
-  h->GetYaxis()->SetTitleSize(0.045);
-  h->GetYaxis()->SetTitleOffset(1.1);
-  h->GetYaxis()->SetLabelSize(0.045);
+  h->GetYaxis()->SetTitleSize(0.05);
+  h->GetYaxis()->SetTitleOffset(0.95);
+  h->GetYaxis()->SetLabelSize(0.05);
   h->GetYaxis()->SetNdivisions(506);
   h->GetYaxis()->SetMaxDigits(3);
 }
@@ -78,11 +78,18 @@ inline void PlotComparisonAndRatio(TH1D* hData, TH1D* hSim, const std::string& v
                            900, 800);
   c->SetTopMargin(0.06);
 
-  TPad* p1 = new TPad("p1","p1",0,0.32,1,1);
-  TPad* p2 = new TPad("p2","p2",0,0.0,1,0.32);
+  TPad* p1 = new TPad("p1","p1",0.0,0.3,1.0,1.0);
+  TPad* p2 = new TPad("p2","p2",0.0,0.0,1.0,0.3);
+  p1->SetTopMargin(0.1);
   p1->SetBottomMargin(0.02);
+  p1->SetLeftMargin(0.1);
+  p1->SetRightMargin(0.05);
+
   p2->SetTopMargin(0.02);
   p2->SetBottomMargin(0.35);
+  p2->SetLeftMargin(0.1);
+  p2->SetRightMargin(0.05);
+  //p2->SetBottomMargin(0.35);
   p1->Draw();
   p2->Draw();
 
@@ -96,6 +103,7 @@ inline void PlotComparisonAndRatio(TH1D* hData, TH1D* hSim, const std::string& v
   hData->SetMarkerColor(kRed);
 
   SetCommonAxisStyle(hSim);
+  hSim->GetXaxis()->SetLabelSize(0.0);
   SetXAxisTitleForVar(hSim, varName);
   hSim->GetYaxis()->SetTitle("Counts");
 
@@ -119,13 +127,13 @@ inline void PlotComparisonAndRatio(TH1D* hData, TH1D* hSim, const std::string& v
   SetCommonAxisStyle(hRatio);
   SetXAxisTitleForVar(hRatio, varName);
   hRatio->GetYaxis()->SetTitle("Data/Sim");
-  hRatio->GetYaxis()->SetTitleOffset(0.9);
-  hRatio->GetYaxis()->SetTitleSize(0.10);
-  hRatio->GetYaxis()->SetLabelSize(0.09);
+  hRatio->GetYaxis()->SetTitleOffset(0.4);
+  hRatio->GetYaxis()->SetTitleSize(0.12);
+  hRatio->GetYaxis()->SetLabelSize(0.1);
 
   hRatio->GetXaxis()->SetTitleSize(0.12);
-  hRatio->GetXaxis()->SetLabelSize(0.10);
-  hRatio->GetXaxis()->SetTitleOffset(1.10);
+  hRatio->GetXaxis()->SetLabelSize(0.1);
+  hRatio->GetXaxis()->SetTitleOffset(1.0);
 
   hRatio->SetMarkerStyle(20);
   hRatio->SetMarkerSize(0.75);
@@ -155,11 +163,11 @@ inline void PlotXsec(TH1D* hDataFinal, TH1D* hSim, double sigma_model_ub,
 
   TCanvas* c = new TCanvas(Form("c_%s_xsec", varName.c_str()),
                            Form("%s xsec", varName.c_str()),
-                           900, 700);
+                           900, 800);
   c->SetTopMargin(0.07);
-  c->SetBottomMargin(0.11);
+  c->SetBottomMargin(0.1);
   c->SetRightMargin(0.07);
-  c->SetLeftMargin(0.11);
+  c->SetLeftMargin(0.1);
 
   TH1D* hRatio = (TH1D*)hDataFinal->Clone(Form("hRatio_xsec_%s", varName.c_str()));
   hRatio->Divide(hSim);
@@ -175,8 +183,12 @@ inline void PlotXsec(TH1D* hDataFinal, TH1D* hSim, double sigma_model_ub,
   SetXAxisTitleForVar(hXsec, varName);
   hXsec->GetYaxis()->SetTitle("dSigma");
   hXsec->GetYaxis()->SetTitleOffset(1.1);
+  hXsec->GetYaxis()->SetTitleSize(0.035);
+  hXsec->GetYaxis()->SetLabelSize(0.030);
 
-  hXsec->GetXaxis()->SetTitleOffset(1.1);
+  hXsec->GetXaxis()->SetTitleOffset(0.95);
+  hXsec->GetXaxis()->SetTitleSize(0.035);
+  hXsec->GetXaxis()->SetLabelSize(0.030);
   double ymax = ComputeYMaxWithErr(hXsec);
   hXsec->SetMinimum(0.0);
   hXsec->SetMaximum(1.25 * ymax);

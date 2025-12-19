@@ -1,9 +1,8 @@
 // PlotCoinXsec.C
 //
-// Run commands:
-//   cd /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v3
-//   root -l -b -q -I./include 'macros/PlotCoinXsec.C("/full/path/to/setting/manifest.json","/full/path/to/rsidis_xs_v3/results/test_one_setting")'
-//
+// Example run command:
+// root -l -b -q 'macros/PlotCoinXsec.C+("/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v3/settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/manifest.json", "/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v3/results/test_one_setting")'
+
 // Inputs expected in the setting directory:
 //   manifest.json
 //   runs_signal.txt
@@ -40,22 +39,10 @@
 #include "../include/Mapping.h"
 #include "../include/PlotComparisonAndRatio.h"
 #include "../include/CoincidenceRandomSubtraction.h"
-/*
-Example (xsec only, default flags):
-root -l -b -q 'macros/PlotCoinXsec.C+("/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v3/settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/manifest.json", "/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v3/results/test_one_setting")'
-
-Example (make BOTH comparison+ratio AND xsec):
-root -l -b -q 'macros/PlotCoinXsec.C+("/path/to/manifest.json","/path/to/outputDir", true, true)'
-
-Notes:
-  - If you see a crash at process exit when using ACLiC (+), try running without '+'.
-  - This macro reads ROOT files from Pass0_ROOTfiles/ symlink under the project root (or as specified in manifest).
-*/
 
 namespace {
-  // Keep histograms alive to prevent ROOT from deleting them during canvas drawing.
-  // Allocated on the heap intentionally to avoid static-destructor order issues when using ACLiC (+).
-  static auto* g_keep_hists = new std::vector<std::unique_ptr<TH1>>();
+
+  std::vector<std::unique_ptr<TH1>> g_keep_hists;
 
   struct RunNormInfo {
     double charge_mC = 0.0;
@@ -86,21 +73,6 @@ namespace {
     if (is5 && is6)  return {"ps5", ps5};
     return {"ps5", ps5};
   }
-
-
-
-
-  std::string SanitizeHistTag(const std::string& in) {
-    std::string out;
-    out.reserve(in.size());
-    for (unsigned char c : in) {
-      if (std::isalnum(c)) out.push_back(static_cast<char>(c));
-      else out.push_back('_');
-    }
-    if (out.empty()) out = "var";
-    return out;
-  }
-
 
   double ToDoubleSafe(const std::string& s, double fallback) {
     try { return std::stod(s); } catch (...) { return fallback; }
@@ -363,6 +335,7 @@ namespace {
                           totalCharge_mC, infoMap, enabled, coinCache, log);
       if (!h) continue;
       sum->Add(h.get());
+      g_keep_hists.push_back(std::move(h));
     }
 
     if (totalCharge_mC > 0.0) sum->Scale(1.0 / totalCharge_mC);
@@ -377,111 +350,191 @@ namespace {
       const TCut& simDeltaCuts,
       const TCut& simNormCuts)
   {
-    if (!simTree) return nullptr;
     auto h = std::make_unique<TH1D>(name.c_str(), name.c_str(), nbins, xmin, xmax);
     h->Sumw2(true);
 
     TCut simCuts = simDeltaCuts * simNormCuts;
-    TDirectory* savedDir = gDirectory;
-    gROOT->cd();
-    h->SetDirectory(gDirectory);
-
-    TString drawCmd = TString::Format("%s>>%s", simVar.c_str(), name.c_str());
+    TString drawCmd = TString::Format("%s>>%s(%d,%f,%f)", simVar.c_str(), name.c_str(), nbins, xmin, xmax);
 
     Long64_t ngen = simTree->GetEntries();
     simTree->Draw(drawCmd, simCuts, "goff");
+    if (ngen > 0) h->Scale(1.0 / (double)ngen);
 
     h->SetDirectory(nullptr);
-    if (savedDir) savedDir->cd();
-
-    if (ngen > 0) h->Scale(1.0 / (double)ngen);
     return h;
   }
 
-  void PlotVariable(
+  struct VarConfig {
+    std::string simVar;
+    int nbins = 0;
+    double xmin = 0.0;
+    double xmax = 0.0;
+  };
+
+  struct YieldSet {
+    std::unordered_map<std::string, std::unique_ptr<TH1D>> hSig;
+    std::unordered_map<std::string, std::unique_ptr<TH1D>> hDum;
+    std::unordered_map<std::string, std::unique_ptr<TH1D>> hPosSig;
+    std::unordered_map<std::string, std::unique_ptr<TH1D>> hPosDum;
+    double qSig = 0.0;
+    double qDum = 0.0;
+    double qPosSig = 0.0;
+    double qPosDum = 0.0;
+  };
+
+  std::unordered_map<std::string, std::unique_ptr<TH1D>> BookSums(
+      const std::vector<VarConfig>& vars,
+      const std::string& prefix)
+  {
+    std::unordered_map<std::string, std::unique_ptr<TH1D>> out;
+    for (const auto& v : vars) {
+      std::string name = prefix + "_" + v.simVar + "_sum";
+      auto h = std::make_unique<TH1D>(name.c_str(), "", v.nbins, v.xmin, v.xmax);
+      h->Sumw2(true);
+      h->Reset();
+      h->SetDirectory(nullptr);
+      out[v.simVar] = std::move(h);
+    }
+    return out;
+  }
+
+  void AccumulateCategory(
+      const std::vector<int>& runs,
+      const std::vector<VarConfig>& vars,
+      std::unordered_map<std::string, std::unique_ptr<TH1D>>& outSums,
+      double& totalCharge_mC,
+      const TCut& baseCutsBool,
+      const std::unordered_map<int, RunNormInfo>& infoMap,
+      const std::vector<std::string>& enabled,
+      std::unordered_map<int, CoincidenceResult>& coinCache,
+      std::ofstream& log)
+  {
+    totalCharge_mC = 0.0;
+
+    for (int run : runs) {
+      auto it = infoMap.find(run);
+      if (it == infoMap.end()) {
+        log << "ERROR missing metadata for run " << run << "\n";
+        continue;
+      }
+      const RunNormInfo& info = it->second;
+
+      totalCharge_mC += info.charge_mC;
+
+      double w = ComputePerRunWeight(info, enabled);
+
+      log << "RUN " << run
+          << " charge_mC=" << info.charge_mC
+          << " ps_choice=" << info.ps_choice
+          << " ps_factor=" << info.ps_factor
+          << " hms_eff=" << info.hms_eff
+          << " comp_livetime=" << info.comp_livetime
+          << " per_run_weight=" << w
+          << "\n";
+
+      std::string path = DataRootPath(run);
+      TFile* f = TFile::Open(path.c_str(), "READ");
+      if (!f || f->IsZombie()) {
+        log << "ERROR cannot open " << path << "\n";
+        if (f) f->Close();
+        continue;
+      }
+
+      TTree* T = dynamic_cast<TTree*>(f->Get("T"));
+      if (!T) {
+        log << "ERROR missing tree T in " << path << "\n";
+        f->Close();
+        continue;
+      }
+
+      CoincidenceConfig cfg;
+      TString baseCutsStr = TString(baseCutsBool.GetTitle());
+      TString weightExpr = Form("%g", w);
+
+      auto itC = coinCache.find(run);
+      if (itC == coinCache.end()) {
+        CoincidenceResult Rwin = ComputeCoincidenceRandomSubtraction(T, baseCutsStr, cfg);
+        coinCache[run] = Rwin;
+        itC = coinCache.find(run);
+      }
+
+      for (const auto& v : vars) {
+        std::string dataExpr = SimToDataMap(v.simVar);
+
+        std::string hname = "hTmp_" + v.simVar + Form("_run%d", run);
+        auto htmp = std::make_unique<TH1D>(hname.c_str(), hname.c_str(), v.nbins, v.xmin, v.xmax);
+        htmp->Sumw2(true);
+        htmp->SetDirectory(nullptr);
+
+        FillRandomSubtractedHistogramWithWindows(T,
+                                                baseCutsStr,
+                                                weightExpr,
+                                                dataExpr.c_str(),
+                                                htmp.get(),
+                                                cfg,
+                                                itC->second);
+
+        auto itSum = outSums.find(v.simVar);
+        if (itSum != outSums.end() && itSum->second) {
+          itSum->second->Add(htmp.get());
+        }
+
+        g_keep_hists.push_back(std::move(htmp));
+      }
+
+      f->Close();
+    }
+
+    if (totalCharge_mC > 0.0) {
+      for (auto& kv : outSums) {
+        if (kv.second) kv.second->Scale(1.0 / totalCharge_mC);
+      }
+    }
+  }
+
+  YieldSet BuildAllYields(
       const std::vector<int>& runsSignal,
       const std::vector<int>& runsDummy,
       const std::vector<int>& runsPosSignal,
       const std::vector<int>& runsPosDummy,
-      const std::string& simVar,
-      TTree* simTree,
-      int nbins, double xmin, double xmax,
-      double wallThicknessRatio,
-      const TCut& simDeltaCuts,
-      const TCut& simNormCuts,
+      const std::vector<VarConfig>& vars,
       const TCut& baseCutsBool,
       const std::unordered_map<int, RunNormInfo>& infoMap,
       const std::vector<std::string>& enabled,
-      double sigma_model_ub,
-      bool makeComparisonRatio,
-      bool makeXsec,
-      const std::string& outDir,
       std::unordered_map<int, CoincidenceResult>& coinCache,
       std::ofstream& log)
   {
-    std::string dataExpr = SimToDataMap(simVar);
-    if (dataExpr.empty()) {
-      log << "SKIP var=" << simVar << " (no SimToDataMap mapping)\n";
-      return;
-    }
+    YieldSet ys;
+    ys.hSig    = BookSums(vars, "hSig");
+    ys.hDum    = BookSums(vars, "hDum");
+    ys.hPosSig = BookSums(vars, "hPosSig");
+    ys.hPosDum = BookSums(vars, "hPosDum");
 
-    // Unique histogram tag per variable (avoid name collisions when using TTree::Draw)
-    std::string histTag;
-    histTag.reserve(simVar.size());
-    for (unsigned char c : simVar) histTag.push_back(std::isalnum(c) ? (char)c : '_');
-    if (histTag.empty()) histTag = "var";
+    log << "Accumulating signal runs\n";
+    AccumulateCategory(runsSignal, vars, ys.hSig, ys.qSig, baseCutsBool, infoMap, enabled, coinCache, log);
 
-    const std::string hSigName = "hSig_" + histTag;
-    const std::string hDumName = "hDum_" + histTag;
-    const std::string hPosSigName = "hPosSig_" + histTag;
-    const std::string hPosDumName = "hPosDum_" + histTag;
-    const std::string hSimName = "hSim_" + histTag;
+    log << "Accumulating dummy runs\n";
+    AccumulateCategory(runsDummy, vars, ys.hDum, ys.qDum, baseCutsBool, infoMap, enabled, coinCache, log);
 
-    auto hSim = BuildSimHist(simVar, simTree, hSimName, nbins, xmin, xmax, simDeltaCuts, simNormCuts);
+    log << "Accumulating positron signal runs\n";
+    AccumulateCategory(runsPosSignal, vars, ys.hPosSig, ys.qPosSig, baseCutsBool, infoMap, enabled, coinCache, log);
 
-    double qSig=0, qDum=0, qPosSig=0, qPosDum=0;
-    auto hSig    = BuildYield(runsSignal,    dataExpr, hSigName,    nbins, xmin, xmax, baseCutsBool, qSig,    infoMap, enabled, coinCache, log);
-    auto hDum    = BuildYield(runsDummy,     dataExpr, hDumName,    nbins, xmin, xmax, baseCutsBool, qDum,    infoMap, enabled, coinCache, log);
-    auto hPosSig = BuildYield(runsPosSignal, dataExpr, hPosSigName, nbins, xmin, xmax, baseCutsBool, qPosSig, infoMap, enabled, coinCache, log);
-    auto hPosDum = BuildYield(runsPosDummy,  dataExpr, hPosDumName, nbins, xmin, xmax, baseCutsBool, qPosDum, infoMap, enabled, coinCache, log);
+    log << "Accumulating positron dummy runs\n";
+    AccumulateCategory(runsPosDummy, vars, ys.hPosDum, ys.qPosDum, baseCutsBool, infoMap, enabled, coinCache, log);
 
-    auto hSigMinusPos = std::make_unique<TH1D>(*hSig);
-    hSigMinusPos->SetName( (std::string("hSigMinusPos_") + histTag).c_str());
-    hSigMinusPos->SetDirectory(nullptr);
-    if (!runsPosSignal.empty()) hSigMinusPos->Add(hPosSig.get(), -1.0);
-
-    auto hDumMinusPos = std::make_unique<TH1D>(*hDum);
-    hDumMinusPos->SetName( (std::string("hDumMinusPos_") + histTag).c_str());
-    hDumMinusPos->SetDirectory(nullptr);
-    if (!runsPosDummy.empty()) hDumMinusPos->Add(hPosDum.get(), -1.0);
-
-    auto hFinal = std::make_unique<TH1D>(*hSigMinusPos);
-    hFinal->SetName( (std::string("hFinal_") + histTag).c_str());
-    hFinal->SetDirectory(nullptr);
-    hFinal->Add(hDumMinusPos.get(), -(1.0 / wallThicknessRatio));
-
-    if (makeComparisonRatio) {
-      PlotComparisonAndRatio(hFinal.get(), hSim.get(), simVar, outDir.c_str());
-    }
-    if (makeXsec) {
-      PlotXsec(hFinal.get(), hSim.get(), sigma_model_ub, simVar, outDir.c_str());
-    }
-
+    return ys;
   }
+
 
 } // namespace
 
-// Example run (ACLiC compiled):
-// root -l -b -q 'macros/PlotCoinXsec.C+("/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v3/settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/manifest.json", "/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v3/results/test_one_setting", true, true)'
-//
-// If you see an exit-time crash with "+", try interpreted mode (no compile):
-// root -l -b -q 'macros/PlotCoinXsec.C("/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v3/settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/manifest.json", "/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v3/results/test_one_setting", true, true)'
 
-void PlotCoinXsec(const char* manifestPath, const char* outputDir, bool makeComparisonRatio=false, bool makeXsec=true)
+void PlotCoinXsec(const char* manifestPath,
+                  const char* outputDir,
+                  bool makeComparisonRatio = true,
+                  bool makeXsec = true)
 {
   gROOT->SetBatch(kTRUE);
-  TH1::AddDirectory(kFALSE);
-
 
   std::string manifest = manifestPath ? manifestPath : "";
   std::string outDir = outputDir ? outputDir : "";
@@ -554,56 +607,76 @@ void PlotCoinXsec(const char* manifestPath, const char* outputDir, bool makeComp
       "(H.cal.etottracknorm>0.7) && (H.cer.npeSum>2.0))";
 
   double wall_thickness_ratio = 3.82;
+  std::vector<VarConfig> vars;
+  //vars.push_back({"Q2", 30, 1.0, 6.0});
+  //vars.push_back({"W",  30, 1.0, 6.0});
+  //vars.push_back({"xbj",30, 0.0, 1.0});
+  vars.push_back({"phipq",16, 0.0, 7.0});
+  vars.push_back({"hsdelta",30, -15.0, 15.0});
+
+
+  for (const auto& v : vars) {
+    log << "plot_var=" << v.simVar << " nbins=" << v.nbins << " xmin=" << v.xmin << " xmax=" << v.xmax << "\n";
+  }
 
   std::unordered_map<int, CoincidenceResult> coinCache;
 
-  log << "plot_var=Q2 nbins=30 xmin=1 xmax=6\n";
-  PlotVariable(runsSignal, runsDummy, runsPosSignal, runsPosDummy,
-               "Q2", tSim, 30, 1.0, 6.0,
-               wall_thickness_ratio,
-               sim_delta_cuts, sim_norm_cuts,
-               data_base_cuts,
-               infoMap, enabled,
-               sigma_model_ub,
-               makeComparisonRatio, makeXsec,
-               outDir,
-               coinCache,
-               log);
+  YieldSet ys = BuildAllYields(runsSignal, runsDummy, runsPosSignal, runsPosDummy,
+                              vars,
+                              data_base_cuts,
+                              infoMap, enabled,
+                              coinCache,
+                              log);
 
-  log << "plot_var=W nbins=30 xmin=1 xmax=6\n";
-  PlotVariable(runsSignal, runsDummy, runsPosSignal, runsPosDummy,
-               "W", tSim, 30, 1.0, 6.0,
-               wall_thickness_ratio,
-               sim_delta_cuts, sim_norm_cuts,
-               data_base_cuts,
-               infoMap, enabled,
-               sigma_model_ub,
-               makeComparisonRatio, makeXsec,
-               outDir,
-               coinCache,
-               log);
+  std::unordered_map<std::string, std::unique_ptr<TH1D>> hSimMap;
+  for (const auto& v : vars) {
+    std::string name = "hSim_" + v.simVar;
+    auto hsim = BuildSimHist(v.simVar, tSim, name, v.nbins, v.xmin, v.xmax, sim_delta_cuts, sim_norm_cuts);
+    if (hsim) {
+      hsim->SetDirectory(nullptr);
+    }
+    hSimMap[v.simVar] = std::move(hsim);
+  }
 
-  log << "plot_var=xbj nbins=30 xmin=0 xmax=1\n";
-  PlotVariable(runsSignal, runsDummy, runsPosSignal, runsPosDummy,
-               "xbj", tSim, 30, 0.0, 1.0,
-               wall_thickness_ratio,
-               sim_delta_cuts, sim_norm_cuts,
-               data_base_cuts,
-               infoMap, enabled,
-               sigma_model_ub,
-               makeComparisonRatio, makeXsec,
-               outDir,
-               coinCache,
-               log);
+  gSystem->mkdir((outDir + "/PNGs").c_str(), true);
+
+  for (const auto& v : vars) {
+    TH1D* hSim = hSimMap[v.simVar].get();
+    TH1D* hSig = ys.hSig[v.simVar].get();
+    TH1D* hDum = ys.hDum[v.simVar].get();
+    TH1D* hPosSig = ys.hPosSig[v.simVar].get();
+    TH1D* hPosDum = ys.hPosDum[v.simVar].get();
+
+    auto hSigMinusPos = std::make_unique<TH1D>(*hSig);
+    hSigMinusPos->SetName(("hSigMinusPos_" + v.simVar).c_str());
+    if (!runsPosSignal.empty()) hSigMinusPos->Add(hPosSig, -1.0);
+
+    auto hDumMinusPos = std::make_unique<TH1D>(*hDum);
+    hDumMinusPos->SetName(("hDumMinusPos_" + v.simVar).c_str());
+    if (!runsPosDummy.empty()) hDumMinusPos->Add(hPosDum, -1.0);
+
+    auto hFinal = std::make_unique<TH1D>(*hSigMinusPos);
+    hFinal->SetName(("hFinal_" + v.simVar).c_str());
+    hFinal->Add(hDumMinusPos.get(), -(1.0 / wall_thickness_ratio));
+
+    if (makeComparisonRatio) {
+      PlotComparisonAndRatio(hFinal.get(), hSim, v.simVar, outDir.c_str());
+    }
+    if (makeXsec) {
+      PlotXsec(hFinal.get(), hSim, sigma_model_ub, v.simVar, outDir.c_str());
+    }
+
+    g_keep_hists.push_back(std::move(hSigMinusPos));
+    g_keep_hists.push_back(std::move(hDumMinusPos));
+    g_keep_hists.push_back(std::move(hFinal));
+  }
 
   fSim->Close();
   log << "DONE\n";
+
 }
 
 void PlotCoinXsec()
 {
-  std::cout << "Loaded PlotCoinXsec.\n"
-            << "Usage: PlotCoinXsec(\"manifest.json\",\"outputDir\", /*makeComparisonRatio=*/false, /*makeXsec=*/true)\n"
-            << "  - makeComparisonRatio=true  -> also produces *_comparison.png and *_ratio.png\n"
-            << "  - makeXsec=true             -> produces *_xsec.png\n";
+  std::cout << "Loaded PlotCoinXsec. Use PlotCoinXsec(\"manifest.json\",\"outputDir\")\n";
 }
