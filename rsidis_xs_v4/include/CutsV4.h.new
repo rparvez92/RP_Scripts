@@ -10,19 +10,17 @@ struct CutParams {
   std::string cut_tag = "v3_like_pid";
 };
 
-// "v3-like" PID/acceptance cuts (dots->underscores) with NO beta windows.
-// Keep beta cuts off until you validate consistent beta modeling in SIM.
-inline TCut BuildCoinCut_V3Like_Underscore_NoBeta()
+inline TCut BuildCoinCut_V3Like_Underscore()
 {
   // Your requested v3-like PID (dots->underscores)
   TCut HmsPid =
     "(H_gtr_dp>-8) && (H_gtr_dp<8) && "
-    "(H_cal_etottracknorm>0.7) && "
+        "(H_cal_etottracknorm>0.7) && "
     "(H_cer_npeSum>2.0)";
 
   TCut ShmsBase =
     "(P_gtr_dp>-10) && (P_gtr_dp<22) && "
-    "(P_cal_etottracknorm<0.8)";
+        "(P_cal_etottracknorm<0.8)";
 
   TCut ShmsAero = "(P_gtr_p<2.7) && (P_aero_npeSum>2)";
   TCut ShmsHGC  = "(P_gtr_p>=2.7) && (P_hgcer_npeSum>1) && (P_aero_npeSum>2)";
