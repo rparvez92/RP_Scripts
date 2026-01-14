@@ -464,7 +464,7 @@ static std::vector<double> PhiEdgesN(int n) {
 struct Binning {
   std::vector<double> ptEdges {0.0, 0.10, 0.20, 0.30, 0.40};
   std::vector<double> zEdges  {0.30, 0.40, 0.50, 0.60, 0.70};
-  std::vector<double> phiEdges = PhiEdgesN(8);
+  std::vector<double> phiEdges = PhiEdgesN(17);
 };
 
 /*
@@ -506,7 +506,8 @@ static void PlotCoinXsec_Single(const char* manifestPath,
   MkdirP(resultsDir + "/PNGs");
   MkdirP(resultsDir + "/tables");
 
-  std::ofstream log(resultsDir + "/log.txt", std::ios::app);
+  //std::ofstream log(resultsDir + "/log.txt", std::ios::app);
+  std::ofstream log(resultsDir + "/log.txt", std::ios::out);
   log << "=== PlotCoinXsec v4 (phipq panels) ===\n";
   log << "manifest: " << manifest << "\n";
   log << "leafDir: " << leafDir << "\n";
@@ -574,7 +575,9 @@ static void PlotCoinXsec_Single(const char* manifestPath,
   // SIM chain
   TChain sim("h10");
   {
-    std::string simGlob = "./simc_worksim/" + settingId + "/*.root";
+    //std::string simGlob = "./simc_worksim/" + settingId + "/*.root";
+    const std::string projectRoot = NormalizeSlashes(Dirname(NormalizeSlashes(settingsRoot)));
+    std::string simGlob = projectRoot + "/simc_worksim/" + settingId + "/*.root";
     int nAdded = sim.Add(simGlob.c_str());
     log << "SIM glob: " << simGlob << " added=" << nAdded << "\n";
     if (sim.GetEntries() <= 0) {
@@ -1072,7 +1075,8 @@ static void PlotCoinXsec_Group(const char* groupPath,
   MkdirP(resultsDir + "/PNGs");
   MkdirP(resultsDir + "/tables");
 
-  std::ofstream log(resultsDir + "/log.txt", std::ios::app);
+  //std::ofstream log(resultsDir + "/log.txt", std::ios::app);
+  std::ofstream log(resultsDir + "/log.txt", std::ios::out);
   log << "=== PlotCoinXsec v5 (GROUP overlay) ===\n";
   log << "groupFile: " << groupFile << "\n";
   log << "resultsDir: " << resultsDir << "\n";
@@ -1216,7 +1220,9 @@ static void PlotCoinXsec_Group(const char* groupPath,
 
     // SIM chain
     c.sim.reset(new TChain("h10"));
-    std::string simGlob = "./simc_worksim/" + c.settingId + "/*.root";
+    //std::string simGlob = "./simc_worksim/" + c.settingId + "/*.root";
+    const std::string projectRoot = NormalizeSlashes(Dirname(NormalizeSlashes(settingsRoot)));
+    std::string simGlob = projectRoot + "/simc_worksim/" + c.settingId + "/*.root";
     int nAdded = c.sim->Add(simGlob.c_str());
     log << "SIM glob (" << c.label << "): " << simGlob << " added=" << nAdded << "\n";
     if (c.sim->GetEntries() <= 0) {
@@ -1539,7 +1545,9 @@ static void PlotCoinXsec_Group(const char* groupPath,
       }
 
       // legend label
-      TString leglab = Form("%s  #LT x #GT=%.3f  #LTQ^{2}#GT=%.2f", cv.label.c_str(), cv.meanXB, cv.meanQ2);
+      //TString leglab = Form("%s  #LT x #GT=%.3f  #LTQ^{2}#GT=%.2f", cv.label.c_str(), cv.meanXB, cv.meanQ2);
+      TString leglab = Form("%s", cv.label.c_str());
+
       leg->AddEntry(g, leglab, "pe");
     } // curve loop
 
