@@ -636,13 +636,11 @@ static void PlotCoinXsec_Single(const char* manifestPath,
   std::ofstream fitcsv;
   if (saveTables) {
     const std::string fitPath = resultsDir + "/tables/fit_parameters.csv";
-    const std::string fitHeader =
+    EnsureCSVHeader(fitPath,
       "mode,group_id,curve_label,setting_id,pt_bin,z_bin,pt_lo,pt_hi,pt_center,z_lo,z_hi,z_center,n_points,"
-      "M0,M0_err,A,A_err,B,B_err,chi2,ndf,prob";
-    // Overwrite each run so re-running the macro does NOT duplicate rows
-    fitcsv.open(fitPath, std::ios::out);
-    fitcsv << fitHeader << std::endl;
-    log << "Fit CSV: " << fitPath << std::endl;
+      "M0,M0_err,A,A_err,B,B_err,chi2,ndf,prob\n");
+    fitcsv.open(fitPath, std::ios::app);
+    log << "Fit CSV: " << fitPath << "\n";
   }
   if (saveTables) {
     std::string csvPath = resultsDir + "/tables/xsec_phipq_pt_z.csv";
@@ -1092,13 +1090,11 @@ static void PlotCoinXsec_Group(const char* groupPath,
   std::ofstream fitcsv;
   if (saveTables) {
     const std::string fitPath = resultsDir + "/tables/fit_parameters.csv";
-    const std::string fitHeader =
+    EnsureCSVHeader(fitPath,
       "mode,group_id,curve_label,setting_id,pt_bin,z_bin,pt_lo,pt_hi,pt_center,z_lo,z_hi,z_center,n_points,"
-      "M0,M0_err,A,A_err,B,B_err,chi2,ndf,prob";
-    // Overwrite each run so re-running the macro does NOT duplicate rows
-    fitcsv.open(fitPath, std::ios::out);
-    fitcsv << fitHeader << std::endl;
-    log << "Fit CSV: " << fitPath << std::endl;
+      "M0,M0_err,A,A_err,B,B_err,chi2,ndf,prob\n");
+    fitcsv.open(fitPath, std::ios::app);
+    log << "Fit CSV: " << fitPath << "\n";
   }
 
   // Read group entries
