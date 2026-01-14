@@ -638,7 +638,7 @@ static void PlotCoinXsec_Single(const char* manifestPath,
     const std::string fitPath = resultsDir + "/tables/fit_parameters.csv";
     EnsureCSVHeader(fitPath,
       "mode,group_id,curve_label,setting_id,pt_bin,z_bin,pt_lo,pt_hi,pt_center,z_lo,z_hi,z_center,n_points,"
-      "M0,M0_err,A,A_err,B,B_err,chi2,ndf,prob");
+      "M0,M0_err,A,A_err,B,B_err,chi2,ndf,prob\n");
     fitcsv.open(fitPath, std::ios::app);
     log << "Fit CSV: " << fitPath << "\n";
   }
@@ -1092,7 +1092,7 @@ static void PlotCoinXsec_Group(const char* groupPath,
     const std::string fitPath = resultsDir + "/tables/fit_parameters.csv";
     EnsureCSVHeader(fitPath,
       "mode,group_id,curve_label,setting_id,pt_bin,z_bin,pt_lo,pt_hi,pt_center,z_lo,z_hi,z_center,n_points,"
-      "M0,M0_err,A,A_err,B,B_err,chi2,ndf,prob");
+      "M0,M0_err,A,A_err,B,B_err,chi2,ndf,prob\n");
     fitcsv.open(fitPath, std::ios::app);
     log << "Fit CSV: " << fitPath << "\n";
   }
