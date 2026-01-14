@@ -1,0 +1,1128 @@
+=== PlotCoinXsec v5 (GROUP overlay) ===
+groupFile: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/grp_LH2_zOv_x0p25_Q23p3_tpq2p0.list
+resultsDir: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0
+settingsRoot: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/settings
+Group entries: 3
+  z0p36  settingId=pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2
+  z0p50  settingId=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2
+  z0p67  settingId=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00324496
+SIM glob (z0p36): ./simc_worksim/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/*.root added=0
+ERROR: SIM chain empty for: ./simc_worksim/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/*.root
+=== PlotCoinXsec v5 (GROUP overlay) ===
+groupFile: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/grp_LH2_zOv_x0p25_Q23p3_tpq2p0.list
+resultsDir: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0
+settingsRoot: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/settings
+Group entries: 3
+  z0p36  settingId=pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2
+  z0p50  settingId=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2
+  z0p67  settingId=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00324496
+SIM glob (z0p36): ./simc_worksim/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00259622
+SIM glob (z0p50): ./simc_worksim/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00179632
+SIM glob (z0p67): ./simc_worksim/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+CSV: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0/tables/xsec_phipq_overlay.csv
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=0
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=0
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=5
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=1
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=1073
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=136
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=894
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=128
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=3022
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=383
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=2284
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=369
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=3329
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=392
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=2582
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=355
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=1286
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=123
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=1065
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=145
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=3
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=2
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=0
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=0
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=0
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=0
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=0
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=4
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=1
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=1690
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=167
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=154
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=150
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=4222
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=441
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=355
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=429
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=4540
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=496
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=393
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=462
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=1992
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=216
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=158
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=189
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=7
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=0
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=0
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=0
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=0
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=0
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=6
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=1
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=1
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=1780
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=124
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=552
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=30
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=4225
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=327
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=1368
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=77
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=4393
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=352
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=1438
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=64
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=2061
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=148
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=660
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=45
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=3
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=0
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=2
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=0
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=0
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=0
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=0
+Saved: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0/PNGs/xsec_vs_phipq_overlay.png
+Done (GROUP overlay).
+=== PlotCoinXsec v5 (GROUP overlay) ===
+groupFile: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/grp_LH2_zOv_x0p25_Q23p3_tpq2p0.list
+resultsDir: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0
+settingsRoot: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/settings
+Group entries: 3
+  z0p36  settingId=pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2
+  z0p50  settingId=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2
+  z0p67  settingId=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00324496
+SIM glob (z0p36): ./simc_worksim/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00259622
+SIM glob (z0p50): ./simc_worksim/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00179632
+SIM glob (z0p67): ./simc_worksim/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+CSV: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0/tables/xsec_phipq_overlay.csv
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=0
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=0
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=5
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=1
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=1073
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=136
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=894
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=128
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=3022
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=383
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=2284
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=369
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=3329
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=392
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=2582
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=355
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=1286
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=123
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=1065
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=145
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=3
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=2
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=0
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=0
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=0
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=0
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=0
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=4
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=1
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=1690
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=167
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=154
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=150
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=4222
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=441
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=355
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=429
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=4540
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=496
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=393
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=462
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=1992
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=216
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=158
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=189
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=7
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=0
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=0
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=0
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=0
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=0
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=6
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=1
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=1
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=1780
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=124
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=552
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=30
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=4225
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=327
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=1368
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=77
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=4393
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=352
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=1438
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=64
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=2061
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=148
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=660
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=45
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=3
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=0
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=2
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=0
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=0
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=0
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=0
+Saved: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0/PNGs/xsec_vs_phipq_overlay.png
+Done (GROUP overlay).
+=== PlotCoinXsec v5 (GROUP overlay) ===
+groupFile: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/grp_LH2_zOv_x0p25_Q23p3_tpq2p0.list
+resultsDir: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0
+settingsRoot: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/settings
+Fit CSV: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0/tables/fit_parameters.csv
+Group entries: 3
+  z0p36  settingId=pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2
+  z0p50  settingId=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2
+  z0p67  settingId=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00324496
+SIM glob (z0p36): ./simc_worksim/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00259622
+SIM glob (z0p50): ./simc_worksim/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00179632
+SIM glob (z0p67): ./simc_worksim/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+CSV: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0/tables/xsec_phipq_overlay.csv
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=0
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=0
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=5
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=1
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=1073
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=136
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=894
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=128
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=3022
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=383
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=2284
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=369
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=3329
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=392
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=2582
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=355
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=1286
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=123
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=1065
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=145
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=3
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=2
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=0
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=0
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p36 setting_id=pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=4 M0=0.0019059 +/- 5.45077e-05 A=-0.438606 +/- 0.0346476 B=-0.221123 +/- 0.0414557 chi2=0.92543 ndf=1 prob=0.336053
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=0
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=0
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=4
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=1
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=1690
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=167
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=154
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=150
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=4222
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=441
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=355
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=429
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=4540
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=496
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=393
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=462
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=1992
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=216
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=158
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=189
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=7
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=0
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=0
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p50 setting_id=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=4 M0=0.002539 +/- 1.30081e-05 A=0.115432 +/- 0.0143465 B=0.031791 +/- 0.0221108 chi2=1.562 ndf=1 prob=0.211373
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=0
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=0
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=0
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=6
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=1
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=1
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=1780
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=124
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=552
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=30
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=4225
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=327
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=1368
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=77
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=4393
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=352
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=1438
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=64
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=2061
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=148
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=660
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=45
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=3
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=0
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=2
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=0
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=0
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=0
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p67 setting_id=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=4 M0=0.00143754 +/- 2.32999e-05 A=-0.422538 +/- 0.0193846 B=-0.177039 +/- 0.0264162 chi2=4.36785 ndf=1 prob=0.0366232
+Saved: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0/PNGs/xsec_vs_phipq_overlay.png
+Done (GROUP overlay).
+=== PlotCoinXsec v5 (GROUP overlay) ===
+groupFile: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/grp_LH2_zOv_x0p25_Q23p3_tpq2p0.list
+resultsDir: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0
+settingsRoot: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/settings
+Fit CSV: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0/tables/fit_parameters.csv
+Group entries: 4
+  z0p36  settingId=pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2
+  z0p50  settingId=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2
+  z0p67  settingId=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2
+  z0p90  settingId=pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00324496
+SIM glob (z0p36): ./simc_worksim/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00259622
+SIM glob (z0p50): ./simc_worksim/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00179632
+SIM glob (z0p67): ./simc_worksim/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.000674216
+SIM glob (z0p90): ./simc_worksim/pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+CSV: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0/tables/xsec_phipq_overlay.csv
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=0
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=0
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=5
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=1
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=1073
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=136
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=894
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=128
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=3022
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=383
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=2284
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=369
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=3329
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=392
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=2582
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=355
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=1286
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=123
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=1065
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=145
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=3
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=2
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=8718 entries(fullCuts)=0
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1034 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=6828 entries(fullCuts)=0
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=997 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p36 setting_id=pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=4 M0=0.0019059 +/- 5.45077e-05 A=-0.438606 +/- 0.0346476 B=-0.221123 +/- 0.0414557 chi2=0.92543 ndf=1 prob=0.336053
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=0
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=0
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=4
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=1
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=1690
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=167
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=154
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=150
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=4222
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=441
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=355
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=429
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=4540
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=496
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=393
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=462
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=1992
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=216
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=158
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=189
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=7
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=0
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=12455 entries(fullCuts)=0
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=1320 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=1060 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=1231 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p50 setting_id=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=4 M0=0.002539 +/- 1.30081e-05 A=0.115432 +/- 0.0143465 B=0.031791 +/- 0.0221108 chi2=1.562 ndf=1 prob=0.211373
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=0
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=0
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=0
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=6
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=1
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=1
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=1780
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=124
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=552
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=30
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=4225
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=327
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=1368
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=77
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=4393
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=352
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=1438
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=64
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=2061
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=148
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=660
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=45
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=3
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=0
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=2
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=12479 entries(fullCuts)=0
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=955 entries(fullCuts)=0
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=4026 entries(fullCuts)=0
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=217 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p67 setting_id=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=4 M0=0.00143754 +/- 2.32999e-05 A=-0.422538 +/- 0.0193846 B=-0.177039 +/- 0.0264162 chi2=4.36785 ndf=1 prob=0.0366232
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=2704 entries(fullCuts)=0
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=52 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=760 entries(fullCuts)=0
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=24 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=2704 entries(fullCuts)=1
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=52 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=760 entries(fullCuts)=0
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=24 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=2704 entries(fullCuts)=428
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=52 entries(fullCuts)=7
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=760 entries(fullCuts)=130
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=24 entries(fullCuts)=2
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=2704 entries(fullCuts)=811
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=52 entries(fullCuts)=13
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=760 entries(fullCuts)=210
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=24 entries(fullCuts)=8
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=2704 entries(fullCuts)=802
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=52 entries(fullCuts)=15
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=760 entries(fullCuts)=236
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=24 entries(fullCuts)=9
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=2704 entries(fullCuts)=444
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=52 entries(fullCuts)=10
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=760 entries(fullCuts)=120
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=24 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=2704 entries(fullCuts)=1
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=52 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=760 entries(fullCuts)=0
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=24 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=2704 entries(fullCuts)=0
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=52 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=760 entries(fullCuts)=0
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=24 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p90 setting_id=pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=4 M0=0.000721022 +/- 1.21786e-05 A=-0.296824 +/- 0.00545502 B=-0.19359 +/- 0.0272178 chi2=13.4698 ndf=1 prob=0.000242428
+Saved: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0/PNGs/xsec_vs_phipq_overlay.png
+Done (GROUP overlay).
+=== PlotCoinXsec v5 (GROUP overlay) ===
+groupFile: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/grp_LH2_zOv_x0p25_Q23p3_tpq2p0.list
+resultsDir: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0
+settingsRoot: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/settings
+Fit CSV: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0/tables/fit_parameters.csv
+Group entries: 4
+  z0p36  settingId=pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2
+  z0p50  settingId=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2
+  z0p67  settingId=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2
+  z0p90  settingId=pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2  leafDir=/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00324496
+SIM glob (z0p36): ./simc_worksim/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00259622
+SIM glob (z0p50): ./simc_worksim/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00179632
+SIM glob (z0p67): ./simc_worksim/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/tpq2p0/../../../../../../../settings/pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.000674216
+SIM glob (z0p90): ./simc_worksim/pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+CSV: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0/tables/xsec_phipq_overlay.csv
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=21
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=20
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=4
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=87
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=4
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=63
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=13
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=842
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=109
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=780
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=114
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=1732
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=216
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=1581
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=234
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=1718
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=181
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=1540
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=243
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=826
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=92
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=813
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=103
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=85
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=3
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=74
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=12
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=13
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=18
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=2
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p36 setting_id=pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=8 M0=0.00203722 +/- 0.000137659 A=-0.42587 +/- 0.0966445 B=-0.382559 +/- 0.0446743 chi2=19.4128 ndf=5 prob=0.00160979
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=26
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=3
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=3
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=101
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=11
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=15
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=12
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=759
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=65
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=78
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=79
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=1349
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=155
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=133
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=148
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=1291
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=142
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=137
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=162
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=704
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=70
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=73
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=67
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=98
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=11
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=11
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=5
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=38
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=2
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=3
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p50 setting_id=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=4 M0=0.00221914 +/- 7.21913e-05 A=-0.300482 +/- 0.00867062 B=-0.25956 +/- 0.0416853 chi2=4.62757 ndf=1 prob=0.031462
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=36
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=0
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=7
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=96
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=4
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=34
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=1
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=408
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=25
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=137
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=4
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=788
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=46
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=275
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=15
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=808
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=66
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=234
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=11
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=404
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=29
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=149
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=11
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=87
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=2
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=23
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=16
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=3
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=10
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=2
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p67 setting_id=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=4 M0=0.00266622 +/- 0.000168559 A=0.180285 +/- 0.133255 B=-0.103546 +/- 0.141021 chi2=0.935742 ndf=1 prob=0.333375
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=5
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=0
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=18
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=2
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=2
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=55
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=1
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=19
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=1
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=101
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=2
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=32
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=104
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=2
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=22
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=1
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=42
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=2
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=20
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=21
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=5
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=7
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=0
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p90 setting_id=pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=4 M0=0.00117718 +/- 2.26832e-05 A=-0.138988 +/- 0.0266788 B=-0.153119 +/- 0.0836503 chi2=1.44577 ndf=1 prob=0.229207
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=6
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=0
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=32
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=5
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=36
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=4
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=1052
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=141
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=909
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=160
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=2710
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=350
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=2049
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=336
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=3096
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=383
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=2527
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=346
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=1437
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=143
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=1241
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=193
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=45
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=2
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=39
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=5
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=2
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=1
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=0
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p36 setting_id=pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=1 N=6 M0=0.00205083 +/- 3.41602e-05 A=-0.466142 +/- 0.0502412 B=-0.334769 +/- 0.0641982 chi2=5.88683 ndf=3 prob=0.117248
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=6
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=1
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=78
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=5
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=8
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=12
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=1882
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=186
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=180
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=210
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=3443
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=371
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=330
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=378
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=3704
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=407
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=367
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=368
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=2138
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=232
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=206
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=219
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=59
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=8
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=2
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=5
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=2
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p50 setting_id=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=1 N=4 M0=0.00214532 +/- 8.61719e+08 A=-0.192682 +/- 1.57832 B=-0.397966 +/- 1.47745 chi2=136.002 ndf=1 prob=1.9931e-31
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=10
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=1
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=0
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=90
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=3
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=32
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=3
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=1479
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=101
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=508
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=34
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=2488
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=197
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=843
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=48
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=2475
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=197
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=854
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=46
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=1514
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=110
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=501
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=24
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=88
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=7
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=17
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=1
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=9
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=0
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=4
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p67 setting_id=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=1 N=4 M0=0.00160752 +/- 5.30102e-05 A=-0.416833 +/- 0.08971 B=-0.864167 +/- 1.91815 chi2=393.334 ndf=1 prob=1.55616e-87
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=2
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=2
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=23
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=2
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=237
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=4
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=67
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=1
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=348
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=7
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=102
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=6
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=335
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=11
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=116
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=3
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=222
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=2
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=58
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=4
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=18
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=4
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=0
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=1
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p90 setting_id=pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=1 N=4 M0=0.000743606 +/- 6.16218e+08 A=-0.373012 +/- 1.47872 B=-0.424093 +/- 1.4785 chi2=10.4456 ndf=1 prob=0.00122939
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=1
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=0
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=14
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=1
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=6
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=1
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=59
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=12
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=37
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=8
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=115
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=18
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=84
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=17
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=162
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=21
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=131
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=22
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=70
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=6
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=54
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=3
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=2
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=3
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=1
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=1
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=0
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p36 setting_id=pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=2 N=4 M0=0.00145145 +/- 0.000163199 A=-0.873049 +/- 0.203047 B=-0.864091 +/- 0.16795 chi2=17.9363 ndf=1 prob=2.28418e-05
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=2
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=1
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=20
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=3
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=1
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=8
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=500
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=64
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=55
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=74
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=1470
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=149
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=142
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=135
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=1826
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=211
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=176
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=214
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=825
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=103
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=56
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=85
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=24
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=3
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=1
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=2
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=1
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p50 setting_id=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=2 N=4 M0=0.00531393 +/- 0.000352626 A=0.792753 +/- 0.0584603 B=0.294101 +/- 0.024054 chi2=19.4741 ndf=1 prob=1.01971e-05
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=4
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=0
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=1
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=41
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=2
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=11
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=1
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=1235
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=111
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=433
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=23
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=2308
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=193
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=852
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=57
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=2606
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=202
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=932
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=36
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=1456
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=117
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=527
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=41
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=37
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=1
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=14
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=1
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=4
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=1
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=1
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p67 setting_id=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=2 N=4 M0=0.00175488 +/- 4.42665e-05 A=-0.156771 +/- 0.0216167 B=-0.13753 +/- 0.0299887 chi2=7.52575 ndf=1 prob=0.00608233
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=5
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=0
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=15
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=1
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=6
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=290
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=10
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=102
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=1
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=434
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=10
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=134
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=4
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=422
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=10
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=127
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=6
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=303
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=2
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=95
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=1
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=12
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=2
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=2
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=1
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p90 setting_id=pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=2 N=4 M0=0.000543757 +/- 6.98642e-06 A=-0.851822 +/- 0.00757938 B=-0.463925 +/- 0.0459181 chi2=3.09815 ndf=1 prob=0.0783812
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=0
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=0
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=1
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=3
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=3
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=6
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=1
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=10
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=9
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=1
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=4
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=13
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=3
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=8
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=2
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=5
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=2
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=0
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=0
+SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=0
+SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=0
+SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=0
+SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=0
+Skip fit (group): curve=z0p36 pt_bin=3 has N=0
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=2
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=0
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=6
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=3
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=0
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=1
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=42
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=7
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=1
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=2
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=65
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=3
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=7
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=6
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=77
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=10
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=10
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=13
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=31
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=5
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=7
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=5
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=4
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=1
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=1
+SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=0
+SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=0
+SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=1
+SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=0
+Skip fit (group): curve=z0p50 pt_bin=3 has N=3
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=3
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=0
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=0
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=0
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=15
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=0
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=7
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=1
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=234
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=18
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=79
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=6
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=681
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=37
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=238
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=11
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=844
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=77
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=313
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=23
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=410
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=31
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=134
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=3
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=8
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=1
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=4
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=1
+SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=1
+SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=1
+SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=4
+SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p67 setting_id=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=3 N=4 M0=0.00463401 +/- 0.000319611 A=0.809679 +/- 0.0471121 B=0.284122 +/- 0.0133753 chi2=4.03896 ndf=1 prob=0.0444612
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=1
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=0
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=8
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=4
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=196
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=5
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=61
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=336
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=6
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=86
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=2
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=321
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=4
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=104
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=5
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=210
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=6
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=70
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=10
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=2
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=1
+SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
+SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=1
+SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p90 setting_id=pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=3 N=4 M0=0.000713326 +/- 1.6695e-05 A=-0.350937 +/- 0.00652249 B=-0.259459 +/- 0.0420272 chi2=28.2128 ndf=1 prob=1.08682e-07
+Saved: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0/PNGs/xsec_vs_phipq_overlay.png
+Done (GROUP overlay).
