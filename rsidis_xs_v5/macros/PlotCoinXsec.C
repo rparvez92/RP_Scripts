@@ -464,7 +464,7 @@ static std::vector<double> PhiEdgesN(int n) {
 struct Binning {
   std::vector<double> ptEdges {0.0, 0.10, 0.20, 0.30, 0.40};
   std::vector<double> zEdges  {0.30, 0.40, 0.50, 0.60, 0.70};
-  std::vector<double> phiEdges = PhiEdgesN(17);
+  std::vector<double> phiEdges = PhiEdgesN(16);
 };
 
 /*
