@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <limits>
 #include <sstream>
 #include <vector>
 #include <string>
@@ -109,6 +110,28 @@ static std::string StripExtension(const std::string& path) {
   if (pos == std::string::npos) return base;
   return base.substr(0, pos);
 }
+
+// Ensure a CSV file exists and has a header line.
+// If the file does not exist (or is empty), write the header.
+static void EnsureCSVHeader(const std::string& path, const std::string& header) {
+  bool need = false;
+  if (gSystem->AccessPathName(path.c_str())) {
+    need = true;
+  } else {
+    std::ifstream in(path);
+    if (!in.good()) {
+      need = true;
+    } else {
+      in.seekg(0, std::ios::end);
+      if (in.tellg() == 0) need = true;
+    }
+  }
+  if (need) {
+    std::ofstream out(path);
+    out << header << "\n";
+  }
+}
+
 
 // Parse encoded number tokens like "0p25" -> 0.25, "neg1p531" -> -1.531
 static bool ParseEncodedNumber(const std::string& enc, double& out) {
@@ -442,7 +465,7 @@ static std::vector<double> PhiEdgesN(int n) {
 struct Binning {
   std::vector<double> ptEdges {0.0, 0.10, 0.20, 0.30, 0.40};
   std::vector<double> zEdges  {0.30, 0.40, 0.50, 0.60, 0.70};
-  std::vector<double> phiEdges = PhiEdgesN(8);
+  std::vector<double> phiEdges = PhiEdgesN(16);
 };
 
 /*
@@ -484,7 +507,8 @@ static void PlotCoinXsec_Single(const char* manifestPath,
   MkdirP(resultsDir + "/PNGs");
   MkdirP(resultsDir + "/tables");
 
-  std::ofstream log(resultsDir + "/log.txt", std::ios::app);
+  //std::ofstream log(resultsDir + "/log.txt", std::ios::app);
+  std::ofstream log(resultsDir + "/log.txt", std::ios::out);
   log << "=== PlotCoinXsec v4 (phipq panels) ===\n";
   log << "manifest: " << manifest << "\n";
   log << "leafDir: " << leafDir << "\n";
@@ -513,22 +537,23 @@ static void PlotCoinXsec_Single(const char* manifestPath,
   // DATA base cuts (underscore), NO beta cuts
   //const TCut dataCuts =
     //"(H_gtr_dp>-8) && (H_gtr_dp<8) && "
-    //"(H_gtr_th>-0.060) && (H_gtr_th<0.060) && "
-    //"(H_gtr_ph>-0.022) && (H_gtr_ph<0.022) && "
     //"(H_cal_etottracknorm>0.7) && "
     //"(H_cer_npeSum>2.0) && "
     //"(P_gtr_dp>-10) && (P_gtr_dp<22) && "
-    //"(P_gtr_th>-0.045) && (P_gtr_th<0.045) && "
-    //"(P_gtr_ph>-0.024) && (P_gtr_ph<0.024) && "
-    //"(P_cal_etottracknorm<0.8)";
+    //"(P_cal_etottracknorm<0.8) && "
+    //"(((P_gtr_p<2.7) && (P_aero_npeSum>2)) || "
+    //" ((P_gtr_p>=2.7) && (P_hgcer_npeSum>1) && (P_aero_npeSum>2)))";
 
   const TCut dataCuts =
     "(H_gtr_dp>-8) && (H_gtr_dp<8) && "
+    "(H_gtr_th>-0.060) && (H_gtr_th<0.060) && "
+    "(H_gtr_ph>-0.022) && (H_gtr_ph<0.022) && "
     "(H_cal_etottracknorm>0.7) && "
     "(H_cer_npeSum>2.0) && "
     "(P_gtr_dp>-10) && (P_gtr_dp<22) && "
+    "(P_gtr_th>-0.045) && (P_gtr_th<0.045) && "
+    "(P_gtr_ph>-0.024) && (P_gtr_ph<0.024) && "
     "(P_cal_etottracknorm<0.8)";
-
 
   // DATA vars (skimmed)
   const std::string data_pt  = "pt";
@@ -551,7 +576,9 @@ static void PlotCoinXsec_Single(const char* manifestPath,
   // SIM chain
   TChain sim("h10");
   {
-    std::string simGlob = "./simc_worksim/" + settingId + "/*.root";
+    //std::string simGlob = "./simc_worksim/" + settingId + "/*.root";
+    const std::string projectRoot = NormalizeSlashes(Dirname(NormalizeSlashes(settingsRoot)));
+    std::string simGlob = projectRoot + "/simc_worksim/" + settingId + "/*.root";
     int nAdded = sim.Add(simGlob.c_str());
     log << "SIM glob: " << simGlob << " added=" << nAdded << "\n";
     if (sim.GetEntries() <= 0) {
@@ -570,19 +597,13 @@ static void PlotCoinXsec_Single(const char* manifestPath,
   }
 
   // SIM cuts
-  //const TCut simCutsBase = 
-    //"(hsdelta>-8.0) && (hsdelta<8.0) && "
-    //"(hsxptar>-0.060) && (hsxptar<0.060) && "
-    //"(hsyptar>-0.022) && (hsyptar<0.022) && "
-    //"(ssdelta>-10.0) && (ssdelta<22.0) && "
-    //"(ssxptar>-0.045) && (ssxptar<0.045) && "
-    //"(ssyptar>-0.024) && (ssyptar<0.024)";
-
   const TCut simCutsBase = 
     "(hsdelta>-8.0) && (hsdelta<8.0) && "
-    "(ssdelta>-10.0) && (ssdelta<22.0)";
-
-
+    "(hsxptar>-0.060) && (hsxptar<0.060) && "
+    "(hsyptar>-0.022) && (hsyptar<0.022) && "
+    "(ssdelta>-10.0) && (ssdelta<22.0) && "
+    "(ssxptar>-0.045) && (ssxptar<0.045) && "
+    "(ssyptar>-0.024) && (ssyptar<0.024)";
 
   const double simNormalizationFactor = 0.842205e11;
   const double simNtried = 53411876.0;                // Ntried from .hist
@@ -611,6 +632,19 @@ static void PlotCoinXsec_Single(const char* manifestPath,
 
   // CSV
   std::ofstream csv;
+
+
+  std::ofstream fitcsv;
+  if (saveTables) {
+    const std::string fitPath = resultsDir + "/tables/fit_parameters.csv";
+    const std::string fitHeader =
+      "mode,group_id,curve_label,setting_id,pt_bin,z_bin,pt_lo,pt_hi,pt_center,z_lo,z_hi,z_center,n_points,"
+      "M0,M0_err,A,A_err,B,B_err,chi2,ndf,prob";
+    // Overwrite each run so re-running the macro does NOT duplicate rows
+    fitcsv.open(fitPath, std::ios::out);
+    fitcsv << fitHeader << std::endl;
+    log << "Fit CSV: " << fitPath << std::endl;
+  }
   if (saveTables) {
     std::string csvPath = resultsDir + "/tables/xsec_phipq_pt_z.csv";
     csv.open(csvPath);
@@ -842,7 +876,7 @@ static void PlotCoinXsec_Single(const char* manifestPath,
         // --- IMPORTANT CHANGE: only keep non-starved points for plotting/fitting ---
         if (!mc_starved) {
           x.push_back(phiCtr);
-          ex.push_back(0.5 * (phiHi - phiLo));
+          ex.push_back(0.0);
           y.push_back(xsec);
           ey.push_back(xsecErr);
 
@@ -932,14 +966,36 @@ static void PlotCoinXsec_Single(const char* manifestPath,
                          0.0, 2.0*TMath::Pi());
 
         // start guesses (stable defaults)
-        double ymean = 0.0;
-        for (int ip = 0; ip < gp.g->GetN(); ip++) {
-          double xx, yy;
-          gp.g->GetPoint(ip, xx, yy);
-          ymean += yy;
-        }
-        ymean /= gp.g->GetN();
+// Determine measured phi range from points (acceptance-aware fit)
+double xmin =  std::numeric_limits<double>::infinity();
+double xmax = -std::numeric_limits<double>::infinity();
 
+double ymean = 0.0;
+for (int ip = 0; ip < gp.g->GetN(); ip++) {
+  double xx, yy;
+  gp.g->GetPoint(ip, xx, yy);
+  ymean += yy;
+  xmin = std::min(xmin, xx);
+  xmax = std::max(xmax, xx);
+}
+ymean /= gp.g->GetN();
+// Acceptance/coverage check: extracting cos(phi), cos(2phi) moments requires
+        // enough phi* coverage. If coverage is too small, the fit becomes ill-conditioned.
+        const double phiSpan = xmax - xmin;
+        const double minPhiSpan = 2.0; // rad; require some phi coverage but allow partial acceptance // require ~70% of full 2pi
+        const int    minFitPoints = 6;
+        const bool   doFit = (gp.g->GetN() >= minFitPoints) && (phiSpan >= minPhiSpan);
+
+        // Fit (and draw) only over the measured phi range to avoid wild extrapolation
+        f->SetRange(xmin, xmax);
+
+        const double NaN = std::numeric_limits<double>::quiet_NaN();
+        double sigma0 = NaN, sigma0_err = NaN;
+        double A = NaN, A_err = NaN;
+        double B = NaN, B_err = NaN;
+        double chi2 = NaN, prob = NaN;
+        int    ndf = 0;
+        int    fitStatus = 999;
 
         // Set Parameter limit
         f->SetParLimits(0, 0.0, 1e9);   // sigma0 positive
@@ -954,8 +1010,23 @@ static void PlotCoinXsec_Single(const char* manifestPath,
         // Fit
         //gp.g->Fit(f, "RQ0");
         if (gp.g->GetN() >= 4) {
-          gp.g->Fit(f, "RQ0");
+          if (doFit) {
+          fitStatus = gp.g->Fit(f, "RQ0");
+
+          sigma0     = f->GetParameter(0);
+          sigma0_err = f->GetParError(0);
+          A          = f->GetParameter(1);
+          A_err      = f->GetParError(1);
+          B          = f->GetParameter(2);
+          B_err      = f->GetParError(2);
+          chi2       = f->GetChisquare();
+          ndf        = f->GetNDF();
+          prob       = f->GetProb();
+
           f->Draw("L SAME");
+        } else {
+          log << "  [fit-skip] ptBin=" << gp.ptBin << " zBin=" << gp.zBin << " N=" << gp.g->GetN() << " phiSpan=" << phiSpan << " -> skipping Fourier fit (A,B)\n";
+        }
         } else {
           std::cout << "Skip fit: pt[" << gp.ptBin << "] z[" << gp.zBin
                     << "] has only N=" << gp.g->GetN() << " points\n";
@@ -964,8 +1035,42 @@ static void PlotCoinXsec_Single(const char* manifestPath,
         fitFuncs.push_back(f);
         std::cout << Form("pt[%d] z[%d]: sigma0=%.3g A=%.3g B=%.3g chi2/ndf=%.2f\n",
                           gp.ptBin, gp.zBin,
-                          f->GetParameter(0), f->GetParameter(1), f->GetParameter(2),
-                          f->GetChisquare() / std::max(1.0, (double)f->GetNDF()));
+                          sigma0, A, B,
+                          (ndf>0 ? chi2 / std::max(1.0, (double)ndf) : NaN));
+
+        // Log + persist fit parameters
+        double ptLoF = binning.ptEdges[gp.ptBin];
+        double ptHiF = binning.ptEdges[gp.ptBin + 1];
+        double ptCF  = Center(ptLoF, ptHiF);
+        double zLoF  = binning.zEdges[gp.zBin];
+        double zHiF  = binning.zEdges[gp.zBin + 1];
+        double zCF   = Center(zLoF, zHiF);
+
+        log << "FIT single setting_id=" << settingId
+            << " pt_bin=" << gp.ptBin << " z_bin=" << gp.zBin
+            << " N=" << gp.g->GetN()
+            << " M0=" << sigma0 << " +/- " << sigma0_err
+            << " A="  << A << " +/- " << A_err
+            << " B="  << B << " +/- " << B_err
+            << " chi2=" << f->GetChisquare() << " ndf=" << f->GetNDF()
+            << " prob=" << f->GetProb() << "\n";
+
+        if (saveTables && fitcsv.is_open()) {
+          fitcsv
+            << "single" << ","            // mode
+            << "" << ","                  // group_id
+            << Form("zbin%d", gp.zBin) << "," // curve_label
+            << settingId << ","
+            << gp.ptBin << "," << gp.zBin << ","
+            << ptLoF << "," << ptHiF << "," << ptCF << ","
+            << zLoF  << "," << zHiF  << "," << zCF << ","
+            << gp.g->GetN() << ","
+            << sigma0 << "," << sigma0_err << ","
+            << A << "," << A_err << ","
+            << B << "," << B_err << ","
+            << chi2 << "," << ndf << "," << prob
+            << "\n";
+        }
       }
 
 
@@ -1010,11 +1115,29 @@ static void PlotCoinXsec_Group(const char* groupPath,
   MkdirP(resultsDir + "/PNGs");
   MkdirP(resultsDir + "/tables");
 
-  std::ofstream log(resultsDir + "/log.txt", std::ios::app);
+  //std::ofstream log(resultsDir + "/log.txt", std::ios::app);
+  std::ofstream log(resultsDir + "/log.txt", std::ios::out);
   log << "=== PlotCoinXsec v5 (GROUP overlay) ===\n";
   log << "groupFile: " << groupFile << "\n";
   log << "resultsDir: " << resultsDir << "\n";
   log << "settingsRoot: " << settingsRoot << "\n";
+
+
+  // Keep group-mode fit functions alive until canvas is written
+  std::vector<TF1*> fitFuncs;
+  fitFuncs.reserve(200);
+
+  std::ofstream fitcsv;
+  if (saveTables) {
+    const std::string fitPath = resultsDir + "/tables/fit_parameters.csv";
+    const std::string fitHeader =
+      "mode,group_id,curve_label,setting_id,pt_bin,z_bin,pt_lo,pt_hi,pt_center,z_lo,z_hi,z_center,n_points,"
+      "M0,M0_err,A,A_err,B,B_err,chi2,ndf,prob";
+    // Overwrite each run so re-running the macro does NOT duplicate rows
+    fitcsv.open(fitPath, std::ios::out);
+    fitcsv << fitHeader << std::endl;
+    log << "Fit CSV: " << fitPath << std::endl;
+  }
 
   // Read group entries
   auto entries = ReadGroupListFile(groupFile, settingsRoot, log);
@@ -1035,7 +1158,8 @@ static void PlotCoinXsec_Group(const char* groupPath,
   // Binning defaults:
   // - In group overlay mode, start with ONE wide pT bin and ONE wide z bin (z dimension comes from curves)
   Binning binning;
-  const bool overlayWidePt = true;   // set false later when you want 4 pads (0-0.1-0.2-0.3-0.4)
+  //const bool overlayWidePt = true;   // set false later when you want 4 pads (0-0.1-0.2-0.3-0.4)
+  const bool overlayWidePt = false;   // set false later when you want 4 pads (0-0.1-0.2-0.3-0.4)
   if (overlayWidePt) binning.ptEdges = {0.0, 0.40};
   binning.zEdges = {0.0, 1.0};       // integrate over z (curves are different z SETTINGS)
 
@@ -1046,13 +1170,9 @@ static void PlotCoinXsec_Group(const char* groupPath,
   // DATA base cuts (same as v4)
   const TCut dataCuts =
     "(H_gtr_dp>-8) && (H_gtr_dp<8) && "
-    "(H_gtr_th>-0.060) && (H_gtr_th<0.060) && "
-    "(H_gtr_ph>-0.022) && (H_gtr_ph<0.022) && "
     "(H_cal_etottracknorm>0.7) && "
     "(H_cer_npeSum>2.0) && "
     "(P_gtr_dp>-10) && (P_gtr_dp<22) && "
-    "(P_gtr_th>-0.045) && (P_gtr_th<0.045) && "
-    "(P_gtr_ph>-0.024) && (P_gtr_ph<0.024) && "
     "(P_cal_etottracknorm<0.8)";
 
   // DATA vars (skimmed)
@@ -1073,11 +1193,7 @@ static void PlotCoinXsec_Group(const char* groupPath,
 
   const TCut simCutsBase =
     "(hsdelta>-8.0) && (hsdelta<8.0) && "
-    "(hsxptar>-0.060) && (hsxptar<0.060) && "
-    "(hsyptar>-0.022) && (hsyptar<0.022) && "
-    "(ssdelta>-10.0) && (ssdelta<22.0) && "
-    "(ssxptar>-0.045) && (ssxptar<0.045) && "
-    "(ssyptar>-0.024) && (ssyptar<0.024)";
+    "(ssdelta>-10.0) && (ssdelta<22.0)";
 
   // SIM normalization (same as v4)
   const double simNormalizationFactor = 0.842205e11;
@@ -1146,7 +1262,9 @@ static void PlotCoinXsec_Group(const char* groupPath,
 
     // SIM chain
     c.sim.reset(new TChain("h10"));
-    std::string simGlob = "./simc_worksim/" + c.settingId + "/*.root";
+    //std::string simGlob = "./simc_worksim/" + c.settingId + "/*.root";
+    const std::string projectRoot = NormalizeSlashes(Dirname(NormalizeSlashes(settingsRoot)));
+    std::string simGlob = projectRoot + "/simc_worksim/" + c.settingId + "/*.root";
     int nAdded = c.sim->Add(simGlob.c_str());
     log << "SIM glob (" << c.label << "): " << simGlob << " added=" << nAdded << "\n";
     if (c.sim->GetEntries() <= 0) {
@@ -1375,7 +1493,7 @@ static void PlotCoinXsec_Group(const char* groupPath,
         // Keep only valid points for plotting/fitting and for y-axis autoscale
         if (valid) {
           x.push_back(phiCtr);
-          ex.push_back(0.5*(phiHi-phiLo));
+          ex.push_back(0.0);
           y.push_back(xsec);
           ey.push_back(xsecErr);
           yMaxByPt[iPt] = std::max(yMaxByPt[iPt], xsec + xsecErr);
@@ -1409,8 +1527,109 @@ static void PlotCoinXsec_Group(const char* groupPath,
       g->SetLineColor(col);
       g->Draw("E1P SAME");
 
-      // legend label
-      TString leglab = Form("%s  #LT x #GT=%.3f  #LTQ^{2}#GT=%.2f", cv.label.c_str(), cv.meanXB, cv.meanQ2);
+
+      // Fit: sigma(phi) = M0 * (1 + A cos(phi) + B cos(2phi))
+      // Acceptance-aware: only fit if we have enough phi coverage, and only draw within measured range.
+      if (g->GetN() >= 4) {
+        TF1* f = new TF1(Form("f_grp_pt%d_c%d", iPt, ic),
+                         "[0]*(1 + [1]*cos(x) + [2]*cos(2*x))",
+                         0.0, 2.0*TMath::Pi());
+
+        // initial guesses + measured phi range
+        double xmin =  std::numeric_limits<double>::infinity();
+        double xmax = -std::numeric_limits<double>::infinity();
+        double ymean = 0.0;
+        for (int ip = 0; ip < g->GetN(); ip++) {
+          double xx, yy;
+          g->GetPoint(ip, xx, yy);
+          ymean += yy;
+          xmin = std::min(xmin, xx);
+          xmax = std::max(xmax, xx);
+        }
+        ymean /= g->GetN();
+
+        const double phiSpan = xmax - xmin;
+        const double minPhiSpan = 2.0; // rad; require some phi coverage but allow partial acceptance // require ~70% of full 2pi
+        const int    minFitPoints = 6;
+        const bool   doFit = (g->GetN() >= minFitPoints) && (phiSpan >= minPhiSpan);
+
+        // Only draw/fit in measured range to avoid wild extrapolation
+        f->SetRange(xmin, xmax);
+
+        const double NaN = std::numeric_limits<double>::quiet_NaN();
+        double sigma0 = NaN, sigma0_err = NaN;
+        double A = NaN, A_err = NaN;
+        double B = NaN, B_err = NaN;
+        double chi2 = NaN, prob = NaN;
+        int    ndf = 0;
+        int    fitStatus = 999;
+
+        f->SetParLimits(0, 0.0, 1e9);
+        f->SetParLimits(1, -1.0, 1.0);
+        f->SetParLimits(2, -1.0, 1.0);
+        f->SetParameters(ymean, 0.0, 0.0);
+        f->SetParNames("M0", "Acos", "Bcos2");
+        f->SetLineColor(col);
+        f->SetLineWidth(2);
+
+        if (doFit) {
+          fitStatus = g->Fit(f, "RQ0");
+          sigma0     = f->GetParameter(0);
+          sigma0_err = f->GetParError(0);
+          A          = f->GetParameter(1);
+          A_err      = f->GetParError(1);
+          B          = f->GetParameter(2);
+          B_err      = f->GetParError(2);
+          chi2       = f->GetChisquare();
+          ndf        = f->GetNDF();
+          prob       = f->GetProb();
+          f->Draw("L SAME");
+        } else {
+          log << "  [fit-skip] group_id=" << groupId
+              << " curve=" << cv.label
+              << " pt_bin=" << iPt
+              << " N=" << g->GetN()
+              << " phiSpan=" << phiSpan
+              << " -> skipping Fourier fit (A,B)\n";
+        }
+
+        fitFuncs.push_back(f);
+
+        log << "FIT group group_id=" << groupId
+            << " curve=" << cv.label
+            << " setting_id=" << cv.settingId
+            << " pt_bin=" << iPt
+            << " N=" << g->GetN()
+            << " fitStatus=" << fitStatus
+            << " M0=" << sigma0 << " +/- " << sigma0_err
+            << " A="  << A << " +/- " << A_err
+            << " B="  << B << " +/- " << B_err
+            << " chi2=" << chi2 << " ndf=" << ndf
+            << " prob=" << prob << "";
+
+        if (saveTables && fitcsv.is_open()) {
+          fitcsv
+            << "group" << ","
+            << groupId << ","
+            << cv.label << ","
+            << cv.settingId << ","
+            << iPt << "," << -1 << ","
+            << ptLo << "," << ptHi << "," << ptCtr << ","
+            << cv.nominalZ << "," << cv.nominalZ << "," << cv.nominalZ << ","
+            << g->GetN() << ","
+            << sigma0 << "," << sigma0_err << ","
+            << A << "," << A_err << ","
+            << B << "," << B_err << ","
+            << chi2 << "," << ndf << "," << prob
+            << "";
+        }
+      } else {
+        log << "Skip fit (group): curve=" << cv.label << " pt_bin=" << iPt << " has N=" << g->GetN() << "";
+      }
+// legend label
+      //TString leglab = Form("%s  #LT x #GT=%.3f  #LTQ^{2}#GT=%.2f", cv.label.c_str(), cv.meanXB, cv.meanQ2);
+      TString leglab = Form("%s", cv.label.c_str());
+
       leg->AddEntry(g, leglab, "pe");
     } // curve loop
 

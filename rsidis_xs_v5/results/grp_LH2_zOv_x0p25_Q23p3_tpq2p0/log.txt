@@ -97,7 +97,7 @@ SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fu
 SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=0
 SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=10
 SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=1
-FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p36 setting_id=pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=10 M0=0.00207886 +/- 4.66954e-05 A=-0.517573 +/- 0.0722958 B=-0.348275 +/- 0.0950136 chi2=13.0719 ndf=7 prob=0.0703753
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p36 setting_id=pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=10 phiSpan=3.53429 tier=2 fitStatus=3 M0=0.00162704 +/- 4.3221e-05 A=-0.918703 +/- 0.0622522 B=-0.485157 +/- 0.0775153 chi2=20.7607 ndf=7 prob=0.00414095
 SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=10
 SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=0
 SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=1
@@ -162,7 +162,7 @@ SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fu
 SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=0
 SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=2
 SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=0
-FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p50 setting_id=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=8 M0=0.00228244 +/- 0.000110817 A=-0.239753 +/- 0.0447119 B=-0.260315 +/- 0.0527481 chi2=13.7189 ndf=5 prob=0.0174974
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p50 setting_id=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=8 phiSpan=2.74889 tier=1 fitStatus=3 M0=0.00345115 +/- 0.000354128 A=0.352024 +/- 0.0849415 B=-999 +/- -999 chi2=10.0632 ndf=6 prob=0.122015
 SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=17
 SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=0
 SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=2
@@ -227,7 +227,7 @@ SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fu
 SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=0
 SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=1
 SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=1
-FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p67 setting_id=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=8 M0=0.00402787 +/- 7.78835e+08 A=0.673523 +/- 1.4658 B=0.185578 +/- 1.59113 chi2=11.1198 ndf=5 prob=0.0490553
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p67 setting_id=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=8 phiSpan=2.74889 tier=1 fitStatus=3 M0=0.00257293 +/- 0.000282087 A=0.20642 +/- 0.0745504 B=-999 +/- -999 chi2=8.41012 ndf=6 prob=0.209569
 SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=3
 SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
 SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=0
@@ -292,7 +292,7 @@ SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(ful
 SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
 SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=0
 SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
-FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p90 setting_id=pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=6 M0=0.000977502 +/- 2.81718e-05 A=-0.991093 +/- 0.125415 B=-0.837003 +/- 0.430695 chi2=14.5793 ndf=3 prob=0.00221388
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p90 setting_id=pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=0 N=6 phiSpan=1.9635 tier=1 fitStatus=3 M0=0.00158413 +/- 0.000349383 A=0.359706 +/- 0.14771 B=-999 +/- -999 chi2=9.81569 ndf=4 prob=0.0436495
 SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=2
 SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=0
 SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=0
@@ -357,7 +357,7 @@ SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fu
 SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=0
 SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=0
 SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=0
-FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p36 setting_id=pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=1 N=10 M0=0.00225509 +/- 3.44801e-05 A=-0.286201 +/- 0.0438503 B=-0.256838 +/- 0.0594802 chi2=11.6862 ndf=7 prob=0.111363
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p36 setting_id=pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=1 N=10 phiSpan=3.53429 tier=2 fitStatus=3 M0=0.000409479 +/- 6.17726e+08 A=0.477096 +/- 1.2601 B=-0.999543 +/- 1.24825 chi2=2549.33 ndf=7 prob=0
 SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=2
 SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=0
 SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=0
@@ -422,7 +422,7 @@ SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fu
 SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=0
 SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=0
 SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=0
-FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p50 setting_id=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=1 N=8 M0=0.00180657 +/- 1.63787e-05 A=-0.569562 +/- 0.0374752 B=-0.311752 +/- 0.0539158 chi2=24.4936 ndf=5 prob=0.000174472
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p50 setting_id=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=1 N=8 phiSpan=2.74889 tier=1 fitStatus=3 M0=0.00294817 +/- 0.000167804 A=0.24855 +/- 0.053386 B=-999 +/- -999 chi2=15.5854 ndf=6 prob=0.0161609
 SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=7
 SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=1
 SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=0
@@ -487,7 +487,7 @@ SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fu
 SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=0
 SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=1
 SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=0
-FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p67 setting_id=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=1 N=8 M0=0.00143161 +/- 1.15685e-05 A=-0.570867 +/- 0.0451505 B=-0.340555 +/- 0.0669364 chi2=10.5874 ndf=5 prob=0.0602022
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p67 setting_id=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=1 N=8 phiSpan=2.74889 tier=1 fitStatus=3 M0=0.0022776 +/- 0.000139649 A=0.270819 +/- 0.0550852 B=-999 +/- -999 chi2=19.9717 ndf=6 prob=0.00280165
 SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=0
 SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
 SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=0
@@ -552,7 +552,7 @@ SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(ful
 SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
 SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=0
 SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
-FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p90 setting_id=pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=1 N=8 M0=0.000768668 +/- 2.69097e-05 A=-0.375563 +/- 0.0117708 B=-0.306414 +/- 0.0315617 chi2=19.1725 ndf=5 prob=0.00178494
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p90 setting_id=pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=1 N=8 phiSpan=2.74889 tier=1 fitStatus=3 M0=0.000463445 +/- 1.40596e-05 A=-0.991805 +/- 0.0892579 B=-999 +/- -999 chi2=94.4328 ndf=6 prob=3.62853e-18
 SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=1
 SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=0
 SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=0
@@ -617,7 +617,7 @@ SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fu
 SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=0
 SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=0
 SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=0
-FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p36 setting_id=pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=2 N=5 M0=0.00733027 +/- 0.000908707 A=0.999782 +/- 0.0305336 B=0.209869 +/- 0.0397204 chi2=7.27193 ndf=2 prob=0.0263585
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p36 setting_id=pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=2 N=5 phiSpan=1.5708 tier=1 fitStatus=3 M0=0.00422491 +/- 0.00119683 A=0.64625 +/- 0.127519 B=-999 +/- -999 chi2=5.29638 ndf=3 prob=0.151337
 SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=0
 SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=0
 SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=0
@@ -682,7 +682,7 @@ SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fu
 SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=0
 SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=0
 SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=0
-FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p50 setting_id=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=2 N=8 M0=0.00158307 +/- 5.13977e-05 A=-0.755794 +/- 0.0345125 B=-0.217067 +/- 0.0371694 chi2=37.4913 ndf=5 prob=4.77371e-07
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p50 setting_id=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=2 N=8 phiSpan=2.74889 tier=1 fitStatus=3 M0=0.00973373 +/- 6.18477e+08 A=0.967357 +/- 1.11572 B=-999 +/- -999 chi2=1317.23 ndf=6 prob=2.01555e-281
 SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=3
 SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=0
 SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=0
@@ -747,7 +747,7 @@ SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fu
 SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=1
 SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=1
 SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=0
-FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p67 setting_id=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=2 N=8 M0=0.00375501 +/- 0.00021792 A=0.748235 +/- 0.0496987 B=0.262651 +/- 0.0162308 chi2=15.3467 ndf=5 prob=0.00897924
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p67 setting_id=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=2 N=8 phiSpan=2.74889 tier=1 fitStatus=3 M0=0.00225309 +/- 0.000559092 A=0.209876 +/- 0.227755 B=-999 +/- -999 chi2=13.1976 ndf=6 prob=0.0400038
 SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=3
 SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
 SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=0
@@ -812,7 +812,7 @@ SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(ful
 SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
 SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=1
 SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
-FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p90 setting_id=pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=2 N=8 M0=0.000689874 +/- 1.49958e-05 A=-0.370109 +/- 0.0657308 B=-0.297603 +/- 0.0574513 chi2=17.8399 ndf=5 prob=0.00315396
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p90 setting_id=pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=2 N=8 phiSpan=2.74889 tier=1 fitStatus=3 M0=0.000670168 +/- 6.1515e+08 A=-0.337974 +/- 1.47366 B=-999 +/- -999 chi2=58.8434 ndf=6 prob=7.7289e-11
 SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=0
 SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=0
 SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=0
@@ -877,7 +877,7 @@ SANITY (z0p36, run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fu
 SANITY (z0p36, run 24566): entries(all)=19971 entries(baseCuts)=1696 entries(fullCuts)=0
 SANITY (z0p36, run 24460): entries(all)=33278 entries(baseCuts)=12050 entries(fullCuts)=0
 SANITY (z0p36, run 24567): entries(all)=19072 entries(baseCuts)=1828 entries(fullCuts)=0
-Skip fit (group): curve=z0p36 pt_bin=3 has N=0
+[fit-skip] group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p36 pt_bin=3 N=0 -> no fit
 SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=2
 SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=0
 SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=0
@@ -942,7 +942,7 @@ SANITY (z0p50, run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fu
 SANITY (z0p50, run 24559): entries(all)=29397 entries(baseCuts)=2234 entries(fullCuts)=0
 SANITY (z0p50, run 24335): entries(all)=6111 entries(baseCuts)=2012 entries(fullCuts)=0
 SANITY (z0p50, run 24560): entries(all)=27290 entries(baseCuts)=2234 entries(fullCuts)=0
-FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p50 setting_id=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=3 N=4 M0=0.00928048 +/- 0.0014376 A=0.997956 +/- 0.163522 B=0.21294 +/- 0.0444245 chi2=2.21497 ndf=1 prob=0.136678
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p50 setting_id=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=3 N=4 phiSpan=1.1781 tier=1 fitStatus=3 M0=0.00480661 +/- 0.00196971 A=0.611211 +/- 0.185231 B=-999 +/- -999 chi2=2.06274 ndf=2 prob=0.356519
 SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=2
 SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=0
 SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=0
@@ -1007,7 +1007,7 @@ SANITY (z0p67, run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fu
 SANITY (z0p67, run 24554): entries(all)=24164 entries(baseCuts)=1625 entries(fullCuts)=1
 SANITY (z0p67, run 24232): entries(all)=21826 entries(baseCuts)=7327 entries(fullCuts)=3
 SANITY (z0p67, run 24555): entries(all)=5408 entries(baseCuts)=421 entries(fullCuts)=0
-FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p67 setting_id=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=3 N=7 M0=0.00129966 +/- 4.29286e-05 A=-0.814496 +/- 0.0346207 B=-0.175417 +/- 0.0504875 chi2=16.2797 ndf=4 prob=0.00266588
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p67 setting_id=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=3 N=7 phiSpan=2.35619 tier=1 fitStatus=3 M0=0.00202637 +/- 0.000194841 A=0.0468179 +/- 0.0957749 B=-999 +/- -999 chi2=27.5067 ndf=5 prob=4.54381e-05
 SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=0
 SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
 SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=0
@@ -1072,6 +1072,6 @@ SANITY (z0p90, run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(ful
 SANITY (z0p90, run 24543): entries(all)=2613 entries(baseCuts)=110 entries(fullCuts)=0
 SANITY (z0p90, run 24206): entries(all)=5092 entries(baseCuts)=1467 entries(fullCuts)=1
 SANITY (z0p90, run 24545): entries(all)=759 entries(baseCuts)=51 entries(fullCuts)=0
-FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p90 setting_id=pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=3 N=8 M0=1.71358e-07 +/- 6.72135e+08 A=-0.430476 +/- 1.33986e-07 B=-0.499166 +/- 5.27061e-08 chi2=2021.42 ndf=5 prob=0
+FIT group group_id=grp_LH2_zOv_x0p25_Q23p3_tpq2p0 curve=z0p90 setting_id=pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2 pt_bin=3 N=8 phiSpan=2.74889 tier=1 fitStatus=3 M0=0.000359729 +/- 3.95071e-06 A=-0.993354 +/- 0.00797451 B=-999 +/- -999 chi2=178.135 ndf=6 prob=8.44667e-36
 Saved: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_LH2_zOv_x0p25_Q23p3_tpq2p0/PNGs/xsec_vs_phipq_overlay.png
 Done (GROUP overlay).

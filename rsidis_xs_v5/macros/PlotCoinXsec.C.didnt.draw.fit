@@ -639,7 +639,7 @@ static void PlotCoinXsec_Single(const char* manifestPath,
     const std::string fitPath = resultsDir + "/tables/fit_parameters.csv";
     const std::string fitHeader =
       "mode,group_id,curve_label,setting_id,pt_bin,z_bin,pt_lo,pt_hi,pt_center,z_lo,z_hi,z_center,n_points,"
-      "M0,M0_err,A,A_err,B,B_err,chi2,ndf,prob,fit_tier";
+      "M0,M0_err,A,A_err,B,B_err,chi2,ndf,prob";
     // Overwrite each run so re-running the macro does NOT duplicate rows
     fitcsv.open(fitPath, std::ios::out);
     fitcsv << fitHeader << std::endl;
@@ -944,166 +944,145 @@ static void PlotCoinXsec_Single(const char* manifestPath,
     for (const auto& gp : graphs) {
       if (gp.ptBin != iPt) continue;
 
-      const double zLo = binning.zEdges[gp.zBin];
-      const double zHi = binning.zEdges[gp.zBin + 1];
+      double zLo = binning.zEdges[gp.zBin];
+      double zHi = binning.zEdges[gp.zBin + 1];
 
       // --- style per z ---
-      const Color_t col = zColors[gp.zBin % nZColors];
+      Color_t col = zColors[gp.zBin % nZColors];
       gp.g->SetMarkerColor(col);
       gp.g->SetLineColor(col);
       gp.g->SetLineWidth(2);
       gp.g->SetMarkerStyle(20 + (gp.zBin % 6));
       gp.g->SetMarkerSize(0.9);
 
-      // --- draw points with error bars (vertical only is handled upstream by graph construction) ---
-      gp.g->Draw("E1P SAME");
+      // --- draw points with error bars ---
+      gp.g->Draw("E1P SAME");   // E1 = error bars, P = points
 
-      // --- acceptance-aware tiered fit based on measured phi-span ---
-      // Tier selection:
-      //   tier 0: M0 only                         sigma(phi) = M0
-      //   tier 1: M0 + A cos(phi)                 sigma(phi) = M0*(1 + A cos(phi))
-      //   tier 2: M0 + A cos(phi) + B cos(2phi)   sigma(phi) = M0*(1 + A cos(phi) + B cos(2phi))
+      // --- fit: sigma(phi) = sigma0 * (1 + A cos(phi) + B cos(2phi)) ---
+      // Only fit if enough points
+      if (gp.g->GetN() >= 4) {
+        TF1* f = new TF1(Form("f_pt%d_z%d", gp.ptBin, gp.zBin),
+                         "[0]*(1 + [1]*cos(x) + [2]*cos(2*x))",
+                         0.0, 2.0*TMath::Pi());
 
-      const double BAD   = -999.0;
-      const int    BAD_I = -999;
+        // start guesses (stable defaults)
+// Determine measured phi range from points (acceptance-aware fit)
+double xmin =  std::numeric_limits<double>::infinity();
+double xmax = -std::numeric_limits<double>::infinity();
 
-      double sigma0 = BAD, sigma0_err = BAD;
-      double A      = BAD, A_err      = BAD;
-      double B      = BAD, B_err      = BAD;
-      double chi2   = BAD; int ndf    = BAD_I; double prob = BAD;
-      int fitStatus = 999;
-      int fitTier   = -1;
+double ymean = 0.0;
+for (int ip = 0; ip < gp.g->GetN(); ip++) {
+  double xx, yy;
+  gp.g->GetPoint(ip, xx, yy);
+  ymean += yy;
+  xmin = std::min(xmin, xx);
+  xmax = std::max(xmax, xx);
+}
+ymean /= gp.g->GetN();
+// Acceptance/coverage check: extracting cos(phi), cos(2phi) moments requires
+        // enough phi* coverage. If coverage is too small, the fit becomes ill-conditioned.
+        const double phiSpan = xmax - xmin;
+        const double minPhiSpan = 0.70 * TMath::TwoPi(); // require ~70% of full 2pi
+        const int    minFitPoints = 6;
+        const bool   doFit = (gp.g->GetN() >= minFitPoints) && (phiSpan >= minPhiSpan);
 
-      const int nPts = gp.g->GetN();
-      double phiSpan = 0.0;
-      double xmin = 0.0, xmax = 0.0;
+        // Fit (and draw) only over the measured phi range to avoid wild extrapolation
+        f->SetRange(xmin, xmax);
 
-      if (nPts >= 1) {
-        // compute measured span + mean
-        double xmn =  1e99, xmx = -1e99;
-        double ysum = 0.0;
-        double yMin =  1e99, yMax = -1e99;
-        for (int i = 0; i < nPts; i++) {
-          double xx, yy;
-          gp.g->GetPoint(i, xx, yy);
-          xmn = std::min(xmn, xx);
-          xmx = std::max(xmx, xx);
-          ysum += yy;
-          yMin = std::min(yMin, yy);
-          yMax = std::max(yMax, yy);
-        }
-        xmin = xmn; xmax = xmx;
-        phiSpan = (xmax > xmin) ? (xmax - xmin) : 0.0;
-        const double ymean = ysum / nPts;
+        const double NaN = std::numeric_limits<double>::quiet_NaN();
+        double sigma0 = NaN, sigma0_err = NaN;
+        double A = NaN, A_err = NaN;
+        double B = NaN, B_err = NaN;
+        double chi2 = NaN, prob = NaN;
+        int    ndf = 0;
+        int    fitStatus = 999;
 
-        // choose tier by phiSpan
-        if (phiSpan < 1.0)              fitTier = 0;
-        else if (phiSpan < TMath::Pi()) fitTier = 1;
-        else                            fitTier = 2;
+        // Set Parameter limit
+        f->SetParLimits(0, 0.0, 1e9);   // sigma0 positive
+        f->SetParLimits(1, -1.0, 1.0);  // A
+        f->SetParLimits(2, -1.0, 1.0);  // B
 
-        // downgrade if not enough points to constrain parameters (want ndf>=1 when possible)
-        // tier2 has 3 params => ndf = N-3, so need N>=4 for ndf>=1
-        // tier1 has 2 params => ndf = N-2, so need N>=3 for ndf>=1
-        if (fitTier == 2 && nPts < 4) fitTier = (nPts >= 3) ? 1 : 0;
-        if (fitTier == 1 && nPts < 3) fitTier = 0;
-
-        TF1* f = nullptr;
-        if (fitTier == 0) {
-          f = new TF1(Form("f0_pt%d_z%d", iPt, gp.zBin), "[0]", xmin, xmax);
-          f->SetParameters(ymean);
-          f->SetParLimits(0, 0.0, 1e9);
-        } else if (fitTier == 1) {
-          f = new TF1(Form("f1_pt%d_z%d", iPt, gp.zBin), "[0]*(1 + [1]*cos(x))", xmin, xmax);
-          double A0 = 0.0;
-          if (yMax + yMin > 0) {
-            A0 = (yMax - yMin) / (yMax + yMin);
-            A0 = std::max(-0.9, std::min(0.9, A0));
-          }
-          f->SetParameters(ymean, A0);
-          f->SetParLimits(0, 0.0, 1e9);
-          f->SetParLimits(1, -1.0, 1.0);
-        } else {
-          f = new TF1(Form("f2_pt%d_z%d", iPt, gp.zBin), "[0]*(1 + [1]*cos(x) + [2]*cos(2*x))", xmin, xmax);
-          double A0 = 0.0;
-          if (yMax + yMin > 0) {
-            A0 = (yMax - yMin) / (yMax + yMin);
-            A0 = std::max(-0.9, std::min(0.9, A0));
-          }
-          f->SetParameters(ymean, A0, 0.0);
-          f->SetParLimits(0, 0.0, 1e9);
-          f->SetParLimits(1, -1.0, 1.0);
-          f->SetParLimits(2, -1.0, 1.0);
-        }
-
-        fitStatus = gp.g->Fit(f, "RQ0");
-
-        sigma0     = f->GetParameter(0);
-        sigma0_err = f->GetParError(0);
-        if (fitTier >= 1) {
-          A     = f->GetParameter(1);
-          A_err = f->GetParError(1);
-        }
-        if (fitTier >= 2) {
-          B     = f->GetParameter(2);
-          B_err = f->GetParError(2);
-        }
-        chi2 = f->GetChisquare();
-        ndf  = f->GetNDF();
-        prob = f->GetProb();
-
-        // sanitize (avoid NaN/inf in CSV)
-        auto sane = [&](double v){ return std::isfinite(v) ? v : BAD; };
-        sigma0 = sane(sigma0); sigma0_err = sane(sigma0_err);
-        A      = sane(A);      A_err      = sane(A_err);
-        B      = sane(B);      B_err      = sane(B_err);
-        chi2   = sane(chi2);
-        prob   = sane(prob);
-
-        // draw fit line
+        f->SetParameters(ymean, 0.0, 0.0);
+        f->SetParNames("sigma0", "Acos", "Bcos2");
         f->SetLineColor(col);
         f->SetLineWidth(2);
-        f->Draw("L SAME");
+
+        // Fit
+        //gp.g->Fit(f, "RQ0");
+        if (gp.g->GetN() >= 4) {
+          if (doFit) {
+          fitStatus = gp.g->Fit(f, "RQ0");
+
+          sigma0     = f->GetParameter(0);
+          sigma0_err = f->GetParError(0);
+          A          = f->GetParameter(1);
+          A_err      = f->GetParError(1);
+          B          = f->GetParameter(2);
+          B_err      = f->GetParError(2);
+          chi2       = f->GetChisquare();
+          ndf        = f->GetNDF();
+          prob       = f->GetProb();
+
+          f->Draw("L SAME");
+        } else {
+          log << "  [fit-skip] ptBin=" << gp.ptBin << " zBin=" << gp.zBin << " N=" << gp.g->GetN() << " phiSpan=" << phiSpan << " -> skipping Fourier fit (A,B)\n";
+        }
+        } else {
+          std::cout << "Skip fit: pt[" << gp.ptBin << "] z[" << gp.zBin
+                    << "] has only N=" << gp.g->GetN() << " points\n";
+        }
+
         fitFuncs.push_back(f);
+        std::cout << Form("pt[%d] z[%d]: sigma0=%.3g A=%.3g B=%.3g chi2/ndf=%.2f\n",
+                          gp.ptBin, gp.zBin,
+                          sigma0, A, B,
+                          (ndf>0 ? chi2 / std::max(1.0, (double)ndf) : NaN));
 
-        log << "[fit-tier] pt_bin=" << iPt << " z_bin=" << gp.zBin
-            << " N=" << nPts << " phiSpan=" << phiSpan
-            << " tier=" << fitTier << " fitStatus=" << fitStatus << "\n";
-      } else {
-        log << "[fit-skip] pt_bin=" << iPt << " z_bin=" << gp.zBin << " N=0 -> no fit\n";
+        // Log + persist fit parameters
+        double ptLoF = binning.ptEdges[gp.ptBin];
+        double ptHiF = binning.ptEdges[gp.ptBin + 1];
+        double ptCF  = Center(ptLoF, ptHiF);
+        double zLoF  = binning.zEdges[gp.zBin];
+        double zHiF  = binning.zEdges[gp.zBin + 1];
+        double zCF   = Center(zLoF, zHiF);
+
+        log << "FIT single setting_id=" << settingId
+            << " pt_bin=" << gp.ptBin << " z_bin=" << gp.zBin
+            << " N=" << gp.g->GetN()
+            << " M0=" << sigma0 << " +/- " << sigma0_err
+            << " A="  << A << " +/- " << A_err
+            << " B="  << B << " +/- " << B_err
+            << " chi2=" << f->GetChisquare() << " ndf=" << f->GetNDF()
+            << " prob=" << f->GetProb() << "\n";
+
+        if (saveTables && fitcsv.is_open()) {
+          fitcsv
+            << "single" << ","            // mode
+            << "" << ","                  // group_id
+            << Form("zbin%d", gp.zBin) << "," // curve_label
+            << settingId << ","
+            << gp.ptBin << "," << gp.zBin << ","
+            << ptLoF << "," << ptHiF << "," << ptCF << ","
+            << zLoF  << "," << zHiF  << "," << zCF << ","
+            << gp.g->GetN() << ","
+            << sigma0 << "," << sigma0_err << ","
+            << A << "," << A_err << ","
+            << B << "," << B_err << ","
+            << chi2 << "," << ndf << "," << prob
+            << "\n";
+        }
       }
 
-      std::cout << Form("pt[%d] z[%d]: tier=%d M0=%.3g A=%.3g B=%.3g chi2/ndf=%.2f prob=%.3g\n",
-                        gp.ptBin, gp.zBin, fitTier,
-                        sigma0, A, B,
-                        (ndf > 0 ? chi2 / (double)ndf : -999.0),
-                        prob);
 
-      if (saveTables && fitcsv.is_open()) {
-        const double ptCtr = 0.5 * (ptLo + ptHi);
-        const double zCtr  = 0.5 * (zLo + zHi);
-        fitcsv
-          << "single" << ","            // mode
-          << "" << ","                  // group_id
-          << Form("zbin%d", gp.zBin) << "," // curve_label
-          << settingId << ","
-          << gp.ptBin << "," << gp.zBin << ","
-          << ptLo << "," << ptHi << "," << ptCtr << ","
-          << zLo  << "," << zHi  << "," << zCtr  << ","
-          << nPts << ","
-          << sigma0 << "," << sigma0_err << ","
-          << A << "," << A_err << ","
-          << B << "," << B_err << ","
-          << chi2 << "," << ndf << "," << prob << "," << fitTier
-          << "\n";
-      }
 
-      // Legend entry per z-bin (single-mode)
+      // Legend: keep it simple (one entry per z)
       leg->AddEntry(gp.g, Form("z #in [%.2f, %.2f]", zLo, zHi), "pe");
+
       drawn++;
     }
 
     leg->Draw();
-  } // pt loop
+  }
 
   if (savePNGs) {
     std::string outPng = resultsDir + "/PNGs/xsec_vs_phipq_panels.png";
@@ -1153,7 +1132,7 @@ static void PlotCoinXsec_Group(const char* groupPath,
     const std::string fitPath = resultsDir + "/tables/fit_parameters.csv";
     const std::string fitHeader =
       "mode,group_id,curve_label,setting_id,pt_bin,z_bin,pt_lo,pt_hi,pt_center,z_lo,z_hi,z_center,n_points,"
-      "M0,M0_err,A,A_err,B,B_err,chi2,ndf,prob,fit_tier";
+      "M0,M0_err,A,A_err,B,B_err,chi2,ndf,prob";
     // Overwrite each run so re-running the macro does NOT duplicate rows
     fitcsv.open(fitPath, std::ios::out);
     fitcsv << fitHeader << std::endl;
@@ -1550,137 +1529,103 @@ static void PlotCoinXsec_Group(const char* groupPath,
 
 
       // Fit: sigma(phi) = M0 * (1 + A cos(phi) + B cos(2phi))
+      // Acceptance-aware: only fit if we have enough phi coverage, and only draw within measured range.
+      if (g->GetN() >= 4) {
+        TF1* f = new TF1(Form("f_grp_pt%d_c%d", iPt, ic),
+                         "[0]*(1 + [1]*cos(x) + [2]*cos(2*x))",
+                         0.0, 2.0*TMath::Pi());
 
-        const double BAD   = -999.0;
-        const int    BAD_I = -999;
-
-        double sigma0 = BAD, sigma0_err = BAD;
-        double A      = BAD, A_err      = BAD;
-        double B      = BAD, B_err      = BAD;
-        double chi2   = BAD; int ndf    = BAD_I; double prob = BAD;
-        int fitStatus = 999;
-        int fitTier   = -1;
-
-        // acceptance-aware phi span
-        double xmin =  1e99, xmax = -1e99;
-        double ysum = 0.0;
-        double yMin =  1e99, yMax = -1e99;
-        const int nPts = g->GetN();
-        for (int i = 0; i < nPts; i++) {
+        // initial guesses + measured phi range
+        double xmin =  std::numeric_limits<double>::infinity();
+        double xmax = -std::numeric_limits<double>::infinity();
+        double ymean = 0.0;
+        for (int ip = 0; ip < g->GetN(); ip++) {
           double xx, yy;
-          g->GetPoint(i, xx, yy);
+          g->GetPoint(ip, xx, yy);
+          ymean += yy;
           xmin = std::min(xmin, xx);
           xmax = std::max(xmax, xx);
-          ysum += yy;
-          yMin = std::min(yMin, yy);
-          yMax = std::max(yMax, yy);
         }
-        const double ymean   = (nPts > 0) ? (ysum / nPts) : 0.0;
-        const double phiSpan = (xmax > xmin) ? (xmax - xmin) : 0.0;
+        ymean /= g->GetN();
 
-        if (nPts >= 1) {
-          // tier by phi span
-          if (phiSpan < 1.0)              fitTier = 0;
-          else if (phiSpan < TMath::Pi()) fitTier = 1;
-          else                             fitTier = 2;
+        const double phiSpan = xmax - xmin;
+        const double minPhiSpan = 0.70 * TMath::TwoPi(); // require ~70% of full 2pi
+        const int    minFitPoints = 6;
+        const bool   doFit = (g->GetN() >= minFitPoints) && (phiSpan >= minPhiSpan);
 
-          // downgrade by point count for ndf>=1 where possible
-          if (fitTier == 2 && nPts < 4) fitTier = (nPts >= 3) ? 1 : 0;
-          if (fitTier == 1 && nPts < 3) fitTier = 0;
+        // Only draw/fit in measured range to avoid wild extrapolation
+        f->SetRange(xmin, xmax);
 
-          TF1* f = nullptr;
-          if (fitTier == 0) {
-            f = new TF1(Form("f0_%s_pt%d", cv.label.c_str(), iPt), "[0]", xmin, xmax);
-            f->SetParameters(ymean);
-            f->SetParLimits(0, 0.0, 1e9);
-          } else if (fitTier == 1) {
-            f = new TF1(Form("f1_%s_pt%d", cv.label.c_str(), iPt), "[0]*(1 + [1]*cos(x))", xmin, xmax);
-            double A0 = 0.0;
-            if (yMax + yMin > 0) {
-              A0 = (yMax - yMin) / (yMax + yMin);
-              A0 = std::max(-0.9, std::min(0.9, A0));
-            }
-            f->SetParameters(ymean, A0);
-            f->SetParLimits(0, 0.0, 1e9);
-            f->SetParLimits(1, -1.0, 1.0);
-          } else {
-            f = new TF1(Form("f2_%s_pt%d", cv.label.c_str(), iPt), "[0]*(1 + [1]*cos(x) + [2]*cos(2*x))", xmin, xmax);
-            double A0 = 0.0;
-            if (yMax + yMin > 0) {
-              A0 = (yMax - yMin) / (yMax + yMin);
-              A0 = std::max(-0.9, std::min(0.9, A0));
-            }
-            f->SetParameters(ymean, A0, 0.0);
-            f->SetParLimits(0, 0.0, 1e9);
-            f->SetParLimits(1, -1.0, 1.0);
-            f->SetParLimits(2, -1.0, 1.0);
-          }
+        const double NaN = std::numeric_limits<double>::quiet_NaN();
+        double sigma0 = NaN, sigma0_err = NaN;
+        double A = NaN, A_err = NaN;
+        double B = NaN, B_err = NaN;
+        double chi2 = NaN, prob = NaN;
+        int    ndf = 0;
+        int    fitStatus = 999;
 
+        f->SetParLimits(0, 0.0, 1e9);
+        f->SetParLimits(1, -1.0, 1.0);
+        f->SetParLimits(2, -1.0, 1.0);
+        f->SetParameters(ymean, 0.0, 0.0);
+        f->SetParNames("M0", "Acos", "Bcos2");
+        f->SetLineColor(col);
+        f->SetLineWidth(2);
+
+        if (doFit) {
           fitStatus = g->Fit(f, "RQ0");
-
           sigma0     = f->GetParameter(0);
           sigma0_err = f->GetParError(0);
-          if (fitTier >= 1) {
-            A     = f->GetParameter(1);
-            A_err = f->GetParError(1);
-          }
-          if (fitTier >= 2) {
-            B     = f->GetParameter(2);
-            B_err = f->GetParError(2);
-          }
-          chi2 = f->GetChisquare();
-          ndf  = f->GetNDF();
-          prob = f->GetProb();
-
-          auto sane = [&](double v){ return std::isfinite(v) ? v : BAD; };
-          sigma0 = sane(sigma0); sigma0_err = sane(sigma0_err);
-          A     = sane(A);      A_err      = sane(A_err);
-          B     = sane(B);      B_err      = sane(B_err);
-          chi2  = sane(chi2);
-          prob  = sane(prob);
-
-          // draw
-          f->SetLineColor(col);
-          f->SetLineWidth(2);
+          A          = f->GetParameter(1);
+          A_err      = f->GetParError(1);
+          B          = f->GetParameter(2);
+          B_err      = f->GetParError(2);
+          chi2       = f->GetChisquare();
+          ndf        = f->GetNDF();
+          prob       = f->GetProb();
           f->Draw("L SAME");
-
-          // ownership
-          fitFuncs.push_back(f);
-
-          log << "FIT group group_id=" << groupId
-              << " curve=" << cv.label
-              << " setting_id=" << cv.settingId
-              << " pt_bin=" << iPt
-              << " N=" << nPts
-              << " phiSpan=" << phiSpan
-              << " tier=" << fitTier
-              << " fitStatus=" << fitStatus
-              << " M0=" << sigma0 << " +/- " << sigma0_err
-              << " A="  << A      << " +/- " << A_err
-              << " B="  << B      << " +/- " << B_err
-              << " chi2=" << chi2 << " ndf=" << ndf << " prob=" << prob
-              << "\n";
-
-          if (fitcsv.is_open()) {
-            fitcsv
-              << "group" << "," << groupId << "," << cv.label << "," << cv.settingId << ","
-              << iPt << "," << -1 << ","
-              << ptLo << "," << ptHi << "," << ptCtr << ","
-              << cv.nominalZ << "," << cv.nominalZ << "," << cv.nominalZ << ","
-              << nPts << ","
-              << sigma0 << "," << sigma0_err << ","
-              << A << "," << A_err << ","
-              << B << "," << B_err << ","
-              << chi2 << "," << ndf << "," << prob << "," << fitTier << "\n";
-          }
-
         } else {
-          log << "[fit-skip] group_id=" << groupId
+          log << "  [fit-skip] group_id=" << groupId
               << " curve=" << cv.label
               << " pt_bin=" << iPt
-              << " N=0 -> no fit\n";
+              << " N=" << g->GetN()
+              << " phiSpan=" << phiSpan
+              << " -> skipping Fourier fit (A,B)\n";
         }
 
+        fitFuncs.push_back(f);
+
+        log << "FIT group group_id=" << groupId
+            << " curve=" << cv.label
+            << " setting_id=" << cv.settingId
+            << " pt_bin=" << iPt
+            << " N=" << g->GetN()
+            << " fitStatus=" << fitStatus
+            << " M0=" << sigma0 << " +/- " << sigma0_err
+            << " A="  << A << " +/- " << A_err
+            << " B="  << B << " +/- " << B_err
+            << " chi2=" << chi2 << " ndf=" << ndf
+            << " prob=" << prob << "";
+
+        if (saveTables && fitcsv.is_open()) {
+          fitcsv
+            << "group" << ","
+            << groupId << ","
+            << cv.label << ","
+            << cv.settingId << ","
+            << iPt << "," << -1 << ","
+            << ptLo << "," << ptHi << "," << ptCtr << ","
+            << cv.nominalZ << "," << cv.nominalZ << "," << cv.nominalZ << ","
+            << g->GetN() << ","
+            << sigma0 << "," << sigma0_err << ","
+            << A << "," << A_err << ","
+            << B << "," << B_err << ","
+            << chi2 << "," << ndf << "," << prob
+            << "";
+        }
+      } else {
+        log << "Skip fit (group): curve=" << cv.label << " pt_bin=" << iPt << " has N=" << g->GetN() << "";
+      }
 // legend label
       //TString leglab = Form("%s  #LT x #GT=%.3f  #LTQ^{2}#GT=%.2f", cv.label.c_str(), cv.meanXB, cv.meanQ2);
       TString leglab = Form("%s", cv.label.c_str());
