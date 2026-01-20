@@ -1,379 +1,206 @@
 #!/usr/bin/env python3
-"""
-Plot SIDIS fit parameters from:
-  results/<group>/tables/fit_parameters.csv
-
-Outputs:
-  results/<group>/PNGs/fitparam_plots/*.png
-
-Run from rsidis_xs_v5/:
-  python3 macros/plot_fit_parameters.py --group grp_LH2_zOv_x0p25_Q23p3_tpq2p0
-
-Extra options added:
-  --drop-nans            (default on) drop rows with NaNs in essential fields
-  --prob-min X           keep only rows with prob >= X
-  --chi2ndf-max Y        keep only rows with chi2/ndf <= Y
-  --min-ndf N            keep only rows with ndf >= N
-  --write-skipped-csv    write skipped rows summary to .../skipped_fits.csv
-"""
-
 import argparse
-import re
-from io import StringIO
 from pathlib import Path
-
-import matplotlib
-matplotlib.use("Agg")  # non-interactive backend (farm/VDI safe)
-
 import numpy as np
 import pandas as pd
+
+# Force non-interactive backend (avoids EGL/DRI crashes on farm nodes)
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
-EXPECTED_COLS = [
-    "mode","group_id","curve_label","setting_id",
-    "pt_bin","z_bin","pt_lo","pt_hi","pt_center","z_lo","z_hi","z_center",
-    "n_points","M0","M0_err","A","A_err","B","B_err","chi2","ndf","prob"
-]
-
 NUM_COLS = [
-    "pt_bin","z_bin","pt_lo","pt_hi","pt_center","z_lo","z_hi","z_center",
-    "n_points","M0","M0_err","A","A_err","B","B_err","chi2","ndf","prob"
+    "pt_lo","pt_hi","pt_center","z_lo","z_hi","z_center",
+    "n_points","M0","M0_err","A","A_err","B","B_err","chi2","ndf","prob","fit_tier"
 ]
 
-ESSENTIAL_COLS = ["curve_label", "pt_bin", "pt_center", "z_center", "n_points", "chi2", "ndf", "prob"]
+KEY_COLS = ["group_id","curve_label","setting_id","pt_bin","z_bin"]
 
 
-def ensure_dir(p: Path) -> None:
-    p.mkdir(parents=True, exist_ok=True)
+def read_fit_csv(path: Path) -> pd.DataFrame:
+    df = pd.read_csv(path)
 
+    # Backward-compat: if fit_tier is missing, infer a best-effort tier
+    if "fit_tier" not in df.columns:
+        # Tier inference: if B is finite -> 2, else if A finite -> 1, else 0
+        def infer_tier(row):
+            a = row.get("A", np.nan)
+            b = row.get("B", np.nan)
+            if pd.notna(b) and b != -999:
+                return 2
+            if pd.notna(a) and a != -999:
+                return 1
+            return 0
+        df["fit_tier"] = df.apply(infer_tier, axis=1)
 
-def _looks_broken(raw: str) -> bool:
-    # If the file has only 0–1 newlines, it's almost certainly concatenated.
-    if raw.count("\n") <= 1:
-        return True
-    # Or: first line contains header AND also contains "single," etc later => header+row glued.
-    first = raw.splitlines()[0] if raw.splitlines() else raw
-    if "mode,group_id" in first and re.search(r"(single|group|overlay),", first):
-        return True
-    return False
-
-
-def repair_fit_csv_text(raw: str) -> str:
-    """
-    Repairs common formatting issues:
-      1) Missing newline after header
-      2) Missing newlines between rows (rows start with mode = single/group/overlay)
-    """
-    s = raw.replace("\r\n", "\n").replace("\r", "\n")
-
-    # Ensure a newline after the header (header ends with 'prob')
-    hdr_pos = s.find("mode,group_id")
-    if hdr_pos != -1:
-        prob_pos = s.find("prob", hdr_pos)
-        if prob_pos != -1:
-            hdr_end = prob_pos + len("prob")
-            if hdr_end < len(s) and s[hdr_end] != "\n":
-                s = s[:hdr_end] + "\n" + s[hdr_end:]
-
-    # Ensure each row begins on a new line.
-    # Insert newline BEFORE these tokens if not already preceded by '\n' and not at start.
-    s = re.sub(r"(?<!\n)(single,)", r"\n\1", s)
-    s = re.sub(r"(?<!\n)(group,)", r"\n\1", s)
-    s = re.sub(r"(?<!\n)(overlay,)", r"\n\1", s)
-
-    return s
-
-
-def read_fit_parameters_csv(path: Path) -> pd.DataFrame:
-    raw = path.read_text(errors="replace")
-    if _looks_broken(raw):
-        raw = repair_fit_csv_text(raw)
-        df = pd.read_csv(StringIO(raw))
-    else:
-        df = pd.read_csv(path)
-
-    # Last-resort: if columns are still wrong, attempt repair
-    if len(df.columns) < 5 or ("curve_label" not in df.columns):
-        raw2 = repair_fit_csv_text(path.read_text(errors="replace"))
-        df = pd.read_csv(StringIO(raw2))
-
-    # Ensure expected columns exist
-    for c in EXPECTED_COLS:
-        if c not in df.columns:
-            df[c] = np.nan
-
-    # Coerce numeric columns
+    # Coerce numerics safely
     for c in NUM_COLS:
-        df[c] = pd.to_numeric(df[c], errors="coerce")
+        if c in df.columns:
+            df[c] = pd.to_numeric(df[c], errors="coerce")
 
-    # If z_center missing, derive from curve_label like z0p36
-    if df["z_center"].isna().all():
-        def z_from_label(s):
-            s = str(s).strip()
-            if s.startswith("z"):
-                s = s[1:]
-            try:
-                return float(s.replace("p", "."))
-            except Exception:
-                return np.nan
-        df["z_center"] = df["curve_label"].map(z_from_label)
+    # Treat -999 as invalid marker
+    df.replace(-999, np.nan, inplace=True)
+
+    # Derived columns
+    df["chi2ndf"] = np.where(df["ndf"] > 0, df["chi2"] / df["ndf"], np.nan)
 
     return df
 
 
-def annotate_and_filter(
-    df: pd.DataFrame,
-    drop_nans: bool = True,
-    prob_min: float | None = None,
-    chi2ndf_max: float | None = None,
-    min_ndf: float | None = None
-):
-    """Return (df_kept, df_skipped) with a 'skip_reason' column on skipped."""
-    df = df.copy()
-
-    # Derived
-    df["chi2ndf"] = np.where(df["ndf"] > 0, df["chi2"] / df["ndf"], np.nan)
-
-    reasons = []
-
-    if drop_nans:
-        nan_mask = df[ESSENTIAL_COLS].isna().any(axis=1)
-        reasons.append(("nan", nan_mask))
-
-    if min_ndf is not None:
-        ndf_mask = (df["ndf"].isna()) | (df["ndf"] < float(min_ndf))
-        reasons.append((f"ndf<{min_ndf}", ndf_mask))
-
-    if prob_min is not None:
-        p_mask = (df["prob"].isna()) | (df["prob"] < float(prob_min))
-        reasons.append((f"prob<{prob_min}", p_mask))
-
-    if chi2ndf_max is not None:
-        c_mask = (df["chi2ndf"].isna()) | (df["chi2ndf"] > float(chi2ndf_max))
-        reasons.append((f"chi2/ndf>{chi2ndf_max}", c_mask))
-
-    # Build final keep mask: must pass all enabled criteria
-    if reasons:
-        reject = np.zeros(len(df), dtype=bool)
-        for _, m in reasons:
-            reject |= m.to_numpy()
-        keep = ~reject
-    else:
-        keep = np.ones(len(df), dtype=bool)
-
-    df_kept = df.loc[keep].copy()
-    df_skip = df.loc[~keep].copy()
-
-    # Assign skip_reason (first matching reason wins, but keep all in a second column)
-    if len(df_skip):
-        all_reasons = []
-        first_reason = []
-        for idx, row in df_skip.iterrows():
-            rlist = []
-            for rname, mask in reasons:
-                if bool(mask.loc[idx]):
-                    rlist.append(rname)
-            all_reasons.append(";".join(rlist) if rlist else "unknown")
-            first_reason.append(rlist[0] if rlist else "unknown")
-        df_skip["skip_reason"] = first_reason
-        df_skip["skip_reasons_all"] = all_reasons
-
-    return df_kept, df_skip
+def dedup(df: pd.DataFrame) -> pd.DataFrame:
+    """If repeated runs appended duplicate rows, keep the last occurrence."""
+    if all(c in df.columns for c in KEY_COLS):
+        return df.drop_duplicates(subset=KEY_COLS, keep="last").copy()
+    return df
 
 
-def plot_vs_pt(df: pd.DataFrame, ycol: str, yerr: str, outpath: Path, title: str, ylabel: str):
-    fig, ax = plt.subplots(figsize=(7, 5))
+def apply_quality_filters(df: pd.DataFrame, min_prob=None, max_chi2ndf=None) -> pd.DataFrame:
+    out = df.copy()
+    if min_prob is not None:
+        out = out[(out["prob"].notna()) & (out["prob"] >= min_prob)]
+    if max_chi2ndf is not None:
+        out = out[(out["chi2ndf"].notna()) & (out["chi2ndf"] <= max_chi2ndf)]
+    return out
 
-    # For this plot, only require the columns used
-    d = df.dropna(subset=["curve_label", "pt_center", ycol], how="any").copy()
-    if yerr in d.columns:
-        # if yerr is all nan, let matplotlib ignore yerr
-        if d[yerr].isna().all():
-            yerr_use = None
-        else:
-            yerr_use = yerr
-    else:
-        yerr_use = None
 
-    for lab, g in d.groupby("curve_label", sort=True):
-        g = g.sort_values("pt_center")
-        x = g["pt_center"].to_numpy()
+def errorbar_by_curve(ax, subdf: pd.DataFrame, xcol, ycol, yerrcol, labelcol="curve_label"):
+    """Group by curve_label and draw default-colored errorbars."""
+    for lab, g in subdf.groupby(labelcol):
+        x = g[xcol].to_numpy()
         y = g[ycol].to_numpy()
-        ye = g[yerr_use].to_numpy() if (yerr_use is not None) else None
+        ye = g[yerrcol].to_numpy() if yerrcol in g.columns else None
         ax.errorbar(x, y, yerr=ye, fmt="o", capsize=2, label=str(lab))
 
+
+def plot_vs_pt(df: pd.DataFrame, y, yerr, outpath: Path, title: str):
+    fig, ax = plt.subplots()
+    errorbar_by_curve(ax, df, "pt_center", y, yerr)
     ax.set_xlabel(r"$p_T$ (GeV)")
-    ax.set_ylabel(ylabel)
+    ax.set_ylabel(y)
     ax.set_title(title)
     ax.grid(True, alpha=0.3)
-    ax.legend(frameon=False)
+    ax.legend()
     fig.tight_layout()
+    fig.savefig(outpath, dpi=200)
+    plt.close(fig)
+
+
+def plot_vs_z_grid(df: pd.DataFrame, y, yerr, outpath: Path, title: str):
+    # pads = pt_bin
+    pt_bins = sorted(df["pt_bin"].dropna().unique().tolist())
+    n = len(pt_bins)
+    if n == 0:
+        return
+
+    ncols = 2 if n > 1 else 1
+    nrows = int(np.ceil(n / ncols))
+
+    fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(10, 6), squeeze=False)
+    axes = axes.flatten()
+
+    for i, ptb in enumerate(pt_bins):
+        ax = axes[i]
+        g = df[df["pt_bin"] == ptb]
+        errorbar_by_curve(ax, g, "z_center", y, yerr)
+        # nice title from pt range if available
+        if "pt_lo" in g.columns and "pt_hi" in g.columns and g["pt_lo"].notna().any():
+            ptlo = float(g["pt_lo"].dropna().iloc[0])
+            pthi = float(g["pt_hi"].dropna().iloc[0])
+            ax.set_title(rf"$p_T \in [{ptlo:.2f}, {pthi:.2f}]$ GeV")
+        else:
+            ax.set_title(f"pt_bin={ptb}")
+        ax.set_xlabel("z")
+        ax.set_ylabel(y)
+        ax.grid(True, alpha=0.3)
+
+    # turn off unused pads
+    for j in range(i + 1, len(axes)):
+        axes[j].axis("off")
+
+    # legend only once (top-left)
+    axes[0].legend()
+
+    fig.suptitle(title)
+    fig.tight_layout(rect=[0, 0, 1, 0.95])
     fig.savefig(outpath, dpi=200)
     plt.close(fig)
 
 
 def plot_prob_vs_pt(df: pd.DataFrame, outpath: Path):
-    if "prob" not in df.columns:
-        return
-
-    d = df.dropna(subset=["curve_label", "pt_center", "prob"], how="any").copy()
-    if d.empty:
-        return
-
-    fig, ax = plt.subplots(figsize=(7, 5))
-    for lab, g in d.groupby("curve_label", sort=True):
-        g = g.sort_values("pt_center")
-        ax.plot(
-            g["pt_center"].to_numpy(),
-            g["prob"].to_numpy(),
-            marker="o",
-            linestyle="-",
-            label=str(lab)
-        )
-
+    # log scale is helpful
+    fig, ax = plt.subplots()
+    # only valid prob
+    gdf = df[(df["prob"].notna()) & (df["ndf"] > 0)]
+    for lab, g in gdf.groupby("curve_label"):
+        ax.plot(g["pt_center"].to_numpy(), g["prob"].to_numpy(), marker="o", label=str(lab))
+    ax.set_yscale("log")
     ax.set_xlabel(r"$p_T$ (GeV)")
     ax.set_ylabel("Fit probability")
-    ax.set_title("Fit quality: probability vs $p_T$")
-    ax.set_yscale("log")
-
-    # avoid issues if prob has zeros
-    ymin = d["prob"].min()
-    if np.isfinite(ymin) and ymin <= 0:
-        # shift strictly positive for log
-        dpos = d[d["prob"] > 0]
-        if not dpos.empty:
-            ax.set_ylim(bottom=dpos["prob"].min() * 0.5)
-
+    ax.set_title(r"Fit quality: probability vs $p_T$")
     ax.grid(True, which="both", alpha=0.3)
-    ax.legend(frameon=False)
+    ax.legend()
     fig.tight_layout()
     fig.savefig(outpath, dpi=200)
     plt.close(fig)
 
 
-def plot_vs_z_grid(df: pd.DataFrame, ycol: str, yerr: str, outpath: Path, suptitle: str, ylabel: str):
-    pt_bins = sorted(df["pt_bin"].dropna().unique().tolist())
-    if len(pt_bins) == 0:
-        return
-
-    fig, axes = plt.subplots(2, 2, figsize=(10, 7), sharey=True)
-    axes = axes.ravel()
-
-    for i, ptb in enumerate(pt_bins[:4]):
-        ax = axes[i]
-        gd = df[df["pt_bin"] == ptb].copy()
-        gd = gd.dropna(subset=["curve_label", "z_center", ycol], how="any")
-        gd = gd.sort_values("z_center")
-
-        for lab, g in gd.groupby("curve_label", sort=True):
-            x = g["z_center"].to_numpy()
-            y = g[ycol].to_numpy()
-            if yerr in g.columns and not g[yerr].isna().all():
-                ye = g[yerr].to_numpy()
-            else:
-                ye = None
-            ax.errorbar(x, y, yerr=ye, fmt="o", capsize=2, label=str(lab))
-
-        # pt edges if available
-        if "pt_lo" in gd.columns and "pt_hi" in gd.columns and len(gd) > 0 and np.isfinite(gd["pt_lo"].iloc[0]) and np.isfinite(gd["pt_hi"].iloc[0]):
-            ax.set_title(fr"$p_T \in$ [{gd['pt_lo'].iloc[0]:.2f}, {gd['pt_hi'].iloc[0]:.2f}] GeV")
-        else:
-            ax.set_title(f"pt_bin={int(ptb)}")
-
-        ax.set_xlabel("z")
-        ax.grid(True, alpha=0.3)
-        if i == 0:
-            ax.legend(frameon=False)
-
-    # Hide unused pads
-    for j in range(min(4, len(pt_bins)), 4):
-        axes[j].axis("off")
-
-    axes[0].set_ylabel(ylabel)
-    axes[2].set_ylabel(ylabel)
-    fig.suptitle(suptitle)
-    fig.tight_layout(rect=[0, 0.0, 1, 0.95])
-    fig.savefig(outpath, dpi=200)
-    plt.close(fig)
-
-
-def print_skipped_summary(df_all: pd.DataFrame, df_kept: pd.DataFrame, df_skip: pd.DataFrame):
-    print("=== Fit-parameter plotting selection summary ===")
-    print(f"Rows in CSV: {len(df_all)}")
-    print(f"Rows kept  : {len(df_kept)}")
-    print(f"Rows skipped: {len(df_skip)}")
-    if len(df_skip):
-        counts = df_skip["skip_reason"].value_counts(dropna=False)
-        print("\nSkipped by reason:")
-        for k, v in counts.items():
-            print(f"  {k:>14s}: {int(v)}")
-
-        # Print a compact table (first 20)
-        cols = ["curve_label","pt_bin","z_bin","pt_center","z_center","n_points","chi2","ndf","chi2ndf","prob","skip_reason"]
-        cols = [c for c in cols if c in df_skip.columns]
-        show = df_skip[cols].sort_values(["skip_reason","curve_label","pt_bin"]).head(20)
-        print("\nFirst 20 skipped rows:")
-        print(show.to_string(index=False))
-    print("==============================================")
-
-
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--group", required=True)
-    ap.add_argument("--results-dir", default="results")
-
-    ap.add_argument("--drop-nans", dest="drop_nans", action="store_true", default=True,
-                    help="Drop rows with NaNs in essential fields (default: on).")
-    ap.add_argument("--keep-nans", dest="drop_nans", action="store_false",
-                    help="Do not drop NaNs globally (plots will still drop NaNs per-plot).")
-
-    ap.add_argument("--prob-min", type=float, default=None,
-                    help="Keep only fits with prob >= this value.")
-    ap.add_argument("--chi2ndf-max", type=float, default=None,
-                    help="Keep only fits with chi2/ndf <= this value.")
-    ap.add_argument("--min-ndf", type=float, default=None,
-                    help="Keep only fits with ndf >= this value.")
-
-    ap.add_argument("--write-skipped-csv", action="store_true",
-                    help="Write skipped rows as CSV into fitparam_plots/skipped_fits.csv")
-
+    ap.add_argument("--group", required=True, help="group id, e.g. grp_LH2_zOv_x0p25_Q23p3_tpq2p0")
+    ap.add_argument("--results", default="results", help="top-level results directory (default: results)")
+    ap.add_argument("--min-prob", type=float, default=None, help="optional: require prob >= X")
+    ap.add_argument("--max-chi2ndf", type=float, default=None, help="optional: require chi2/ndf <= Y")
+    ap.add_argument("--dedup", action="store_true", help="drop duplicate rows by (group,curve,pt_bin,z_bin)")
     args = ap.parse_args()
 
-    results_dir = Path(args.results_dir).resolve()
-    csv_path = results_dir / args.group / "tables" / "fit_parameters.csv"
-    if not csv_path.exists():
-        raise SystemExit(f"ERROR: not found: {csv_path}")
+    fitcsv = Path(args.results) / args.group / "tables" / "fit_parameters.csv"
+    outdir = Path(args.results) / args.group / "PNGs" / "fitparam_plots"
+    outdir.mkdir(parents=True, exist_ok=True)
 
-    df_all = read_fit_parameters_csv(csv_path)
+    df = read_fit_csv(fitcsv)
+    if args.dedup:
+        df = dedup(df)
 
-    # Apply filtering / selection
-    df_kept, df_skip = annotate_and_filter(
-        df_all,
-        drop_nans=args.drop_nans,
-        prob_min=args.prob_min,
-        chi2ndf_max=args.chi2ndf_max,
-        min_ndf=args.min_ndf
-    )
+    # Print a quick tier summary before any cuts
+    print("Rows total:", len(df))
+    print("Tier counts:\n", df["fit_tier"].value_counts(dropna=False).sort_index())
 
-    outdir = results_dir / args.group / "PNGs" / "fitparam_plots"
-    ensure_dir(outdir)
+    # Optional quality filters (applied AFTER tier selection per plot, below)
+    q_min_prob = args.min_prob
+    q_max_chi2ndf = args.max_chi2ndf
 
-    # Optional skipped CSV
-    if args.write_skipped_csv and len(df_skip):
-        skip_path = outdir / "skipped_fits.csv"
-        df_skip.to_csv(skip_path, index=False)
+    # --- M0 plots (tiers 0/1/2) ---
+    d0 = df[df["M0"].notna()].copy()
+    d0 = apply_quality_filters(d0, q_min_prob, q_max_chi2ndf)
+    plot_vs_pt(d0, "M0", "M0_err", outdir / "M0_vs_pT.png", r"Fit parameter $M_0$ vs $p_T$")
 
-    # Make plots (only using kept rows)
-    plot_vs_pt(df_kept, "A", "A_err", outdir / "A_vs_pT.png", "Fit parameter A vs $p_T$", "A")
-    plot_vs_pt(df_kept, "B", "B_err", outdir / "B_vs_pT.png", "Fit parameter B vs $p_T$", "B")
-    plot_vs_pt(df_kept, "M0", "M0_err", outdir / "M0_vs_pT.png", "Fit parameter $M_0$ vs $p_T$", r"$M_0$")
-    plot_prob_vs_pt(df_kept, outdir / "prob_vs_pT.png")
-    plot_vs_z_grid(df_kept, "A", "A_err", outdir / "A_vs_z_grid.png", "A vs z (pads: $p_T$ bins)", "A")
-    plot_vs_z_grid(df_kept, "B", "B_err", outdir / "B_vs_z_grid.png", "B vs z (pads: $p_T$ bins)", "B")
+    # --- A plots (tiers 1/2 only) ---
+    dA = df[(df["fit_tier"] >= 1) & (df["A"].notna())].copy()
+    dA = apply_quality_filters(dA, q_min_prob, q_max_chi2ndf)
+    plot_vs_pt(dA, "A", "A_err", outdir / "A_vs_pT.png", r"Fit parameter $A$ vs $p_T$")
+    plot_vs_z_grid(dA, "A", "A_err", outdir / "A_vs_z_grid.png", r"$A$ vs $z$ (pads: $p_T$ bins)")
 
-    print(f"Wrote plots to: {outdir}")
-    print_skipped_summary(df_all, df_kept, df_skip)
+    # --- B plots (tier 2 only) ---
+    dB = df[(df["fit_tier"] >= 2) & (df["B"].notna())].copy()
+    dB = apply_quality_filters(dB, q_min_prob, q_max_chi2ndf)
+    plot_vs_pt(dB, "B", "B_err", outdir / "B_vs_pT.png", r"Fit parameter $B$ vs $p_T$")
+    plot_vs_z_grid(dB, "B", "B_err", outdir / "B_vs_z_grid.png", r"$B$ vs $z$ (pads: $p_T$ bins)")
+
+    # --- prob vs pT (only where ndf>0 & prob valid) ---
+    dp = df[(df["ndf"] > 0) & (df["prob"].notna())].copy()
+    dp = apply_quality_filters(dp, q_min_prob, q_max_chi2ndf)
+    plot_prob_vs_pt(dp, outdir / "prob_vs_pT.png")
+
+    # Skipped summary
+    def nvalid(x): return int(np.sum(pd.notna(x)))
+    print("\nValid counts after tier logic (before your optional filters were applied inside plots):")
+    print("M0 valid:", nvalid(df["M0"]))
+    print("A  valid (tier>=1):", nvalid(df.loc[df["fit_tier"]>=1, "A"]))
+    print("B  valid (tier>=2):", nvalid(df.loc[df["fit_tier"]>=2, "B"]))
+    print("prob valid (ndf>0):", len(df[(df["ndf"]>0) & (df["prob"].notna())]))
+
+    print("\nWrote plots to:", outdir)
 
 
 if __name__ == "__main__":
