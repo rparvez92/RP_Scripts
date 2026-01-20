@@ -316,7 +316,7 @@ static void EnsureCsvHeader(const TString& csvPath) {
     << "entriesD,entriesS,"
     << "muD,muD_err,sigD,sigD_err,statusD,chi2D,ndfD,"
     << "muS,muS_err,sigS,sigS_err,statusS,chi2S,ndfS,"
-    << "dmu,dmu_err"
+    << "dmu_GeV,dmu_err_GeV,dmu_MeV,dmu_err_MeV"
     << "\n";
 
   csv.close();
@@ -328,7 +328,7 @@ static void AppendCsvRow(const TString& csvPath,
                          double intDwin, double intSwin, double simScale,
                          double entriesD, double entriesS,
                          const FitOut& fD, const FitOut& fS,
-                         double dmu, double dmuErr) {
+                         double dmu, double dmuErr, double dmuMeV, double dmuErrMeV) {
   std::ofstream csv(csvPath.Data(), std::ios::out | std::ios::app);
   if (!csv.is_open()) {
     std::cerr << "[ERROR] Cannot append CSV: " << csvPath << "\n";
@@ -367,7 +367,9 @@ static void AppendCsvRow(const TString& csvPath,
     << fS.chi2 << ","
     << fS.ndf << ","
     << dmu << ","
-    << dmuErr
+    << dmuErr << ","
+    << dmuMeV << ","
+    << dmuErrMeV
     << "\n";
 
   csv.close();
@@ -460,6 +462,9 @@ static void ProcessOneRun(int run,
       // Δμ and error
       double dmu = fD.mu - fS.mu;
       double dmuErr = std::sqrt(fD.muErr * fD.muErr + fS.muErr * fS.muErr);
+      double dmuMeV = dmu * 1000.0;
+      double dmuErrMeV = dmuErr * 1000.0;
+
 
       // Draw
       StyleHists(hD, hS);
@@ -510,7 +515,7 @@ static void ProcessOneRun(int run,
       AppendCsvRow(csvPath, run, dp, V, pw,
                    intDwin, intSwin, simScale,
                    hD->GetEntries(), hS->GetEntries(),
-                   fD, fS, dmu, dmuErr);
+                   fD, fS, dmu, dmuErr, dmuMeV, dmuErrMeV);
     }
 
     // Save PNG
