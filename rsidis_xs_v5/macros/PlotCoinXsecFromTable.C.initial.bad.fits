@@ -1,25 +1,23 @@
 // PlotCoinXsecFromTable.C (rsidis_xs_v5)
 //
-// Purpose:
-//   Read the heavy compute table produced by TableCoinXsec.C and:
-//     - apply plotting-only guards/outlier filters
-//     - plot xsec vs phipq with pads = pT bins
-//       * single mode: curves = z bins (overlay in each pT pad)
-//       * group  mode: curves = settings/curve_label (overlay) and z shown as rows
-//     - fit each curve with tiered physics model:
-//         tier0: M0
-//         tier1: M0(1 + A cos(phi))
-//         tier2: M0(1 + A cos(phi) + B cos(2phi))
-//       where tier is selected by measured phi span and point count, and further
-//       validated by coverage uniformity + robustness guards.
-//     - write fit_parameters_single.csv / fit_parameters_group.csv
-//     - save a single PNG:
-//         results/<id>/PNGs/xsec_phipq_z_pt_overlayed_single.png
-//         results/<id>/PNGs/xsec_phipq_z_pt_overlayed_group.png
+// Reads table CSV(s) produced by TableCoinXsec.C and generates:
+//   - xsec vs phipq plots with pads = pT bins
+//   - curves = z (single mode) OR z-settings from group list (group mode)
+//   - tiered physics fits: M0, M0(1+A cos phi), M0(1 + A cos phi + B cos 2phi)
+//   - fit_parameters_single.csv / fit_parameters_group.csv
+//   - PNG outputs:
+//       results/<setting_id>/PNGs/xsec_phipq_z_pt_overlayed_single.png
+//       results/<group_id>/PNGs/xsec_phipq_z_pt_overlayed_group.png
+//
+// Semantics:
+//   * Single mode: z is binned (z_lo/z_hi from table), curves are those z-bins.
+//   * Group  mode: z is the fixed setting value encoded in curve_label (e.g. z0p36),
+//                  curves are those z-settings, labeled cleanly as "z = 0.xx".
+//     (No z-range in group mode.)
 //
 // Run examples:
 //   root -l -b -q 'macros/PlotCoinXsecFromTable.C("settings/.../manifest.txt","results","settings")'
-//   root -l -b -q 'macros/PlotCoinXsecFromTable.C("groups/.../mygroup.list","results","settings")'
+//   root -l -b -q 'macros/PlotCoinXsecFromTable.C("groups/.../grp_*.list","results","settings")'
 
 #include <iostream>
 #include <fstream>
@@ -28,7 +26,6 @@
 #include <string>
 #include <unordered_map>
 #include <map>
-#include <set>
 #include <algorithm>
 #include <cmath>
 #include <cctype>
@@ -166,23 +163,20 @@ static double WrapPhi(double phi) {
   return phi;
 }
 
-// ---------- XSEC flag bits (from TableCoinXsec.C) ----------
-enum XsecFlagBits : unsigned int {
-  MC_EMPTY        = 1u << 0,
-  MC_STARVED      = 1u << 1,
-  MC_BAD_RELERR   = 1u << 2,
-  NET_NEGATIVE    = 1u << 3,
-  NET_NANINF      = 1u << 4,
-  SIM_NANINF      = 1u << 5,
-  XSEC_NANINF     = 1u << 6,
-  XSEC_NEGATIVE   = 1u << 7,
-  XSEC_BAD_RELERR = 1u << 8,
-  XSEC_ZERO_ERR   = 1u << 9,
-  SIM_ZERO        = 1u << 10,
-  NET_ZERO        = 1u << 11
-};
+// Parse z-setting from curve_label like "z0p36" -> 0.36.
+static double ParseZSetting(std::string s) {
+  if (s.empty()) return kMissing;
+  if (s[0] == 'z' || s[0] == 'Z') s = s.substr(1);
+  for (auto& c : s) {
+    if (c == 'p') c = '.';
+    if (c == 'm') c = '-';
+  }
+  double z = kMissing;
+  if (!ToD(s, z)) return kMissing;
+  return z;
+}
 
-// ---------- Fit flag bits (as agreed) ----------
+// ---------- Fit flag bits ----------
 enum FitFlagBits : unsigned int {
   FIT_STATUS_BAD      = 1u << 0,
   NONFINITE_PARAM     = 1u << 1,
@@ -212,34 +206,26 @@ static void AppendNote(std::string& note, const char* tok) {
 
 // ---------- Config ----------
 struct PlotConfig {
-  // point filtering (DEFAULT)
   bool use_valid_default = true;
   bool allow_negative_xsec = false;
 
-  // xsec outlier safety (off by default; can tighten later)
   bool use_relx_guard = false;
   double max_rel_xsec_err_plot = 0.80;
 
-  // fit tier thresholds (from PlotCoinXsec.C)
-  double tier_span0_max = 1.0;          // <1 rad => tier 0
-  double tier_span1_max = TMath::Pi();  // <pi => tier 1; else tier 2
+  double tier_span0_max = 1.0;
+  double tier_span1_max = TMath::Pi();
 
-  // coverage uniformity
   int phi_nsectors = 8;
   int phi_occ_min_tier1 = 3;
   int phi_occ_min_tier2 = 4;
 
-  // robustness: one point dominating weights
   double max_weight_frac = 0.80;
 
-  // fit-quality thresholds
   double chi2ndf_max = 10.0;
   double prob_min = 1e-6;
 
-  // "at limit" tolerance for A,B
   double par_limit_tol = 0.98;
 
-  // parameter sanity
   double M0_min = 0.0;
   double M0_relerr_max = 1.0;
 
@@ -251,7 +237,9 @@ struct PlotConfig {
   double B_err_max = 1.0;
   double B_sig_min = 1.0;
 
-  // output
+  TString xTitle = "#phi_{pq} (rad)";
+  TString yTitle = "d#sigma";
+
   bool save_png = true;
   bool save_fit_csv = true;
 };
@@ -278,13 +266,13 @@ struct Row {
   int valid_default=0;
 };
 
-// ---------- Fit result record ----------
+// ---------- Fit record ----------
 struct FitOut {
-  // meta
   std::string mode;
   std::string group_id;
   std::string curve_label;
   std::string setting_id;
+
   int pt_bin=-1;
   int z_bin=-1;
   double pt_lo=kMissing, pt_hi=kMissing, pt_center=kMissing;
@@ -296,7 +284,6 @@ struct FitOut {
   int phi_nsectors=0;
   double dominant_wfrac=kMissing;
 
-  // fit
   int fit_tier=-1;
   int fit_status=999;
   int cov_status=-1;
@@ -319,15 +306,14 @@ struct FitOut {
 };
 
 // ---------- CSV reader ----------
-static bool ReadTableCSV(const std::string& csvPath, std::vector<Row>& rows, std::string& headerLineOut) {
+static bool ReadTableCSV(const std::string& csvPath, std::vector<Row>& rows) {
   std::ifstream f(csvPath);
   if (!f.is_open()) return false;
 
   std::string header;
   if (!std::getline(f, header)) return false;
-  headerLineOut = header;
-
   auto cols = SplitCSVLine(header);
+
   std::unordered_map<std::string,int> idx;
   for (int i=0;i<(int)cols.size();i++) idx[cols[i]] = i;
 
@@ -387,7 +373,6 @@ static bool ReadTableCSV(const std::string& csvPath, std::vector<Row>& rows, std
     r.xsec_err = getD(v,"xsec_err",kMissing);
     r.rel_xsec_err = getD(v,"rel_xsec_err",kMissing);
 
-    // flag_bits stored as integer
     {
       auto s = getS(v,"flag_bits");
       long long tmp=0;
@@ -408,7 +393,6 @@ static bool PassPointDefault(const Row& r, const PlotConfig& cfg) {
   if (r.xsec_err <= 0.0) return false;
 
   if (cfg.use_valid_default && r.valid_default != 1) return false;
-
   if (!cfg.allow_negative_xsec && r.xsec <= 0.0) return false;
 
   if (cfg.use_relx_guard) {
@@ -418,18 +402,20 @@ static bool PassPointDefault(const Row& r, const PlotConfig& cfg) {
   return true;
 }
 
-// ---------- grouping ----------
+// ---------- curve grouping ----------
 struct CurveKey {
   int pt_bin=-1;
   int z_bin=-1;
-  std::string curve;      // label used for legend/color key
-  std::string setting_id; // for fit csv
+  double sort_z=kMissing;
+  std::string legend;
+  std::string setting_id;
 };
 
 static bool operator<(const CurveKey& a, const CurveKey& b) {
-  if (a.z_bin != b.z_bin) return a.z_bin < b.z_bin;
   if (a.pt_bin != b.pt_bin) return a.pt_bin < b.pt_bin;
-  if (a.curve != b.curve) return a.curve < b.curve;
+  if (a.z_bin != b.z_bin) return a.z_bin < b.z_bin;
+  if (std::isfinite(a.sort_z) && std::isfinite(b.sort_z) && a.sort_z != b.sort_z) return a.sort_z < b.sort_z;
+  if (a.legend != b.legend) return a.legend < b.legend;
   return a.setting_id < b.setting_id;
 }
 
@@ -440,7 +426,7 @@ struct CurvePoints {
   double z_lo=kMissing, z_hi=kMissing, z_center=kMissing;
 };
 
-// ---------- coverage uniformity ----------
+// ---------- uniformity ----------
 static int PhiOccupancy(const std::vector<double>& phi, int nsectors) {
   if (nsectors <= 0) return 0;
   std::vector<char> occ(nsectors, 0);
@@ -458,7 +444,7 @@ static int PhiOccupancy(const std::vector<double>& phi, int nsectors) {
   return cnt;
 }
 
-// ---------- robustness: dominant weight fraction ----------
+// ---------- robustness ----------
 static double DominantWeightFrac(const std::vector<double>& ey) {
   double sum = 0.0;
   double mx = 0.0;
@@ -472,14 +458,12 @@ static double DominantWeightFrac(const std::vector<double>& ey) {
   return mx / sum;
 }
 
-// ---------- fit + validity ----------
+// ---------- fit validity ----------
 static void ComputeFitValidity(FitOut& fo, const PlotConfig& cfg) {
-  // Notes from bits
   auto noteIf = [&](unsigned int bit, const char* tok){
     if (fo.fit_flag_bits & bit) AppendNote(fo.note, tok);
   };
 
-  // covariance bits based on cov_status
   if (fo.cov_status < 0) {
     fo.fit_flag_bits |= COV_FAILED;
   } else if (fo.cov_status == 0) {
@@ -499,42 +483,35 @@ static void ComputeFitValidity(FitOut& fo, const PlotConfig& cfg) {
   if (fin(fo.chi2_ndf) && fo.chi2_ndf > cfg.chi2ndf_max) fo.fit_flag_bits |= CHI2NDF_HUGE;
   if (fin(fo.prob) && fo.prob < cfg.prob_min) fo.fit_flag_bits |= PROB_TINY;
 
-  // coverage uniformity (tier-dependent)
   if (fo.fit_tier == 1) {
     if (fo.phi_occ < cfg.phi_occ_min_tier1) fo.fit_flag_bits |= PHI_UNIFORM_FAIL;
   } else if (fo.fit_tier == 2) {
     if (fo.phi_occ < cfg.phi_occ_min_tier2) fo.fit_flag_bits |= PHI_UNIFORM_FAIL;
   }
 
-  // robustness
   if (fin(fo.dominant_wfrac) && fo.dominant_wfrac > cfg.max_weight_frac) fo.fit_flag_bits |= DOMINANT_WEIGHT_PT;
 
-  // at limit
   if (fo.fit_tier >= 1 && fin(fo.A) && std::abs(fo.A) >= cfg.par_limit_tol) fo.fit_flag_bits |= PARAM_AT_LIMIT;
   if (fo.fit_tier >= 2 && fin(fo.B) && std::abs(fo.B) >= cfg.par_limit_tol) fo.fit_flag_bits |= PARAM_AT_LIMIT;
 
-  // M0 sanity
   if (!fin(fo.M0) || fo.M0 <= cfg.M0_min) fo.fit_flag_bits |= M0_BAD;
   if (fin(fo.M0) && fin(fo.M0_err) && fo.M0 > 0) {
     double r = std::abs(fo.M0_err/fo.M0);
     if (r > cfg.M0_relerr_max) fo.fit_flag_bits |= M0_RELERR_HUGE;
   }
 
-  // A sanity
   if (fo.fit_tier >= 1) {
     if (!fin(fo.A) || std::abs(fo.A) > cfg.A_abs_max_plot) fo.fit_flag_bits |= A_BAD;
     if (!fin(fo.A_err) || fo.A_err <= 0 || fo.A_err > cfg.A_err_max) fo.fit_flag_bits |= A_ERR_BAD;
     if (fin(fo.A_sig) && fo.A_sig < cfg.A_sig_min) fo.fit_flag_bits |= A_SIG_LOW;
   }
 
-  // B sanity
   if (fo.fit_tier >= 2) {
     if (!fin(fo.B) || std::abs(fo.B) > cfg.B_abs_max_plot) fo.fit_flag_bits |= B_BAD;
     if (!fin(fo.B_err) || fo.B_err <= 0 || fo.B_err > cfg.B_err_max) fo.fit_flag_bits |= B_ERR_BAD;
     if (fin(fo.B_sig) && fo.B_sig < cfg.B_sig_min) fo.fit_flag_bits |= B_SIG_LOW;
   }
 
-  // notes
   noteIf(FIT_STATUS_BAD,     "FIT_STATUS_BAD");
   noteIf(NDF_NONPOSITIVE,    "NDF_NONPOSITIVE");
   noteIf(COV_FAILED,         "COV_FAILED");
@@ -555,47 +532,30 @@ static void ComputeFitValidity(FitOut& fo, const PlotConfig& cfg) {
   noteIf(B_ERR_BAD,          "B_ERR_BAD");
   noteIf(B_SIG_LOW,          "B_SIG_LOW");
 
-  // default validity
   const unsigned int catastrophic = FIT_STATUS_BAD | NONFINITE_PARAM | NONFINITE_ERR | NDF_NONPOSITIVE | COV_FAILED;
   const unsigned int defaultReject = catastrophic | COV_NOT_POSDEF | CHI2NDF_HUGE | PROB_TINY | PHI_UNIFORM_FAIL | DOMINANT_WEIGHT_PT;
 
   fo.valid_fit_default = ((fo.fit_flag_bits & defaultReject) == 0u) ? 1 : 0;
-
-  fo.valid_M0_default = (fo.valid_fit_default == 1 && (fo.fit_flag_bits & (M0_BAD | M0_RELERR_HUGE)) == 0u) ? 1 : 0;
-
-  if (fo.fit_tier >= 1) {
-    fo.valid_A_default = (fo.valid_fit_default == 1 && (fo.fit_flag_bits & (A_BAD | A_ERR_BAD | A_SIG_LOW)) == 0u) ? 1 : 0;
-  } else {
-    fo.valid_A_default = 0;
-  }
-
-  if (fo.fit_tier >= 2) {
-    fo.valid_B_default = (fo.valid_fit_default == 1 && (fo.fit_flag_bits & (B_BAD | B_ERR_BAD | B_SIG_LOW)) == 0u) ? 1 : 0;
-  } else {
-    fo.valid_B_default = 0;
-  }
+  fo.valid_M0_default  = (fo.valid_fit_default == 1 && (fo.fit_flag_bits & (M0_BAD | M0_RELERR_HUGE)) == 0u) ? 1 : 0;
+  fo.valid_A_default   = (fo.valid_fit_default == 1 && fo.fit_tier>=1 && (fo.fit_flag_bits & (A_BAD | A_ERR_BAD | A_SIG_LOW)) == 0u) ? 1 : 0;
+  fo.valid_B_default   = (fo.valid_fit_default == 1 && fo.fit_tier>=2 && (fo.fit_flag_bits & (B_BAD | B_ERR_BAD | B_SIG_LOW)) == 0u) ? 1 : 0;
 }
 
+// ---------- fit ----------
 static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFunc) {
   FitOut fo;
-  fo.mode = ""; // filled by caller
-  fo.group_id = ""; // filled by caller
-  fo.curve_label = cp.key.curve;
-  fo.setting_id = cp.key.setting_id;
+  fo.curve_label = cp.key.legend;
+  fo.setting_id  = cp.key.setting_id;
   fo.pt_bin = cp.key.pt_bin;
   fo.z_bin  = cp.key.z_bin;
-
   fo.pt_lo = cp.pt_lo; fo.pt_hi = cp.pt_hi; fo.pt_center = cp.pt_center;
-  fo.z_lo = cp.z_lo; fo.z_hi = cp.z_hi; fo.z_center = cp.z_center;
+  fo.z_lo  = cp.z_lo;  fo.z_hi  = cp.z_hi;  fo.z_center = cp.z_center;
 
   fo.npts = (int)cp.x.size();
   fo.phi_nsectors = cfg.phi_nsectors;
-
   outFunc = nullptr;
-
   if (fo.npts <= 0) return fo;
 
-  // compute span + y stats
   double xmin=1e99, xmax=-1e99;
   double ysum=0.0, yMin=1e99, yMax=-1e99;
   for (int i=0;i<fo.npts;i++) {
@@ -608,46 +568,43 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
   fo.phi_min = xmin;
   fo.phi_max = xmax;
   fo.phi_span = (xmax > xmin) ? (xmax - xmin) : 0.0;
-
   const double ymean = ysum / fo.npts;
 
-  // tier selection (same as PlotCoinXsec.C)
   if (fo.phi_span < cfg.tier_span0_max) fo.fit_tier = 0;
   else if (fo.phi_span < cfg.tier_span1_max) fo.fit_tier = 1;
   else fo.fit_tier = 2;
 
-  // downgrade by point count to prefer ndf>=1
   if (fo.fit_tier == 2 && fo.npts < 4) fo.fit_tier = (fo.npts >= 3) ? 1 : 0;
   if (fo.fit_tier == 1 && fo.npts < 3) fo.fit_tier = 0;
 
-  // coverage uniformity + robustness
   fo.phi_occ = PhiOccupancy(cp.x, cfg.phi_nsectors);
   fo.dominant_wfrac = DominantWeightFrac(cp.ey);
 
-  // build graph
   std::vector<double> ex(fo.npts, 0.0);
-  TGraphErrors g(fo.npts, const_cast<double*>(cp.x.data()), const_cast<double*>(cp.y.data()),
-                 ex.data(), const_cast<double*>(cp.ey.data()));
+  TGraphErrors g(fo.npts,
+                 const_cast<double*>(cp.x.data()),
+                 const_cast<double*>(cp.y.data()),
+                 ex.data(),
+                 const_cast<double*>(cp.ey.data()));
 
-  // function
   TF1* f = nullptr;
   if (fo.fit_tier == 0) {
-    f = new TF1(Form("f0_pt%d_z%d_%s", fo.pt_bin, fo.z_bin, fo.curve_label.c_str()), "[0]", xmin, xmax);
+    f = new TF1(Form("f0_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()), "[0]", xmin, xmax);
     f->SetParameters(ymean);
     f->SetParLimits(0, 0.0, 1e9);
   } else if (fo.fit_tier == 1) {
-    f = new TF1(Form("f1_pt%d_z%d_%s", fo.pt_bin, fo.z_bin, fo.curve_label.c_str()),
+    f = new TF1(Form("f1_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()),
                 "[0]*(1 + [1]*cos(x))", xmin, xmax);
     double A0 = 0.0;
     if (yMax + yMin > 0) {
       A0 = (yMax - yMin) / (yMax + yMin);
-      A0 = std::max(-0.9, std::min(0.9, A0)); // clipped to avoid starting on bounds
+      A0 = std::max(-0.9, std::min(0.9, A0));
     }
     f->SetParameters(ymean, A0);
     f->SetParLimits(0, 0.0, 1e9);
     f->SetParLimits(1, -1.0, 1.0);
   } else {
-    f = new TF1(Form("f2_pt%d_z%d_%s", fo.pt_bin, fo.z_bin, fo.curve_label.c_str()),
+    f = new TF1(Form("f2_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()),
                 "[0]*(1 + [1]*cos(x) + [2]*cos(2*x))", xmin, xmax);
     double A0 = 0.0;
     if (yMax + yMin > 0) {
@@ -660,16 +617,14 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
     f->SetParLimits(2, -1.0, 1.0);
   }
 
-  // Fit with result for cov status
   TFitResultPtr r = g.Fit(f, "RQS0");
-  fo.fit_status = (int)r; // ROOT convention: 0 ok
+  fo.fit_status = (int)r;
   if (r.Get()) {
     fo.cov_status = r->CovMatrixStatus();
     fo.chi2 = r->Chi2();
     fo.ndf  = r->Ndf();
     fo.prob = r->Prob();
   } else {
-    // fallback
     fo.cov_status = -1;
     fo.chi2 = f->GetChisquare();
     fo.ndf  = f->GetNDF();
@@ -677,7 +632,6 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
   }
   if (fo.ndf > 0) fo.chi2_ndf = fo.chi2 / (double)fo.ndf;
 
-  // parameters
   fo.M0 = f->GetParameter(0);
   fo.M0_err = f->GetParError(0);
   if (fo.fit_tier >= 1) { fo.A = f->GetParameter(1); fo.A_err = f->GetParError(1); }
@@ -686,7 +640,6 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
   if (std::isfinite(fo.A) && std::isfinite(fo.A_err) && fo.A_err > 0) fo.A_sig = std::abs(fo.A)/fo.A_err;
   if (std::isfinite(fo.B) && std::isfinite(fo.B_err) && fo.B_err > 0) fo.B_sig = std::abs(fo.B)/fo.B_err;
 
-  // sanitize non-finite -> kMissing
   auto sane = [&](double v){ return std::isfinite(v) ? v : kMissing; };
   fo.M0 = sane(fo.M0); fo.M0_err = sane(fo.M0_err);
   fo.A  = sane(fo.A);  fo.A_err  = sane(fo.A_err);
@@ -697,14 +650,13 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
   fo.A_sig = sane(fo.A_sig);
   fo.B_sig = sane(fo.B_sig);
 
-  // validity bits and derived booleans
   ComputeFitValidity(fo, cfg);
 
   outFunc = f;
   return fo;
 }
 
-// ---------- fit csv ----------
+// ---------- fit CSV ----------
 static void WriteFitHeader(std::ofstream& out) {
   out
     << "mode,group_id,curve_label,setting_id,pt_bin,z_bin,"
@@ -747,7 +699,7 @@ static void WriteFitRow(std::ofstream& out, const FitOut& fo) {
 } // namespace
 
 // ------------------------------------------------------------
-// Main entry (wrapper): pass the same manifestPath or group .list as before
+// Main macro entry
 // ------------------------------------------------------------
 void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
                            const char* resultsRoot = "results",
@@ -772,7 +724,7 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
   std::string pngPath;
 
   if (isGroup) {
-    id = StripExtension(Basename(p)); // group_id
+    id = StripExtension(Basename(p));
     resultsDir = NormalizeSlashes(std::string(resultsRoot) + "/" + id);
     csvPath = resultsDir + "/tables/xsec_phipq_z_pt_overlayed_group.csv";
     fitPath = resultsDir + "/tables/fit_parameters_group.csv";
@@ -785,50 +737,47 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
     pngPath = resultsDir + "/PNGs/xsec_phipq_z_pt_overlayed_single.png";
   }
 
-  // Ensure output dirs exist
   MkdirP(resultsDir);
   MkdirP(resultsDir + "/tables");
   MkdirP(resultsDir + "/PNGs");
 
-  // Config defaults (as agreed)
   PlotConfig cfg;
   cfg.save_png = savePNGs;
   cfg.save_fit_csv = saveFitCsv;
 
-  // Read table
   std::vector<Row> rows;
-  std::string headerLine;
-  if (!ReadTableCSV(csvPath, rows, headerLine)) {
+  if (!ReadTableCSV(csvPath, rows)) {
     std::cerr << "ERROR: cannot read table CSV: " << csvPath << "\n";
     return;
   }
   std::cout << "Read rows: " << rows.size() << " from " << csvPath << "\n";
 
-  // Filter + group
   std::map<CurveKey, CurvePoints> curves;
-
-  // keep bin definitions
   std::map<int, std::pair<double,double>> ptEdgesByBin;
-  std::map<int, std::pair<double,double>> zEdgesByBin;
 
   for (const auto& r : rows) {
     if (!PassPointDefault(r, cfg)) continue;
 
     ptEdgesByBin[r.pt_bin] = {r.pt_lo, r.pt_hi};
-    zEdgesByBin[r.z_bin]   = {r.z_lo,  r.z_hi};
 
     CurveKey k;
     k.pt_bin = r.pt_bin;
-    k.z_bin  = r.z_bin;
 
     if (isGroup) {
-      // curves = settings / curve_label (for legend), but keep setting_id for bookkeeping
-      k.curve = (!r.curve_label.empty()) ? r.curve_label : r.setting_id;
+      k.z_bin = -1;
       k.setting_id = r.setting_id;
+      double zset = ParseZSetting(r.curve_label);
+      k.sort_z = zset;
+      if (std::isfinite(zset) && zset != kMissing) {
+        k.legend = Form("z = %.2f", zset);
+      } else {
+        k.legend = r.curve_label.empty() ? r.setting_id : r.curve_label;
+      }
     } else {
-      // curves = z bins (label by z-range later); keep setting_id
-      k.curve = Form("zbin%d", r.z_bin);
+      k.z_bin = r.z_bin;
       k.setting_id = r.setting_id;
+      k.sort_z = r.z_center;
+      k.legend = Form("zbin%d", r.z_bin);
     }
 
     auto& cp = curves[k];
@@ -836,16 +785,23 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
     cp.x.push_back(r.phi_center);
     cp.y.push_back(r.xsec);
     cp.ey.push_back(r.xsec_err);
+
     cp.pt_lo = r.pt_lo; cp.pt_hi = r.pt_hi; cp.pt_center = r.pt_center;
-    cp.z_lo  = r.z_lo;  cp.z_hi  = r.z_hi;  cp.z_center  = r.z_center;
+
+    if (isGroup) {
+      double zset = ParseZSetting(r.curve_label);
+      cp.z_center = zset;
+      cp.z_lo = kMissing; cp.z_hi = kMissing;
+    } else {
+      cp.z_lo = r.z_lo; cp.z_hi = r.z_hi; cp.z_center = r.z_center;
+    }
   }
 
   if (curves.empty()) {
-    std::cerr << "ERROR: after filtering, 0 curves/points remain. Check filters or table validity.\n";
+    std::cerr << "ERROR: after filtering, 0 curves/points remain.\n";
     return;
   }
 
-  // Sort points within each curve by phi
   for (auto& kv : curves) {
     auto& cp = kv.second;
     std::vector<size_t> idx(cp.x.size());
@@ -859,33 +815,20 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
     reorder(cp.x); reorder(cp.y); reorder(cp.ey);
   }
 
-  // Determine pt bins and z bins present
-  std::vector<int> ptBins, zBins;
+  std::vector<int> ptBins;
   for (auto& kv : ptEdgesByBin) ptBins.push_back(kv.first);
-  for (auto& kv : zEdgesByBin)  zBins.push_back(kv.first);
   std::sort(ptBins.begin(), ptBins.end());
-  std::sort(zBins.begin(), zBins.end());
 
   const int nPt = (int)ptBins.size();
-  const int nZ  = isGroup ? (int)zBins.size() : 1;
+  int nCols = (nPt <= 2) ? nPt : 2;
+  int nRows = (int)std::ceil((double)nPt / (double)nCols);
 
-  // Create canvas:
-  //  - single: grid over pt only (cols up to 2)
-  //  - group : grid rows = z bins, cols = pt bins (single output PNG)
-  int nCols = isGroup ? nPt : ((nPt <= 2) ? nPt : 2);
-  int nRows = isGroup ? nZ  : (int)std::ceil((double)nPt / (double)nCols);
-
-  int width  = 1200;
-  int height = 450 * nRows;
-  if (isGroup) {
-    width  = std::max(900, 420 * nCols);
-    height = std::max(600, 360 * nRows);
-  }
+  int width  = 900 * nCols;
+  int height = 650 * nRows;
 
   TCanvas* c = new TCanvas("c_xsec_from_table", "xsec vs phipq (from table)", width, height);
-  c->Divide(nCols, nRows, 0.001, 0.001);
+  c->Divide(nCols, nRows, 0.002, 0.002);
 
-  // Open fit CSV
   std::ofstream fitcsv;
   if (cfg.save_fit_csv) {
     fitcsv.open(fitPath, std::ios::out);
@@ -893,166 +836,124 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
     std::cout << "Fit CSV: " << fitPath << "\n";
   }
 
-  // Colors
   static const Color_t palette[] = { kBlack, kRed+1, kBlue+1, kGreen+2, kMagenta+1, kOrange+7, kCyan+2, kViolet+1 };
   static const int nPal = sizeof(palette)/sizeof(palette[0]);
 
-  // Store fit funcs to keep alive
   std::vector<TF1*> fitFuncs;
 
-  // Helper: get pt edges
   auto ptEdge = [&](int pt_bin)->std::pair<double,double>{
     auto it = ptEdgesByBin.find(pt_bin);
     if (it!=ptEdgesByBin.end()) return it->second;
     return {kMissing,kMissing};
   };
-  auto zEdge = [&](int z_bin)->std::pair<double,double>{
-    auto it = zEdgesByBin.find(z_bin);
-    if (it!=zEdgesByBin.end()) return it->second;
-    return {kMissing,kMissing};
-  };
 
-  // Draw per pad
-  for (int rZ=0; rZ<nRows; rZ++) {
-    for (int cPt=0; cPt<nCols; cPt++) {
-      int padIdx = rZ*nCols + cPt + 1;
-      if (padIdx > nCols*nRows) continue;
-      c->cd(padIdx);
-      gPad->SetGrid(1,1);
-      gPad->SetLeftMargin(0.12);
-      gPad->SetRightMargin(0.04);
-      gPad->SetTopMargin(0.10);
-      gPad->SetBottomMargin(0.12);
+  for (int ip=0; ip<nPt; ip++) {
+    c->cd(ip+1);
 
-      int pt_bin = -1;
-      int z_bin  = -1;
+    gPad->SetGrid(1,1);
+    gPad->SetLeftMargin(0.18);
+    gPad->SetRightMargin(0.05);
+    gPad->SetTopMargin(0.08);
+    gPad->SetBottomMargin(0.18);
+    gPad->SetTickx();
+    gPad->SetTicky();
+
+    int pt_bin = ptBins[ip];
+    auto [ptLo, ptHi] = ptEdge(pt_bin);
+    double ptCtr = (std::isfinite(ptLo) && std::isfinite(ptHi)) ? 0.5*(ptLo+ptHi) : kMissing;
+
+    std::vector<CurvePoints*> curvesHere;
+    for (auto& kv : curves) if (kv.first.pt_bin == pt_bin) curvesHere.push_back(&kv.second);
+
+    std::sort(curvesHere.begin(), curvesHere.end(),
+      [&](const CurvePoints* a, const CurvePoints* b){
+        double za = a->key.sort_z, zb = b->key.sort_z;
+        if (std::isfinite(za) && std::isfinite(zb) && za != zb) return za < zb;
+        return a->key.legend < b->key.legend;
+      });
+
+    double yMax = 0.0;
+    for (auto* cp : curvesHere)
+      for (size_t i=0;i<cp->y.size();i++)
+        yMax = std::max(yMax, cp->y[i] + cp->ey[i]);
+    if (yMax <= 0.0) yMax = 1.0;
+
+    TH1F* frame = (TH1F*)gPad->DrawFrame(0.0, 0.0, TMath::TwoPi(), 1.20*yMax);
+    frame->SetTitle("");
+    frame->GetXaxis()->SetTitle(cfg.xTitle);
+    frame->GetYaxis()->SetTitle(cfg.yTitle);
+
+    frame->GetXaxis()->SetTitleSize(0.060);
+    frame->GetYaxis()->SetTitleSize(0.060);
+    frame->GetXaxis()->SetLabelSize(0.050);
+    frame->GetYaxis()->SetLabelSize(0.050);
+
+    frame->GetXaxis()->SetTitleOffset(1.25);
+    frame->GetYaxis()->SetTitleOffset(1.45);
+    frame->GetXaxis()->SetLabelOffset(0.010);
+    frame->GetYaxis()->SetLabelOffset(0.010);
+
+    TLegend* leg = new TLegend(0.20, 0.68, 0.58, 0.90);
+    leg->SetBorderSize(0);
+    leg->SetFillStyle(0);
+    leg->SetTextSize(0.042);
+    leg->SetHeader(Form("p_{T} [%.2f, %.2f]", ptLo, ptHi), "C");
+
+    int colorIndex = 0;
+    int drawn = 0;
+
+    for (auto* cp : curvesHere) {
+      int N = (int)cp->x.size();
+      if (N <= 0) continue;
+
+      std::vector<double> ex(N, 0.0);
+      TGraphErrors* g = new TGraphErrors(N, cp->x.data(), cp->y.data(), ex.data(), cp->ey.data());
+
+      Color_t col = palette[colorIndex % nPal];
+      colorIndex++;
+
+      g->SetMarkerStyle(20 + (drawn % 6));
+      g->SetMarkerSize(0.95);
+      g->SetLineWidth(2);
+      g->SetMarkerColor(col);
+      g->SetLineColor(col);
+      g->Draw("E1P SAME");
+
+      TF1* f = nullptr;
+      FitOut fo = FitCurve(*cp, cfg, f);
+      fo.mode = isGroup ? "group" : "single";
+      fo.group_id = id;
+      fo.pt_center = ptCtr;
 
       if (isGroup) {
-        if (cPt >= nPt || rZ >= nZ) continue;
-        pt_bin = ptBins[cPt];
-        z_bin  = zBins[rZ];
+        fo.z_bin = -1;
+        fo.z_lo = kMissing;
+        fo.z_hi = kMissing;
+        fo.z_center = cp->z_center;
+      }
+
+      if (f) {
+        f->SetLineColor(col);
+        f->SetLineWidth(2);
+        f->Draw("L SAME");
+        fitFuncs.push_back(f);
+
+        if (cfg.save_fit_csv && fitcsv.is_open()) WriteFitRow(fitcsv, fo);
+      }
+
+      if (isGroup) {
+        leg->AddEntry(g, cp->key.legend.c_str(), "pe");
       } else {
-        // pad indexing: fill by ptBins across grid
-        int linear = rZ*nCols + cPt;
-        if (linear >= nPt) continue;
-        pt_bin = ptBins[linear];
-        z_bin  = -999; // unused in pad selection for single
+        leg->AddEntry(g, Form("z #in [%.2f, %.2f]", cp->z_lo, cp->z_hi), "pe");
       }
 
-      auto [ptLo, ptHi] = ptEdge(pt_bin);
-      double ptCtr = (std::isfinite(ptLo) && std::isfinite(ptHi)) ? 0.5*(ptLo+ptHi) : kMissing;
-
-      double zLo=kMissing,zHi=kMissing,zCtr=kMissing;
-      if (isGroup) {
-        auto ze = zEdge(z_bin);
-        zLo = ze.first; zHi = ze.second;
-        zCtr = (std::isfinite(zLo)&&std::isfinite(zHi)) ? 0.5*(zLo+zHi) : kMissing;
-      }
-
-      // Determine y max in this pad
-      double yMax = 0.0;
-      for (const auto& kv : curves) {
-        const auto& ck = kv.first;
-        const auto& cp = kv.second;
-        if (ck.pt_bin != pt_bin) continue;
-        if (isGroup && ck.z_bin != z_bin) continue;
-        if (!isGroup && ck.z_bin < 0) continue; // shouldn't happen
-        for (size_t i=0;i<cp.y.size();i++) {
-          yMax = std::max(yMax, cp.y[i] + cp.ey[i]);
-        }
-      }
-      if (yMax <= 0.0) yMax = 1.0;
-
-      TH1F* frame = (TH1F*)gPad->DrawFrame(0.0, 0.0, TMath::TwoPi(), 1.20*yMax);
-      frame->SetTitle("");
-      frame->GetXaxis()->SetTitle("#phi_{pq} (rad)");
-      frame->GetYaxis()->SetTitle("d#sigma / d#phi (arb.)");
-      frame->GetXaxis()->SetTitleSize(0.055);
-      frame->GetYaxis()->SetTitleSize(0.055);
-      frame->GetXaxis()->SetLabelSize(0.045);
-      frame->GetYaxis()->SetLabelSize(0.045);
-
-      // pad title text via legend header
-      TLegend* leg = new TLegend(0.12, 0.70, 0.96, 0.90);
-      leg->SetBorderSize(0);
-      leg->SetFillStyle(0);
-      leg->SetTextSize(0.040);
-
-      if (isGroup) {
-        leg->SetHeader(Form("p_{T} [%.2f, %.2f],  z [%.2f, %.2f]", ptLo, ptHi, zLo, zHi), "C");
-      } else {
-        leg->SetHeader(Form("p_{T} [%.2f, %.2f]", ptLo, ptHi), "C");
-      }
-
-      // Draw curves in this pad
-      int drawn=0;
-      int colorIndex=0;
-
-      for (auto& kv : curves) {
-        const auto& ck = kv.first;
-        auto& cp = kv.second;
-        if (ck.pt_bin != pt_bin) continue;
-        if (isGroup && ck.z_bin != z_bin) continue;
-
-        // Build graph
-        int N = (int)cp.x.size();
-        if (N <= 0) continue;
-
-        std::vector<double> ex(N, 0.0);
-        TGraphErrors* g = new TGraphErrors(N, cp.x.data(), cp.y.data(), ex.data(), cp.ey.data());
-
-        Color_t col = palette[colorIndex % nPal];
-        colorIndex++;
-
-        g->SetMarkerStyle(20 + (drawn % 6));
-        g->SetMarkerSize(0.9);
-        g->SetLineWidth(2);
-        g->SetMarkerColor(col);
-        g->SetLineColor(col);
-
-        g->Draw("E1P SAME");
-
-        // Fit and draw
-        TF1* f = nullptr;
-        FitOut fo = FitCurve(cp, cfg, f);
-        fo.mode = isGroup ? "group" : "single";
-        fo.group_id = isGroup ? id : ""; // match legacy convention; empty for single
-        fo.pt_center = ptCtr;
-        if (isGroup) {
-          fo.z_lo = zLo; fo.z_hi = zHi; fo.z_center = zCtr;
-        } else {
-          fo.z_lo = cp.z_lo; fo.z_hi = cp.z_hi; fo.z_center = cp.z_center;
-        }
-
-        if (f) {
-          f->SetLineColor(col);
-          f->SetLineWidth(2);
-          f->Draw("L SAME");
-          fitFuncs.push_back(f);
-
-          if (cfg.save_fit_csv && fitcsv.is_open()) {
-            WriteFitRow(fitcsv, fo);
-          }
-        }
-
-        // Legend entry
-        if (isGroup) {
-          leg->AddEntry(g, ck.curve.c_str(), "pe");
-        } else {
-          // label by z-range
-          leg->AddEntry(g, Form("z #in [%.2f, %.2f]", cp.z_lo, cp.z_hi), "pe");
-        }
-
-        drawn++;
-      }
-
-      leg->Draw();
+      drawn++;
     }
+
+    leg->Draw();
   }
 
-  if (cfg.save_fit_csv && fitcsv.is_open()) {
-    fitcsv.close();
-  }
+  if (cfg.save_fit_csv && fitcsv.is_open()) fitcsv.close();
 
   if (cfg.save_png) {
     c->SaveAs(pngPath.c_str());

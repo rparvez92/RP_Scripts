@@ -3,7 +3,7 @@
 // Reads table CSV(s) produced by TableCoinXsec.C and generates:
 //   - xsec vs phipq plots with pads = pT bins
 //   - curves = z (single mode) OR z-settings from group list (group mode)
-//   - tiered physics fits: M0, M0(1+A cos phi), M0(1 + A cos phi + B cos 2phi)
+//   - tiered physics fits: sigma = M0*(1 + A cos(phi) + B cos(2phi)) with tiering
 //   - fit_parameters_single.csv / fit_parameters_group.csv
 //   - PNG outputs:
 //       results/<setting_id>/PNGs/xsec_phipq_z_pt_overlayed_single.png
@@ -14,6 +14,15 @@
 //   * Group  mode: z is the fixed setting value encoded in curve_label (e.g. z0p36),
 //                  curves are those z-settings, labeled cleanly as "z = 0.xx".
 //     (No z-range in group mode.)
+//
+// Fitting philosophy updates (per your request):
+//   * Plot points use DEFAULT filter (valid_default etc).
+//   * Fits use a stricter, FIT-ONLY filter + robustness guards:
+//       - keep only points with rel_err = (xsec_err/xsec) < 0.60 for fit
+//       - apply an error floor: sigma_i <- max(sigma_i, 0.25 * median(sigma))
+//       - if a single point dominates weights after the floor (dominant_wfrac > 0.60),
+//         drop that single most-influential point and refit once
+//   * Do NOT draw fit curve unless valid_fit_default==1 (i.e., trustworthy fit).
 //
 // Run examples:
 //   root -l -b -q 'macros/PlotCoinXsecFromTable.C("settings/.../manifest.txt","results","settings")'
@@ -176,6 +185,20 @@ static double ParseZSetting(std::string s) {
   return z;
 }
 
+// median for positive finite values
+static double MedianPositive(const std::vector<double>& v) {
+  std::vector<double> a;
+  a.reserve(v.size());
+  for (double x : v) {
+    if (std::isfinite(x) && x > 0) a.push_back(x);
+  }
+  if (a.empty()) return kMissing;
+  std::sort(a.begin(), a.end());
+  size_t n = a.size();
+  if (n % 2 == 1) return a[n/2];
+  return 0.5*(a[n/2 - 1] + a[n/2]);
+}
+
 // ---------- Fit flag bits ----------
 enum FitFlagBits : unsigned int {
   FIT_STATUS_BAD      = 1u << 0,
@@ -196,7 +219,9 @@ enum FitFlagBits : unsigned int {
   B_BAD               = 1u << 15,
   B_ERR_BAD           = 1u << 16,
   B_SIG_LOW           = 1u << 17,
-  DOMINANT_WEIGHT_PT  = 1u << 18
+  DOMINANT_WEIGHT_PT  = 1u << 18,
+  NO_FIT_POINTS       = 1u << 19,
+  ROBUST_DROPPED_PT   = 1u << 20
 };
 
 static void AppendNote(std::string& note, const char* tok) {
@@ -206,26 +231,35 @@ static void AppendNote(std::string& note, const char* tok) {
 
 // ---------- Config ----------
 struct PlotConfig {
+  // plot-point filtering (DEFAULT)
   bool use_valid_default = true;
   bool allow_negative_xsec = false;
 
-  bool use_relx_guard = false;
-  double max_rel_xsec_err_plot = 0.80;
+  // Fit-only filter + robustness (defaults you approved)
+  double fit_relerr_max = 0.60;
+  double fit_sigma_floor_frac = 0.25;
+  double robust_drop_dom_wfrac_gt = 0.60;
 
-  double tier_span0_max = 1.0;
-  double tier_span1_max = TMath::Pi();
+  // fit tier thresholds
+  double tier_span0_max = 1.0;          // <1 rad => tier 0
+  double tier_span1_max = TMath::Pi();  // <pi => tier 1; else tier 2
 
+  // coverage uniformity
   int phi_nsectors = 8;
   int phi_occ_min_tier1 = 3;
   int phi_occ_min_tier2 = 4;
 
-  double max_weight_frac = 0.80;
+  // robustness: also hard reject if still dominated after dropping
+  double max_weight_frac_reject = 0.80;
 
+  // fit-quality thresholds
   double chi2ndf_max = 10.0;
   double prob_min = 1e-6;
 
+  // "at limit" tolerance for A,B
   double par_limit_tol = 0.98;
 
+  // parameter sanity
   double M0_min = 0.0;
   double M0_relerr_max = 1.0;
 
@@ -237,9 +271,11 @@ struct PlotConfig {
   double B_err_max = 1.0;
   double B_sig_min = 1.0;
 
+  // labels
   TString xTitle = "#phi_{pq} (rad)";
   TString yTitle = "d#sigma";
 
+  // output
   bool save_png = true;
   bool save_fit_csv = true;
 };
@@ -278,7 +314,8 @@ struct FitOut {
   double pt_lo=kMissing, pt_hi=kMissing, pt_center=kMissing;
   double z_lo=kMissing, z_hi=kMissing, z_center=kMissing;
 
-  int npts=0;
+  int npts=0;          // plotted points
+  int npts_fit=0;      // points used in fit (after fit-only filter)
   double phi_min=kMissing, phi_max=kMissing, phi_span=kMissing;
   int phi_occ=0;
   int phi_nsectors=0;
@@ -385,7 +422,7 @@ static bool ReadTableCSV(const std::string& csvPath, std::vector<Row>& rows) {
   return true;
 }
 
-// ---------- point filter ----------
+// ---------- point filter (plot) ----------
 static bool PassPointDefault(const Row& r, const PlotConfig& cfg) {
   if (!std::isfinite(r.phi_center)) return false;
   if (!std::isfinite(r.xsec) || !std::isfinite(r.xsec_err)) return false;
@@ -394,21 +431,16 @@ static bool PassPointDefault(const Row& r, const PlotConfig& cfg) {
 
   if (cfg.use_valid_default && r.valid_default != 1) return false;
   if (!cfg.allow_negative_xsec && r.xsec <= 0.0) return false;
-
-  if (cfg.use_relx_guard) {
-    if (!std::isfinite(r.rel_xsec_err) || r.rel_xsec_err == kMissing) return false;
-    if (r.rel_xsec_err > cfg.max_rel_xsec_err_plot) return false;
-  }
   return true;
 }
 
 // ---------- curve grouping ----------
 struct CurveKey {
   int pt_bin=-1;
-  int z_bin=-1;
-  double sort_z=kMissing;
-  std::string legend;
-  std::string setting_id;
+  int z_bin=-1;           // single mode uses z_bin; group mode uses -1
+  double sort_z=kMissing; // single: z_center; group: z_setting
+  std::string legend;     // legend label
+  std::string setting_id; // source setting id (group)
 };
 
 static bool operator<(const CurveKey& a, const CurveKey& b) {
@@ -421,9 +453,9 @@ static bool operator<(const CurveKey& a, const CurveKey& b) {
 
 struct CurvePoints {
   CurveKey key;
-  std::vector<double> x, y, ey;
+  std::vector<double> x, y, ey; // plotted points (already default-filtered)
   double pt_lo=kMissing, pt_hi=kMissing, pt_center=kMissing;
-  double z_lo=kMissing, z_hi=kMissing, z_center=kMissing;
+  double z_lo=kMissing, z_hi=kMissing, z_center=kMissing; // single: range; group: only z_center
 };
 
 // ---------- uniformity ----------
@@ -444,7 +476,7 @@ static int PhiOccupancy(const std::vector<double>& phi, int nsectors) {
   return cnt;
 }
 
-// ---------- robustness ----------
+// dominant weight fraction for a given error vector (after any floors)
 static double DominantWeightFrac(const std::vector<double>& ey) {
   double sum = 0.0;
   double mx = 0.0;
@@ -464,6 +496,7 @@ static void ComputeFitValidity(FitOut& fo, const PlotConfig& cfg) {
     if (fo.fit_flag_bits & bit) AppendNote(fo.note, tok);
   };
 
+  // covariance bits
   if (fo.cov_status < 0) {
     fo.fit_flag_bits |= COV_FAILED;
   } else if (fo.cov_status == 0) {
@@ -483,62 +516,137 @@ static void ComputeFitValidity(FitOut& fo, const PlotConfig& cfg) {
   if (fin(fo.chi2_ndf) && fo.chi2_ndf > cfg.chi2ndf_max) fo.fit_flag_bits |= CHI2NDF_HUGE;
   if (fin(fo.prob) && fo.prob < cfg.prob_min) fo.fit_flag_bits |= PROB_TINY;
 
+  // coverage uniformity
   if (fo.fit_tier == 1) {
     if (fo.phi_occ < cfg.phi_occ_min_tier1) fo.fit_flag_bits |= PHI_UNIFORM_FAIL;
   } else if (fo.fit_tier == 2) {
     if (fo.phi_occ < cfg.phi_occ_min_tier2) fo.fit_flag_bits |= PHI_UNIFORM_FAIL;
   }
 
-  if (fin(fo.dominant_wfrac) && fo.dominant_wfrac > cfg.max_weight_frac) fo.fit_flag_bits |= DOMINANT_WEIGHT_PT;
+  // hard reject still dominated
+  if (fin(fo.dominant_wfrac) && fo.dominant_wfrac > cfg.max_weight_frac_reject) fo.fit_flag_bits |= DOMINANT_WEIGHT_PT;
 
+  // at limit
   if (fo.fit_tier >= 1 && fin(fo.A) && std::abs(fo.A) >= cfg.par_limit_tol) fo.fit_flag_bits |= PARAM_AT_LIMIT;
   if (fo.fit_tier >= 2 && fin(fo.B) && std::abs(fo.B) >= cfg.par_limit_tol) fo.fit_flag_bits |= PARAM_AT_LIMIT;
 
+  // M0 sanity
   if (!fin(fo.M0) || fo.M0 <= cfg.M0_min) fo.fit_flag_bits |= M0_BAD;
   if (fin(fo.M0) && fin(fo.M0_err) && fo.M0 > 0) {
     double r = std::abs(fo.M0_err/fo.M0);
     if (r > cfg.M0_relerr_max) fo.fit_flag_bits |= M0_RELERR_HUGE;
   }
 
+  // A sanity
   if (fo.fit_tier >= 1) {
     if (!fin(fo.A) || std::abs(fo.A) > cfg.A_abs_max_plot) fo.fit_flag_bits |= A_BAD;
     if (!fin(fo.A_err) || fo.A_err <= 0 || fo.A_err > cfg.A_err_max) fo.fit_flag_bits |= A_ERR_BAD;
     if (fin(fo.A_sig) && fo.A_sig < cfg.A_sig_min) fo.fit_flag_bits |= A_SIG_LOW;
   }
 
+  // B sanity
   if (fo.fit_tier >= 2) {
     if (!fin(fo.B) || std::abs(fo.B) > cfg.B_abs_max_plot) fo.fit_flag_bits |= B_BAD;
     if (!fin(fo.B_err) || fo.B_err <= 0 || fo.B_err > cfg.B_err_max) fo.fit_flag_bits |= B_ERR_BAD;
     if (fin(fo.B_sig) && fo.B_sig < cfg.B_sig_min) fo.fit_flag_bits |= B_SIG_LOW;
   }
 
-  noteIf(FIT_STATUS_BAD,     "FIT_STATUS_BAD");
-  noteIf(NDF_NONPOSITIVE,    "NDF_NONPOSITIVE");
-  noteIf(COV_FAILED,         "COV_FAILED");
-  noteIf(COV_NOT_POSDEF,     "COV_NOT_POSDEF");
-  noteIf(NONFINITE_PARAM,    "NONFINITE_PARAM");
-  noteIf(NONFINITE_ERR,      "NONFINITE_ERR");
-  noteIf(CHI2NDF_HUGE,       "CHI2NDF_HUGE");
-  noteIf(PROB_TINY,          "PROB_TINY");
-  noteIf(PHI_UNIFORM_FAIL,   "PHI_UNIFORM_FAIL");
-  noteIf(DOMINANT_WEIGHT_PT, "DOMINANT_WEIGHT_PT");
-  noteIf(PARAM_AT_LIMIT,     "PARAM_AT_LIMIT");
-  noteIf(M0_BAD,             "M0_BAD");
-  noteIf(M0_RELERR_HUGE,     "M0_RELERR_HUGE");
-  noteIf(A_BAD,              "A_BAD");
-  noteIf(A_ERR_BAD,          "A_ERR_BAD");
-  noteIf(A_SIG_LOW,          "A_SIG_LOW");
-  noteIf(B_BAD,              "B_BAD");
-  noteIf(B_ERR_BAD,          "B_ERR_BAD");
-  noteIf(B_SIG_LOW,          "B_SIG_LOW");
+  // notes
+  noteIf(NO_FIT_POINTS,     "NO_FIT_POINTS");
+  noteIf(ROBUST_DROPPED_PT, "ROBUST_DROPPED_PT");
+  noteIf(FIT_STATUS_BAD,    "FIT_STATUS_BAD");
+  noteIf(NDF_NONPOSITIVE,   "NDF_NONPOSITIVE");
+  noteIf(COV_FAILED,        "COV_FAILED");
+  noteIf(COV_NOT_POSDEF,    "COV_NOT_POSDEF");
+  noteIf(NONFINITE_PARAM,   "NONFINITE_PARAM");
+  noteIf(NONFINITE_ERR,     "NONFINITE_ERR");
+  noteIf(CHI2NDF_HUGE,      "CHI2NDF_HUGE");
+  noteIf(PROB_TINY,         "PROB_TINY");
+  noteIf(PHI_UNIFORM_FAIL,  "PHI_UNIFORM_FAIL");
+  noteIf(DOMINANT_WEIGHT_PT,"DOMINANT_WEIGHT_PT");
+  noteIf(PARAM_AT_LIMIT,    "PARAM_AT_LIMIT");
+  noteIf(M0_BAD,            "M0_BAD");
+  noteIf(M0_RELERR_HUGE,    "M0_RELERR_HUGE");
+  noteIf(A_BAD,             "A_BAD");
+  noteIf(A_ERR_BAD,         "A_ERR_BAD");
+  noteIf(A_SIG_LOW,         "A_SIG_LOW");
+  noteIf(B_BAD,             "B_BAD");
+  noteIf(B_ERR_BAD,         "B_ERR_BAD");
+  noteIf(B_SIG_LOW,         "B_SIG_LOW");
 
-  const unsigned int catastrophic = FIT_STATUS_BAD | NONFINITE_PARAM | NONFINITE_ERR | NDF_NONPOSITIVE | COV_FAILED;
+  const unsigned int catastrophic = FIT_STATUS_BAD | NONFINITE_PARAM | NONFINITE_ERR | NDF_NONPOSITIVE | COV_FAILED | NO_FIT_POINTS;
   const unsigned int defaultReject = catastrophic | COV_NOT_POSDEF | CHI2NDF_HUGE | PROB_TINY | PHI_UNIFORM_FAIL | DOMINANT_WEIGHT_PT;
 
   fo.valid_fit_default = ((fo.fit_flag_bits & defaultReject) == 0u) ? 1 : 0;
-  fo.valid_M0_default  = (fo.valid_fit_default == 1 && (fo.fit_flag_bits & (M0_BAD | M0_RELERR_HUGE)) == 0u) ? 1 : 0;
-  fo.valid_A_default   = (fo.valid_fit_default == 1 && fo.fit_tier>=1 && (fo.fit_flag_bits & (A_BAD | A_ERR_BAD | A_SIG_LOW)) == 0u) ? 1 : 0;
-  fo.valid_B_default   = (fo.valid_fit_default == 1 && fo.fit_tier>=2 && (fo.fit_flag_bits & (B_BAD | B_ERR_BAD | B_SIG_LOW)) == 0u) ? 1 : 0;
+  fo.valid_M0_default = (fo.valid_fit_default == 1 && (fo.fit_flag_bits & (M0_BAD | M0_RELERR_HUGE)) == 0u) ? 1 : 0;
+  fo.valid_A_default  = (fo.valid_fit_default == 1 && fo.fit_tier>=1 && (fo.fit_flag_bits & (A_BAD | A_ERR_BAD | A_SIG_LOW)) == 0u) ? 1 : 0;
+  fo.valid_B_default  = (fo.valid_fit_default == 1 && fo.fit_tier>=2 && (fo.fit_flag_bits & (B_BAD | B_ERR_BAD | B_SIG_LOW)) == 0u) ? 1 : 0;
+}
+
+// choose tier based on fit-point span and fit-point count, then downgrade by occupancy
+static int ChooseTier(int npts_fit, double phi_span_fit, int phi_occ, const PlotConfig& cfg) {
+  int tier = 2;
+  if (phi_span_fit < cfg.tier_span0_max) tier = 0;
+  else if (phi_span_fit < cfg.tier_span1_max) tier = 1;
+  else tier = 2;
+
+  if (tier == 2 && npts_fit < 4) tier = (npts_fit >= 3) ? 1 : 0;
+  if (tier == 1 && npts_fit < 3) tier = 0;
+
+  // Pre-downgrade by coverage
+  if (tier == 2 && phi_occ < cfg.phi_occ_min_tier2) tier = 1;
+  if (tier == 1 && phi_occ < cfg.phi_occ_min_tier1) tier = 0;
+
+  return tier;
+}
+
+// build fit vectors from plotted points with fit-only filtering and error floor
+static void BuildFitVectors(const CurvePoints& cp, const PlotConfig& cfg,
+                            std::vector<double>& xf, std::vector<double>& yf, std::vector<double>& ef,
+                            bool& didDrop, int& droppedIndex)
+{
+  xf.clear(); yf.clear(); ef.clear();
+  didDrop = false;
+  droppedIndex = -1;
+
+  // fit-only relerr cut
+  for (size_t i=0;i<cp.x.size();i++) {
+    double x = cp.x[i];
+    double y = cp.y[i];
+    double e = cp.ey[i];
+    if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(e)) continue;
+    if (y <= 0 || e <= 0) continue;
+    double rel = e / y;
+    if (std::isfinite(rel) && rel > cfg.fit_relerr_max) continue;
+    xf.push_back(x);
+    yf.push_back(y);
+    ef.push_back(e);
+  }
+
+  if (ef.empty()) return;
+
+  // error floor
+  double med = MedianPositive(ef);
+  if (std::isfinite(med) && med > 0) {
+    double floor = cfg.fit_sigma_floor_frac * med;
+    for (double& e : ef) if (e < floor) e = floor;
+  }
+
+  // robust: if dominated, drop most influential point and refit once
+  double dom = DominantWeightFrac(ef);
+  if (std::isfinite(dom) && dom > cfg.robust_drop_dom_wfrac_gt && ef.size() >= 4) {
+    // find index of max weight = min ef
+    size_t imax = 0;
+    double best = 1e99;
+    for (size_t i=0;i<ef.size();i++) {
+      if (ef[i] < best) { best = ef[i]; imax = i; }
+    }
+    droppedIndex = (int)imax;
+    didDrop = true;
+    xf.erase(xf.begin()+imax);
+    yf.erase(yf.begin()+imax);
+    ef.erase(ef.begin()+imax);
+  }
 }
 
 // ---------- fit ----------
@@ -554,47 +662,58 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
   fo.npts = (int)cp.x.size();
   fo.phi_nsectors = cfg.phi_nsectors;
   outFunc = nullptr;
-  if (fo.npts <= 0) return fo;
 
-  double xmin=1e99, xmax=-1e99;
-  double ysum=0.0, yMin=1e99, yMax=-1e99;
-  for (int i=0;i<fo.npts;i++) {
-    xmin = std::min(xmin, cp.x[i]);
-    xmax = std::max(xmax, cp.x[i]);
-    ysum += cp.y[i];
-    yMin = std::min(yMin, cp.y[i]);
-    yMax = std::max(yMax, cp.y[i]);
+  // Build fit-only vectors
+  std::vector<double> xf, yf, ef;
+  bool didDrop=false;
+  int droppedIndex=-1;
+  BuildFitVectors(cp, cfg, xf, yf, ef, didDrop, droppedIndex);
+  fo.npts_fit = (int)xf.size();
+
+  // span/occ for fit points
+  if (fo.npts_fit >= 1) {
+    double xmin=1e99, xmax=-1e99;
+    for (double x : xf) { xmin = std::min(xmin, x); xmax = std::max(xmax, x); }
+    fo.phi_min = xmin;
+    fo.phi_max = xmax;
+    fo.phi_span = (xmax > xmin) ? (xmax - xmin) : 0.0;
+    fo.phi_occ = PhiOccupancy(xf, cfg.phi_nsectors);
+    fo.dominant_wfrac = DominantWeightFrac(ef);
   }
-  fo.phi_min = xmin;
-  fo.phi_max = xmax;
-  fo.phi_span = (xmax > xmin) ? (xmax - xmin) : 0.0;
-  const double ymean = ysum / fo.npts;
 
-  if (fo.phi_span < cfg.tier_span0_max) fo.fit_tier = 0;
-  else if (fo.phi_span < cfg.tier_span1_max) fo.fit_tier = 1;
-  else fo.fit_tier = 2;
+  if (didDrop) {
+    fo.fit_flag_bits |= ROBUST_DROPPED_PT;
+  }
 
-  if (fo.fit_tier == 2 && fo.npts < 4) fo.fit_tier = (fo.npts >= 3) ? 1 : 0;
-  if (fo.fit_tier == 1 && fo.npts < 3) fo.fit_tier = 0;
+  if (fo.npts_fit < 2) {
+    fo.fit_flag_bits |= NO_FIT_POINTS;
+    fo.fit_status = 999;
+    fo.cov_status = -1;
+    fo.ndf = -999;
+    ComputeFitValidity(fo, cfg);
+    return fo;
+  }
 
-  fo.phi_occ = PhiOccupancy(cp.x, cfg.phi_nsectors);
-  fo.dominant_wfrac = DominantWeightFrac(cp.ey);
+  // pick tier using fit points
+  fo.fit_tier = ChooseTier(fo.npts_fit, fo.phi_span, fo.phi_occ, cfg);
 
-  std::vector<double> ex(fo.npts, 0.0);
-  TGraphErrors g(fo.npts,
-                 const_cast<double*>(cp.x.data()),
-                 const_cast<double*>(cp.y.data()),
-                 ex.data(),
-                 const_cast<double*>(cp.ey.data()));
+  // compute mean for initial M0
+  double ysum=0.0, yMin=1e99, yMax=-1e99;
+  for (double y : yf) { ysum += y; yMin = std::min(yMin, y); yMax = std::max(yMax, y); }
+  double ymean = ysum / (double)fo.npts_fit;
+
+  // Build graph for fit
+  std::vector<double> ex(fo.npts_fit, 0.0);
+  TGraphErrors gfit(fo.npts_fit, xf.data(), yf.data(), ex.data(), ef.data());
 
   TF1* f = nullptr;
   if (fo.fit_tier == 0) {
-    f = new TF1(Form("f0_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()), "[0]", xmin, xmax);
+    f = new TF1(Form("f0_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()), "[0]", fo.phi_min, fo.phi_max);
     f->SetParameters(ymean);
     f->SetParLimits(0, 0.0, 1e9);
   } else if (fo.fit_tier == 1) {
     f = new TF1(Form("f1_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()),
-                "[0]*(1 + [1]*cos(x))", xmin, xmax);
+                "[0]*(1 + [1]*cos(x))", fo.phi_min, fo.phi_max);
     double A0 = 0.0;
     if (yMax + yMin > 0) {
       A0 = (yMax - yMin) / (yMax + yMin);
@@ -605,7 +724,7 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
     f->SetParLimits(1, -1.0, 1.0);
   } else {
     f = new TF1(Form("f2_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()),
-                "[0]*(1 + [1]*cos(x) + [2]*cos(2*x))", xmin, xmax);
+                "[0]*(1 + [1]*cos(x) + [2]*cos(2*x))", fo.phi_min, fo.phi_max);
     double A0 = 0.0;
     if (yMax + yMin > 0) {
       A0 = (yMax - yMin) / (yMax + yMin);
@@ -617,7 +736,8 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
     f->SetParLimits(2, -1.0, 1.0);
   }
 
-  TFitResultPtr r = g.Fit(f, "RQS0");
+  // Fit
+  TFitResultPtr r = gfit.Fit(f, "RQS0");
   fo.fit_status = (int)r;
   if (r.Get()) {
     fo.cov_status = r->CovMatrixStatus();
@@ -661,7 +781,7 @@ static void WriteFitHeader(std::ofstream& out) {
   out
     << "mode,group_id,curve_label,setting_id,pt_bin,z_bin,"
     << "pt_lo,pt_hi,pt_center,z_lo,z_hi,z_center,"
-    << "npts,phi_min,phi_max,phi_span,phi_occ,phi_nsectors,dominant_wfrac,"
+    << "npts,npts_fit,phi_min,phi_max,phi_span,phi_occ,phi_nsectors,dominant_wfrac,"
     << "M0,M0_err,A,A_err,B,B_err,A_sig,B_sig,"
     << "chi2,ndf,chi2_ndf,prob,fit_tier,fit_status,cov_status,"
     << "fit_flag_bits,valid_fit_default,valid_M0_default,valid_A_default,valid_B_default,"
@@ -678,7 +798,7 @@ static void WriteFitRow(std::ofstream& out, const FitOut& fo) {
     << fo.z_bin << ","
     << fo.pt_lo << "," << fo.pt_hi << "," << fo.pt_center << ","
     << fo.z_lo << "," << fo.z_hi << "," << fo.z_center << ","
-    << fo.npts << ","
+    << fo.npts << "," << fo.npts_fit << ","
     << fo.phi_min << "," << fo.phi_max << "," << fo.phi_span << ","
     << fo.phi_occ << "," << fo.phi_nsectors << "," << fo.dominant_wfrac << ","
     << fo.M0 << "," << fo.M0_err << ","
@@ -717,14 +837,14 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
   const std::string p = NormalizeSlashes(std::string(manifestOrGroupPath));
   const bool isGroup = EndsWith(p, ".list");
 
-  std::string id;
+  std::string id;          // setting_id or group_id
   std::string resultsDir;
   std::string csvPath;
   std::string fitPath;
   std::string pngPath;
 
   if (isGroup) {
-    id = StripExtension(Basename(p));
+    id = StripExtension(Basename(p)); // group_id
     resultsDir = NormalizeSlashes(std::string(resultsRoot) + "/" + id);
     csvPath = resultsDir + "/tables/xsec_phipq_z_pt_overlayed_group.csv";
     fitPath = resultsDir + "/tables/fit_parameters_group.csv";
@@ -752,6 +872,7 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
   }
   std::cout << "Read rows: " << rows.size() << " from " << csvPath << "\n";
 
+  // Group points into curves (plot filter)
   std::map<CurveKey, CurvePoints> curves;
   std::map<int, std::pair<double,double>> ptEdgesByBin;
 
@@ -766,8 +887,10 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
     if (isGroup) {
       k.z_bin = -1;
       k.setting_id = r.setting_id;
+
       double zset = ParseZSetting(r.curve_label);
       k.sort_z = zset;
+
       if (std::isfinite(zset) && zset != kMissing) {
         k.legend = Form("z = %.2f", zset);
       } else {
@@ -802,6 +925,7 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
     return;
   }
 
+  // Sort points in each curve by phi
   for (auto& kv : curves) {
     auto& cp = kv.second;
     std::vector<size_t> idx(cp.x.size());
@@ -815,6 +939,7 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
     reorder(cp.x); reorder(cp.y); reorder(cp.ey);
   }
 
+  // pT bins present
   std::vector<int> ptBins;
   for (auto& kv : ptEdgesByBin) ptBins.push_back(kv.first);
   std::sort(ptBins.begin(), ptBins.end());
@@ -823,6 +948,7 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
   int nCols = (nPt <= 2) ? nPt : 2;
   int nRows = (int)std::ceil((double)nPt / (double)nCols);
 
+  // Larger canvas for safe margins
   int width  = 900 * nCols;
   int height = 650 * nRows;
 
@@ -839,7 +965,7 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
   static const Color_t palette[] = { kBlack, kRed+1, kBlue+1, kGreen+2, kMagenta+1, kOrange+7, kCyan+2, kViolet+1 };
   static const int nPal = sizeof(palette)/sizeof(palette[0]);
 
-  std::vector<TF1*> fitFuncs;
+  std::vector<TF1*> fitFuncs; // keep alive only for drawn fits
 
   auto ptEdge = [&](int pt_bin)->std::pair<double,double>{
     auto it = ptEdgesByBin.find(pt_bin);
@@ -862,9 +988,11 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
     auto [ptLo, ptHi] = ptEdge(pt_bin);
     double ptCtr = (std::isfinite(ptLo) && std::isfinite(ptHi)) ? 0.5*(ptLo+ptHi) : kMissing;
 
+    // curves in this pad
     std::vector<CurvePoints*> curvesHere;
     for (auto& kv : curves) if (kv.first.pt_bin == pt_bin) curvesHere.push_back(&kv.second);
 
+    // order by z (sort_z)
     std::sort(curvesHere.begin(), curvesHere.end(),
       [&](const CurvePoints* a, const CurvePoints* b){
         double za = a->key.sort_z, zb = b->key.sort_z;
@@ -872,6 +1000,7 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
         return a->key.legend < b->key.legend;
       });
 
+    // y-range based on points
     double yMax = 0.0;
     for (auto* cp : curvesHere)
       for (size_t i=0;i<cp->y.size();i++)
@@ -932,13 +1061,18 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
         fo.z_center = cp->z_center;
       }
 
-      if (f) {
-        f->SetLineColor(col);
-        f->SetLineWidth(2);
-        f->Draw("L SAME");
-        fitFuncs.push_back(f);
+      // Always write fit row (even invalid), but only draw fit if trustworthy
+      if (cfg.save_fit_csv && fitcsv.is_open()) WriteFitRow(fitcsv, fo);
 
-        if (cfg.save_fit_csv && fitcsv.is_open()) WriteFitRow(fitcsv, fo);
+      if (f) {
+        if (fo.valid_fit_default == 1) {
+          f->SetLineColor(col);
+          f->SetLineWidth(2);
+          f->Draw("L SAME");
+          fitFuncs.push_back(f);
+        } else {
+          delete f; // don't draw invalid fit
+        }
       }
 
       if (isGroup) {
