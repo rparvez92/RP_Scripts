@@ -36,7 +36,6 @@
 #include <unordered_map>
 #include <map>
 #include <algorithm>
-#include <tuple>
 #include <cmath>
 #include <cctype>
 
@@ -695,152 +694,86 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
     return fo;
   }
 
-  // Decide starting tier from fit points.
-  // IMPORTANT: if the higher-tier fit is unstable (common when coverage is sparse
-  // or errors are highly non-uniform), we automatically fall back to a lower tier
-  // (tier2 -> tier1 -> tier0) until we get a fit that passes the default validity.
-  const int tierStart = ChooseTier(fo.npts_fit, fo.phi_span, fo.phi_occ, cfg);
+  // pick tier using fit points
+  fo.fit_tier = ChooseTier(fo.npts_fit, fo.phi_span, fo.phi_occ, cfg);
 
-  // compute mean/range for initial guesses
+  // compute mean for initial M0
   double ysum=0.0, yMin=1e99, yMax=-1e99;
   for (double y : yf) { ysum += y; yMin = std::min(yMin, y); yMax = std::max(yMax, y); }
-  const double ymean = ysum / (double)fo.npts_fit;
+  double ymean = ysum / (double)fo.npts_fit;
 
-  // Build graph for fit once (data are the same for all tiers)
+  // Build graph for fit
   std::vector<double> ex(fo.npts_fit, 0.0);
   TGraphErrors gfit(fo.npts_fit, xf.data(), yf.data(), ex.data(), ef.data());
 
-  auto MakeFunc = [&](int tier)->TF1*{
-    TF1* f = nullptr;
-    if (tier <= 0) {
-      f = new TF1(Form("f0_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()), "[0]", fo.phi_min, fo.phi_max);
-      f->SetParameters(ymean);
-      f->SetParLimits(0, 0.0, 1e9);
-      return f;
-    }
-
-    // initial A from peak-to-valley heuristic (bounded)
+  TF1* f = nullptr;
+  if (fo.fit_tier == 0) {
+    f = new TF1(Form("f0_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()), "[0]", fo.phi_min, fo.phi_max);
+    f->SetParameters(ymean);
+    f->SetParLimits(0, 0.0, 1e9);
+  } else if (fo.fit_tier == 1) {
+    f = new TF1(Form("f1_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()),
+                "[0]*(1 + [1]*cos(x))", fo.phi_min, fo.phi_max);
     double A0 = 0.0;
     if (yMax + yMin > 0) {
       A0 = (yMax - yMin) / (yMax + yMin);
       A0 = std::max(-0.9, std::min(0.9, A0));
     }
-
-    if (tier == 1) {
-      f = new TF1(Form("f1_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()),
-                  "[0]*(1 + [1]*cos(x))", fo.phi_min, fo.phi_max);
-      f->SetParameters(ymean, A0);
-      f->SetParLimits(0, 0.0, 1e9);
-      f->SetParLimits(1, -1.0, 1.0);
-      return f;
-    }
-
+    f->SetParameters(ymean, A0);
+    f->SetParLimits(0, 0.0, 1e9);
+    f->SetParLimits(1, -1.0, 1.0);
+  } else {
     f = new TF1(Form("f2_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()),
                 "[0]*(1 + [1]*cos(x) + [2]*cos(2*x))", fo.phi_min, fo.phi_max);
+    double A0 = 0.0;
+    if (yMax + yMin > 0) {
+      A0 = (yMax - yMin) / (yMax + yMin);
+      A0 = std::max(-0.9, std::min(0.9, A0));
+    }
     f->SetParameters(ymean, A0, 0.0);
     f->SetParLimits(0, 0.0, 1e9);
     f->SetParLimits(1, -1.0, 1.0);
     f->SetParLimits(2, -1.0, 1.0);
-    return f;
-  };
-
-  auto FillFromFunc = [&](FitOut& o, TF1* f, const TFitResultPtr& r){
-    o.fit_status = (int)r;
-    if (r.Get()) {
-      o.cov_status = r->CovMatrixStatus();
-      o.chi2 = r->Chi2();
-      o.ndf  = r->Ndf();
-      o.prob = r->Prob();
-    } else {
-      o.cov_status = -1;
-      o.chi2 = f->GetChisquare();
-      o.ndf  = f->GetNDF();
-      o.prob = f->GetProb();
-    }
-    if (o.ndf > 0) o.chi2_ndf = o.chi2 / (double)o.ndf;
-
-    o.M0 = f->GetParameter(0);
-    o.M0_err = f->GetParError(0);
-    if (o.fit_tier >= 1) { o.A = f->GetParameter(1); o.A_err = f->GetParError(1); }
-    if (o.fit_tier >= 2) { o.B = f->GetParameter(2); o.B_err = f->GetParError(2); }
-
-    if (std::isfinite(o.A) && std::isfinite(o.A_err) && o.A_err > 0) o.A_sig = std::abs(o.A)/o.A_err;
-    if (std::isfinite(o.B) && std::isfinite(o.B_err) && o.B_err > 0) o.B_sig = std::abs(o.B)/o.B_err;
-
-    auto sane = [&](double v){ return std::isfinite(v) ? v : kMissing; };
-    o.M0 = sane(o.M0); o.M0_err = sane(o.M0_err);
-    o.A  = sane(o.A);  o.A_err  = sane(o.A_err);
-    o.B  = sane(o.B);  o.B_err  = sane(o.B_err);
-    o.chi2 = sane(o.chi2);
-    o.prob = sane(o.prob);
-    o.chi2_ndf = sane(o.chi2_ndf);
-    o.A_sig = sane(o.A_sig);
-    o.B_sig = sane(o.B_sig);
-  };
-
-  // Base-out that we will copy + update per attempt
-  FitOut best = fo;
-  best.fit_tier = tierStart;
-  best.note.clear(); // keep only tokens from ComputeFitValidity + fallback token
-  if (didDrop) best.fit_flag_bits |= ROBUST_DROPPED_PT;
-
-  const int minTier = 0;
-  TF1* bestFunc = nullptr;
-  bool foundValid = false;
-
-  for (int tier = tierStart; tier >= minTier; --tier) {
-    FitOut cand = fo;
-    cand.fit_tier = tier;
-    if (didDrop) cand.fit_flag_bits |= ROBUST_DROPPED_PT;
-
-    TF1* f = MakeFunc(tier);
-    TFitResultPtr r = gfit.Fit(f, "RQS0");
-    FillFromFunc(cand, f, r);
-    ComputeFitValidity(cand, cfg);
-
-    // Keep first valid as the chosen fit
-    if (!foundValid && cand.valid_fit_default == 1) {
-      if (tier != tierStart) {
-        AppendNote(cand.note, Form("FALLBACK_FROM_TIER%d", tierStart));
-      }
-      best = cand;
-      bestFunc = f;
-      foundValid = true;
-      break;
-    }
-
-    // Otherwise keep the *best* invalid attempt as backup (prefer higher tier,
-    // then fewer rejection bits, then higher prob).
-    if (!foundValid) {
-      const unsigned int catastrophic = FIT_STATUS_BAD | NONFINITE_PARAM | NONFINITE_ERR | NDF_NONPOSITIVE | COV_FAILED | NO_FIT_POINTS;
-      const unsigned int defaultReject = catastrophic | COV_NOT_POSDEF | CHI2NDF_HUGE | PROB_TINY | PHI_UNIFORM_FAIL | DOMINANT_WEIGHT_PT;
-
-      auto score = [&](const FitOut& o)->std::tuple<int,int,double>{
-        // smaller is better for bitcount
-        const unsigned int rej = (o.fit_flag_bits & defaultReject);
-        const int bitcnt = __builtin_popcount((unsigned int)rej);
-        const double p = (std::isfinite(o.prob) ? o.prob : -1.0);
-        return std::make_tuple(-o.fit_tier, bitcnt, -p); // prefer higher tier, fewer bits, higher prob
-      };
-
-      if (!bestFunc) {
-        // first attempt becomes baseline backup
-        best = cand;
-        bestFunc = f;
-      } else if (score(cand) < score(best)) {
-        best = cand;
-        delete bestFunc;
-        bestFunc = f;
-      } else {
-        delete f;
-      }
-    } else {
-      delete f;
-    }
   }
 
-  outFunc = bestFunc;
-  return best;
+  // Fit
+  TFitResultPtr r = gfit.Fit(f, "RQS0");
+  fo.fit_status = (int)r;
+  if (r.Get()) {
+    fo.cov_status = r->CovMatrixStatus();
+    fo.chi2 = r->Chi2();
+    fo.ndf  = r->Ndf();
+    fo.prob = r->Prob();
+  } else {
+    fo.cov_status = -1;
+    fo.chi2 = f->GetChisquare();
+    fo.ndf  = f->GetNDF();
+    fo.prob = f->GetProb();
+  }
+  if (fo.ndf > 0) fo.chi2_ndf = fo.chi2 / (double)fo.ndf;
+
+  fo.M0 = f->GetParameter(0);
+  fo.M0_err = f->GetParError(0);
+  if (fo.fit_tier >= 1) { fo.A = f->GetParameter(1); fo.A_err = f->GetParError(1); }
+  if (fo.fit_tier >= 2) { fo.B = f->GetParameter(2); fo.B_err = f->GetParError(2); }
+
+  if (std::isfinite(fo.A) && std::isfinite(fo.A_err) && fo.A_err > 0) fo.A_sig = std::abs(fo.A)/fo.A_err;
+  if (std::isfinite(fo.B) && std::isfinite(fo.B_err) && fo.B_err > 0) fo.B_sig = std::abs(fo.B)/fo.B_err;
+
+  auto sane = [&](double v){ return std::isfinite(v) ? v : kMissing; };
+  fo.M0 = sane(fo.M0); fo.M0_err = sane(fo.M0_err);
+  fo.A  = sane(fo.A);  fo.A_err  = sane(fo.A_err);
+  fo.B  = sane(fo.B);  fo.B_err  = sane(fo.B_err);
+  fo.chi2 = sane(fo.chi2);
+  fo.prob = sane(fo.prob);
+  fo.chi2_ndf = sane(fo.chi2_ndf);
+  fo.A_sig = sane(fo.A_sig);
+  fo.B_sig = sane(fo.B_sig);
+
+  ComputeFitValidity(fo, cfg);
+
+  outFunc = f;
+  return fo;
 }
 
 // ---------- fit CSV ----------
@@ -1024,9 +957,8 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
 
   std::ofstream fitcsv;
   if (cfg.save_fit_csv) {
-    fitcsv.open(fitPath, std::ios::out | std::ios::trunc);
+    fitcsv.open(fitPath, std::ios::out);
     WriteFitHeader(fitcsv);
-    fitcsv.flush();
     std::cout << "Fit CSV: " << fitPath << "\n";
   }
 
