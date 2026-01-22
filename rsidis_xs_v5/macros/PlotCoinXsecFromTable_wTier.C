@@ -1,4 +1,4 @@
-// PlotCoinXsecFromTable.C (rsidis_xs_v5)
+// PlotCoinXsecFromTable_wTier.C (rsidis_xs_v5)
 //
 // Reads table CSV(s) produced by TableCoinXsec.C and generates:
 //   - xsec vs phipq plots with pads = pT bins
@@ -25,8 +25,8 @@
 //   * Do NOT draw fit curve unless valid_fit_default==1 (i.e., trustworthy fit).
 //
 // Run examples:
-//   root -l -b -q 'macros/PlotCoinXsecFromTable.C("settings/.../manifest.txt","results","settings")'
-//   root -l -b -q 'macros/PlotCoinXsecFromTable.C("groups/.../grp_*.list","results","settings")'
+//   root -l -b -q 'macros/PlotCoinXsecFromTable_wTier.C("settings/.../manifest.txt","results","settings")'
+//   root -l -b -q 'macros/PlotCoinXsecFromTable_wTier.C("groups/.../grp_*.list","results","settings")'
 
 #include <iostream>
 #include <fstream>
@@ -279,6 +279,11 @@ struct PlotConfig {
   // output
   bool save_png = true;
   bool save_fit_csv = true;
+
+  // diagnostic: draw invalid-fit curves as dashed lines
+  // - tierOn mode: only drawn if this is true
+  // - tierOff mode: fit curve is always drawn (even if invalid), but dashed if invalid
+  bool draw_invalid_fits = true;
 };
 
 // ---------- Row ----------
@@ -340,6 +345,7 @@ struct FitOut {
   int valid_M0_default=0;
   int valid_A_default=0;
   int valid_B_default=0;
+  std::string attempts;
   std::string note;
 };
 
@@ -435,6 +441,22 @@ static bool PassPointDefault(const Row& r, const PlotConfig& cfg) {
   return true;
 }
 
+// Like PassPointDefault, but returns a drop-reason token for diagnostics/auditing.
+static bool PassPointDefaultReason(const Row& r, const PlotConfig& cfg, std::string& reason) {
+  reason.clear();
+
+  if (!std::isfinite(r.phi_center)) { reason="NONFINITE_PHI"; return false; }
+  if (r.phi_center == kMissing) { reason="MISSING_PHI"; return false; }
+
+  if (!std::isfinite(r.xsec) || r.xsec == kMissing) { reason="NONFINITE_XSEC"; return false; }
+  if (!std::isfinite(r.xsec_err) || r.xsec_err == kMissing) { reason="NONFINITE_XSEC_ERR"; return false; }
+  if (r.xsec_err <= 0.0) { reason="NONPOS_XSEC_ERR"; return false; }
+
+  if (cfg.use_valid_default && r.valid_default != 1) { reason="VALID_DEFAULT0"; return false; }
+  if (!cfg.allow_negative_xsec && r.xsec <= 0.0) { reason="NONPOS_XSEC"; return false; }
+
+  return true;
+}
 // ---------- curve grouping ----------
 struct CurveKey {
   int pt_bin=-1;
@@ -455,6 +477,7 @@ static bool operator<(const CurveKey& a, const CurveKey& b) {
 struct CurvePoints {
   CurveKey key;
   std::vector<double> x, y, ey; // plotted points (already default-filtered)
+  std::vector<long long> row_i; // index into full rows vector for each plotted point
   double pt_lo=kMissing, pt_hi=kMissing, pt_center=kMissing;
   double z_lo=kMissing, z_hi=kMissing, z_center=kMissing; // single: range; group: only z_center
 };
@@ -601,24 +624,44 @@ static int ChooseTier(int npts_fit, double phi_span_fit, int phi_occ, const Plot
   return tier;
 }
 
-// build fit vectors from plotted points with fit-only filtering and error floor
+
+// build fit vectors from plotted points with fit-only filtering and error floor.
+// Also returns per-plot-point fit exclusion reasons and the list of plot indices
+// actually used in the final fit (after robust drop).
 static void BuildFitVectors(const CurvePoints& cp, const PlotConfig& cfg,
                             std::vector<double>& xf, std::vector<double>& yf, std::vector<double>& ef,
-                            bool& didDrop, int& droppedIndex)
+                            std::vector<int>& usedPlotIdx,
+                            std::vector<std::string>& fitExclReasonPlot,
+                            bool& didDrop, int& droppedPlotIndex)
 {
   xf.clear(); yf.clear(); ef.clear();
+  usedPlotIdx.clear();
   didDrop = false;
-  droppedIndex = -1;
+  droppedPlotIndex = -1;
+
+  fitExclReasonPlot.assign(cp.x.size(), "");
 
   // fit-only relerr cut
+  std::vector<int> candPlotIdx;
+  candPlotIdx.reserve(cp.x.size());
+
   for (size_t i=0;i<cp.x.size();i++) {
     double x = cp.x[i];
     double y = cp.y[i];
     double e = cp.ey[i];
-    if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(e)) continue;
-    if (y <= 0 || e <= 0) continue;
-    double rel = e / y;
-    if (std::isfinite(rel) && rel > cfg.fit_relerr_max) continue;
+
+    if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(e) || y<=0.0 || e<=0.0) {
+      fitExclReasonPlot[i] = "FIT_BADVAL";
+      continue;
+    }
+
+    const double rel = e / y;
+    if (std::isfinite(rel) && rel > cfg.fit_relerr_max) {
+      fitExclReasonPlot[i] = "FIT_RELERR_GT_MAX";
+      continue;
+    }
+
+    candPlotIdx.push_back((int)i);
     xf.push_back(x);
     yf.push_back(y);
     ef.push_back(e);
@@ -642,16 +685,45 @@ static void BuildFitVectors(const CurvePoints& cp, const PlotConfig& cfg,
     for (size_t i=0;i<ef.size();i++) {
       if (ef[i] < best) { best = ef[i]; imax = i; }
     }
-    droppedIndex = (int)imax;
     didDrop = true;
+    droppedPlotIndex = candPlotIdx[imax];
+    fitExclReasonPlot[droppedPlotIndex] = "FIT_ROBUST_DROPPED";
+
     xf.erase(xf.begin()+imax);
     yf.erase(yf.begin()+imax);
     ef.erase(ef.begin()+imax);
+    candPlotIdx.erase(candPlotIdx.begin()+imax);
+  }
+
+  // remaining candidates are used in fit
+  usedPlotIdx = candPlotIdx;
+  for (int ip : usedPlotIdx) {
+    if (fitExclReasonPlot[ip].empty()) fitExclReasonPlot[ip] = "FIT_INCLUDED";
   }
 }
 
+
+
 // ---------- fit ----------
-static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFunc) {
+static std::string AttemptReasonToken(const FitOut& fo) {
+  // Priority order roughly matches what you care about in diagnostics
+  if (fo.fit_flag_bits & NO_FIT_POINTS) return "NO_PTS";
+  if (fo.fit_flag_bits & (COV_NOT_POSDEF | COV_FAILED)) return "COV";
+  if (fo.fit_flag_bits & FIT_STATUS_BAD) return "STATUS";
+  if (fo.fit_flag_bits & NDF_NONPOSITIVE) return "NDF";
+  if (fo.fit_flag_bits & PHI_UNIFORM_FAIL) return "PHI";
+  if (fo.fit_flag_bits & DOMINANT_WEIGHT_PT) return "DOM";
+  if (fo.fit_flag_bits & (NONFINITE_PARAM | NONFINITE_ERR)) return "NONFIN";
+  if (fo.fit_flag_bits & CHI2NDF_HUGE) return "CHI2";
+  if (fo.fit_flag_bits & PROB_TINY) return "PROB";
+  return "BAD";
+}
+
+static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, bool tierOn,
+                       std::vector<int>& usedPlotIdx,
+                       std::vector<std::string>& fitExclReasonPlot,
+                       TF1*& outFunc)
+{
   FitOut fo;
   fo.curve_label = cp.key.legend;
   fo.setting_id  = cp.key.setting_id;
@@ -664,17 +736,20 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
   fo.phi_nsectors = cfg.phi_nsectors;
   outFunc = nullptr;
 
-  // Build fit-only vectors
+  usedPlotIdx.clear();
+  fitExclReasonPlot.clear();
+
+  // Build fit-only vectors (and exclusions)
   std::vector<double> xf, yf, ef;
   bool didDrop=false;
-  int droppedIndex=-1;
-  BuildFitVectors(cp, cfg, xf, yf, ef, didDrop, droppedIndex);
+  int droppedPlotIndex=-1;
+  BuildFitVectors(cp, cfg, xf, yf, ef, usedPlotIdx, fitExclReasonPlot, didDrop, droppedPlotIndex);
   fo.npts_fit = (int)xf.size();
 
   // span/occ for fit points
   if (fo.npts_fit >= 1) {
     double xmin=1e99, xmax=-1e99;
-    for (double x : xf) { xmin = std::min(xmin, x); xmax = std::max(xmax, x); }
+    for (double x : xf) { xmin = min(xmin, x); xmax = max(xmax, x); }
     fo.phi_min = xmin;
     fo.phi_max = xmax;
     fo.phi_span = (xmax > xmin) ? (xmax - xmin) : 0.0;
@@ -686,24 +761,30 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
     fo.fit_flag_bits |= ROBUST_DROPPED_PT;
   }
 
-  if (fo.npts_fit < 2) {
+  // For tierOff reference: always try tier-2 model (3 params) if possible
+  const int forcedTier = 2;
+
+  const int minPointsNeeded = tierOn ? 2 : 3; // tierOff needs >=3 points to constrain 3 params
+  if (fo.npts_fit < minPointsNeeded) {
     fo.fit_flag_bits |= NO_FIT_POINTS;
     fo.fit_status = 999;
     fo.cov_status = -1;
     fo.ndf = -999;
+    fo.fit_tier = tierOn ? ChooseTier(fo.npts_fit, fo.phi_span, fo.phi_occ, cfg) : forcedTier;
     ComputeFitValidity(fo, cfg);
+
+    // attempt history
+    if (!tierOn) fo.attempts = "t2:bad(NO_PTS)";
     return fo;
   }
 
-  // Decide starting tier from fit points.
-  // IMPORTANT: if the higher-tier fit is unstable (common when coverage is sparse
-  // or errors are highly non-uniform), we automatically fall back to a lower tier
-  // (tier2 -> tier1 -> tier0) until we get a fit that passes the default validity.
-  const int tierStart = ChooseTier(fo.npts_fit, fo.phi_span, fo.phi_occ, cfg);
+  // Decide starting tier from fit points (tierOn) or force tier2 (tierOff).
+  const int tierStart = tierOn ? ChooseTier(fo.npts_fit, fo.phi_span, fo.phi_occ, cfg) : forcedTier;
+  const int minTier   = tierOn ? 0 : forcedTier;
 
   // compute mean/range for initial guesses
   double ysum=0.0, yMin=1e99, yMax=-1e99;
-  for (double y : yf) { ysum += y; yMin = std::min(yMin, y); yMax = std::max(yMax, y); }
+  for (double y : yf) { ysum += y; yMin = min(yMin, y); yMax = max(yMax, y); }
   const double ymean = ysum / (double)fo.npts_fit;
 
   // Build graph for fit once (data are the same for all tiers)
@@ -723,7 +804,7 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
     double A0 = 0.0;
     if (yMax + yMin > 0) {
       A0 = (yMax - yMin) / (yMax + yMin);
-      A0 = std::max(-0.9, std::min(0.9, A0));
+      A0 = max(-0.9, min(0.9, A0));
     }
 
     if (tier == 1) {
@@ -764,8 +845,8 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
     if (o.fit_tier >= 1) { o.A = f->GetParameter(1); o.A_err = f->GetParError(1); }
     if (o.fit_tier >= 2) { o.B = f->GetParameter(2); o.B_err = f->GetParError(2); }
 
-    if (std::isfinite(o.A) && std::isfinite(o.A_err) && o.A_err > 0) o.A_sig = std::abs(o.A)/o.A_err;
-    if (std::isfinite(o.B) && std::isfinite(o.B_err) && o.B_err > 0) o.B_sig = std::abs(o.B)/o.B_err;
+    if (std::isfinite(o.A) && std::isfinite(o.A_err) && o.A_err > 0) o.A_sig = abs(o.A)/o.A_err;
+    if (std::isfinite(o.B) && std::isfinite(o.B_err) && o.B_err > 0) o.B_sig = abs(o.B)/o.B_err;
 
     auto sane = [&](double v){ return std::isfinite(v) ? v : kMissing; };
     o.M0 = sane(o.M0); o.M0_err = sane(o.M0_err);
@@ -778,29 +859,32 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
     o.B_sig = sane(o.B_sig);
   };
 
-  // Base-out that we will copy + update per attempt
   FitOut best = fo;
   best.fit_tier = tierStart;
-  best.note.clear(); // keep only tokens from ComputeFitValidity + fallback token
+  best.note.clear();
+  best.attempts.clear();
   if (didDrop) best.fit_flag_bits |= ROBUST_DROPPED_PT;
 
-  const int minTier = 0;
   TF1* bestFunc = nullptr;
   bool foundValid = false;
+
+  std::map<int, FitOut> attempted; // tier -> result
 
   for (int tier = tierStart; tier >= minTier; --tier) {
     FitOut cand = fo;
     cand.fit_tier = tier;
+    cand.note.clear();
+    cand.attempts.clear();
     if (didDrop) cand.fit_flag_bits |= ROBUST_DROPPED_PT;
 
     TF1* f = MakeFunc(tier);
     TFitResultPtr r = gfit.Fit(f, "RQS0");
     FillFromFunc(cand, f, r);
     ComputeFitValidity(cand, cfg);
+    attempted[tier] = cand;
 
-    // Keep first valid as the chosen fit
     if (!foundValid && cand.valid_fit_default == 1) {
-      if (tier != tierStart) {
+      if (tierOn && tier != tierStart) {
         AppendNote(cand.note, Form("FALLBACK_FROM_TIER%d", tierStart));
       }
       best = cand;
@@ -809,22 +893,19 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
       break;
     }
 
-    // Otherwise keep the *best* invalid attempt as backup (prefer higher tier,
-    // then fewer rejection bits, then higher prob).
     if (!foundValid) {
+      // keep best invalid backup: prefer fewer reject bits, then simpler tier, then higher prob
       const unsigned int catastrophic = FIT_STATUS_BAD | NONFINITE_PARAM | NONFINITE_ERR | NDF_NONPOSITIVE | COV_FAILED | NO_FIT_POINTS;
       const unsigned int defaultReject = catastrophic | COV_NOT_POSDEF | CHI2NDF_HUGE | PROB_TINY | PHI_UNIFORM_FAIL | DOMINANT_WEIGHT_PT;
 
-      auto score = [&](const FitOut& o)->std::tuple<int,int,double>{
-        // smaller is better for bitcount
+      auto score = [&](const FitOut& o){
         const unsigned int rej = (o.fit_flag_bits & defaultReject);
         const int bitcnt = __builtin_popcount((unsigned int)rej);
         const double p = (std::isfinite(o.prob) ? o.prob : -1.0);
-        return std::make_tuple(-o.fit_tier, bitcnt, -p); // prefer higher tier, fewer bits, higher prob
+        return std::make_tuple(bitcnt, o.fit_tier, -p); // fewer bits, simpler tier, higher prob
       };
 
       if (!bestFunc) {
-        // first attempt becomes baseline backup
         best = cand;
         bestFunc = f;
       } else if (score(cand) < score(best)) {
@@ -840,8 +921,33 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
   }
 
   outFunc = bestFunc;
+
+  // Build attempt history string, e.g. "t2:bad(COV); t1:bad(COV); t0:ok_or_best"
+  {
+    std::string s;
+    auto add = [&](int tier, const std::string& tok){
+      if (!s.empty()) s += "; ";
+      s += Form("t%d:%s", tier, tok.c_str());
+    };
+
+    // prefer order t2 -> t1 -> t0 when present
+    for (int t=2; t>=0; --t) {
+      auto it = attempted.find(t);
+      if (it == attempted.end()) continue;
+      if (t == best.fit_tier) {
+        add(t, "ok_or_best");
+      } else {
+        const FitOut& a = it->second;
+        if (a.valid_fit_default == 1) add(t, "ok");
+        else add(t, std::string("bad(") + AttemptReasonToken(a) + ")");
+      }
+    }
+    best.attempts = s;
+  }
+
   return best;
 }
+
 
 // ---------- fit CSV ----------
 static void WriteFitHeader(std::ofstream& out) {
@@ -852,7 +958,7 @@ static void WriteFitHeader(std::ofstream& out) {
     << "M0,M0_err,A,A_err,B,B_err,A_sig,B_sig,"
     << "chi2,ndf,chi2_ndf,prob,fit_tier,fit_status,cov_status,"
     << "fit_flag_bits,valid_fit_default,valid_M0_default,valid_A_default,valid_B_default,"
-    << "note\n";
+    << "attempts,note\n";
 }
 
 static void WriteFitRow(std::ofstream& out, const FitOut& fo) {
@@ -879,20 +985,119 @@ static void WriteFitRow(std::ofstream& out, const FitOut& fo) {
     << fo.valid_M0_default << ","
     << fo.valid_A_default << ","
     << fo.valid_B_default << ","
+    << fo.attempts << ","
     << fo.note
     << "\n";
 }
+
+// ---------- parsed points CSV (all rows) ----------
+static void WriteParsedHeader(std::ofstream& out) {
+  out
+    << "mode,group_id,tier_tag,"
+    << "curve_label_raw,plot_label,setting_id,"
+    << "pt_bin,z_bin,phi_bin,"
+    << "pt_lo,pt_hi,pt_center,"
+    << "z_lo,z_hi,z_center,"
+    << "phi_center,"
+    << "xsec,xsec_err,rel_xsec_err,n_sim,flag_bits,valid_default,"
+    << "is_plotted,plot_drop_reason,"
+    << "is_used_in_fit,fit_excl_reason,"
+    << "fit_tier,valid_fit_default,"
+    << "y_fit,residual,pull,"
+    << "attempts,note\n";
+}
+
+static double EvalSigmaModel(double phi, int tier, double M0, double A, double B) {
+  if (!std::isfinite(phi) || phi==kMissing) return kMissing;
+  if (!std::isfinite(M0) || M0==kMissing) return kMissing;
+  const double c1 = std::cos(phi);
+  const double c2 = std::cos(2.0*phi);
+  if (tier <= 0) return M0;
+  if (tier == 1) {
+    if (!std::isfinite(A) || A==kMissing) return kMissing;
+    return M0*(1.0 + A*c1);
+  }
+  if (!std::isfinite(A) || A==kMissing) return kMissing;
+  if (!std::isfinite(B) || B==kMissing) return kMissing;
+  return M0*(1.0 + A*c1 + B*c2);
+}
+
+static void WriteParsedRow(std::ofstream& out,
+                           const Row& r,
+                           long long rowIndex,
+                           const std::string& modeTag,
+                           const std::string& groupId,
+                           const std::string& tierTag,
+                           const std::string& plotLabel,
+                           bool isPlotted,
+                           const std::string& plotDropReason,
+                           bool isUsedInFit,
+                           const std::string& fitExclReason,
+                           const FitOut* fo)
+{
+  // Fit-based diagnostics (optional)
+  int fitTier = -1;
+  int validFit = 0;
+  double yFit = kMissing;
+  double resid = kMissing;
+  double pull = kMissing;
+  std::string attempts;
+  std::string note;
+
+  if (fo) {
+    fitTier = fo->fit_tier;
+    validFit = fo->valid_fit_default;
+    attempts = fo->attempts;
+    note = fo->note;
+
+    yFit = EvalSigmaModel(r.phi_center, fo->fit_tier, fo->M0, fo->A, fo->B);
+    if (std::isfinite(yFit) && yFit!=kMissing && std::isfinite(r.xsec) && r.xsec!=kMissing) {
+      resid = r.xsec - yFit;
+      if (std::isfinite(r.xsec_err) && r.xsec_err>0.0) pull = resid / r.xsec_err;
+    }
+  }
+
+  out
+    << modeTag << ","
+    << groupId << ","
+    << tierTag << ","
+    << r.curve_label << ","
+    << plotLabel << ","
+    << r.setting_id << ","
+    << r.pt_bin << ","
+    << r.z_bin << ","
+    << r.phi_bin << ","
+    << r.pt_lo << "," << r.pt_hi << "," << r.pt_center << ","
+    << r.z_lo << "," << r.z_hi << "," << r.z_center << ","
+    << r.phi_center << ","
+    << r.xsec << "," << r.xsec_err << "," << r.rel_xsec_err << "," << r.n_sim << ","
+    << r.flag_bits << "," << r.valid_default << ","
+    << (isPlotted ? 1 : 0) << ","
+    << plotDropReason << ","
+    << (isUsedInFit ? 1 : 0) << ","
+    << fitExclReason << ","
+    << fitTier << ","
+    << validFit << ","
+    << yFit << ","
+    << resid << ","
+    << pull << ","
+    << attempts << ","
+    << note
+    << "\n";
+}
+
 
 } // namespace
 
 // ------------------------------------------------------------
 // Main macro entry
 // ------------------------------------------------------------
-void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
-                           const char* resultsRoot = "results",
-                           const char* settingsRoot = "settings",
-                           bool savePNGs = true,
-                           bool saveFitCsv = true)
+void PlotCoinXsecFromTable_wTier(const char* manifestOrGroupPath,
+                                 const char* resultsRoot = "results",
+                                 const char* settingsRoot = "settings",
+                                 bool tierOn = true,
+                                 bool savePNGs = true,
+                                 bool saveFitCsv = true)
 {
   gROOT->SetBatch(kTRUE);
 
@@ -910,19 +1115,23 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
   std::string fitPath;
   std::string pngPath;
 
+  const std::string tierTag = tierOn ? "tierOn" : "tierOff";
+
   if (isGroup) {
     id = StripExtension(Basename(p)); // group_id
     resultsDir = NormalizeSlashes(std::string(resultsRoot) + "/" + id);
     csvPath = resultsDir + "/tables/xsec_phipq_z_pt_overlayed_group.csv";
-    fitPath = resultsDir + "/tables/fit_parameters_group.csv";
-    pngPath = resultsDir + "/PNGs/xsec_phipq_z_pt_overlayed_group.png";
+    fitPath = resultsDir + "/tables/fit_parameters_group_" + tierTag + ".csv";
+    pngPath = resultsDir + "/PNGs/xsec_phipq_z_pt_overlayed_group_" + tierTag + ".png";
   } else {
     id = MakeSettingIdFromManifestPath(p, NormalizeSlashes(settingsRoot));
     resultsDir = NormalizeSlashes(std::string(resultsRoot) + "/" + id);
     csvPath = resultsDir + "/tables/xsec_phipq_z_pt_overlayed_single.csv";
-    fitPath = resultsDir + "/tables/fit_parameters_single.csv";
-    pngPath = resultsDir + "/PNGs/xsec_phipq_z_pt_overlayed_single.png";
+    fitPath = resultsDir + "/tables/fit_parameters_single_" + tierTag + ".csv";
+    pngPath = resultsDir + "/PNGs/xsec_phipq_z_pt_overlayed_single_" + tierTag + ".png";
   }
+
+  const std::string parsedPath = resultsDir + "/tables/parsed_dataPoints_" + std::string(isGroup ? "group" : "single") + "_" + tierTag + ".csv";
 
   MkdirP(resultsDir);
   MkdirP(resultsDir + "/tables");
@@ -943,10 +1152,15 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
   std::map<CurveKey, CurvePoints> curves;
   std::map<int, std::pair<double,double>> ptEdgesByBin;
 
-  for (const auto& r : rows) {
-    if (!PassPointDefault(r, cfg)) continue;
+  for (size_t ir=0; ir<rows.size(); ++ir) {
+    const auto& r = rows[ir];
 
-    ptEdgesByBin[r.pt_bin] = {r.pt_lo, r.pt_hi};
+    // Keep pT edges even for rows that won't be plotted (useful for auditing)
+    if (r.pt_bin >= 0 && std::isfinite(r.pt_lo) && std::isfinite(r.pt_hi))
+      ptEdgesByBin[r.pt_bin] = {r.pt_lo, r.pt_hi};
+
+    // Plot filter (default)
+    if (!PassPointDefault(r, cfg)) continue;
 
     CurveKey k;
     k.pt_bin = r.pt_bin;
@@ -975,6 +1189,7 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
     cp.x.push_back(r.phi_center);
     cp.y.push_back(r.xsec);
     cp.ey.push_back(r.xsec_err);
+    cp.row_i.push_back((long long)ir);
 
     cp.pt_lo = r.pt_lo; cp.pt_hi = r.pt_hi; cp.pt_center = r.pt_center;
 
@@ -1004,6 +1219,11 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
       v.swap(tmp);
     };
     reorder(cp.x); reorder(cp.y); reorder(cp.ey);
+    {
+      std::vector<long long> tmp; tmp.reserve(cp.row_i.size());
+      for (auto i : idx) tmp.push_back(cp.row_i[i]);
+      cp.row_i.swap(tmp);
+    }
   }
 
   // pT bins present
@@ -1027,8 +1247,20 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
     fitcsv.open(fitPath, std::ios::out | std::ios::trunc);
     WriteFitHeader(fitcsv);
     fitcsv.flush();
-    std::cout << "Fit CSV: " << fitPath << "\n";
+    std::cout << "Fit CSV: " << fitPath << "";
   }
+
+  std::ofstream parsedcsv;
+  if (cfg.save_fit_csv) {
+    parsedcsv.open(parsedPath, std::ios::out | std::ios::trunc);
+    WriteParsedHeader(parsedcsv);
+    parsedcsv.flush();
+    std::cout << "Parsed points CSV: " << parsedPath << "";
+  }
+
+  // Cache fit outputs and per-point fit-usage reasons for the parsed-data export
+  std::map<CurveKey, FitOut> fitByCurve;
+  std::map<CurveKey, std::unordered_map<long long, std::string>> fitReasonByCurve;
 
   static const Color_t palette[] = { kBlack, kRed+1, kBlue+1, kGreen+2, kMagenta+1, kOrange+7, kCyan+2, kViolet+1 };
   static const int nPal = sizeof(palette)/sizeof(palette[0]);
@@ -1117,7 +1349,9 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
       g->Draw("E1P SAME");
 
       TF1* f = nullptr;
-      FitOut fo = FitCurve(*cp, cfg, f);
+      std::vector<int> usedPlotIdx;
+      std::vector<std::string> fitExclReasonPlot;
+      FitOut fo = FitCurve(*cp, cfg, tierOn, usedPlotIdx, fitExclReasonPlot, f);
       fo.mode = isGroup ? "group" : "single";
       fo.group_id = id;
       fo.pt_center = ptCtr;
@@ -1129,17 +1363,34 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
         fo.z_center = cp->z_center;
       }
 
-      // Always write fit row (even invalid), but only draw fit if trustworthy
+            // Cache fit outputs for parsed points export
+      fitByCurve[cp->key] = fo;
+      {
+        auto& mreason = fitReasonByCurve[cp->key];
+        // Map per-plot-point fit inclusion/exclusion token back to original table row index
+        for (size_t ipt=0; ipt<cp->row_i.size() && ipt<fitExclReasonPlot.size(); ++ipt) {
+          mreason[cp->row_i[ipt]] = fitExclReasonPlot[ipt];
+        }
+      }
+
+// Always write fit row (even invalid), but only draw fit if trustworthy
       if (cfg.save_fit_csv && fitcsv.is_open()) WriteFitRow(fitcsv, fo);
 
       if (f) {
-        if (fo.valid_fit_default == 1) {
+        // Drawing policy:
+        // - tierOn: draw only valid fits by default; optionally draw invalid as dashed (cfg.draw_invalid_fits)
+        // - tierOff: always draw the fit curve (even if invalid) so it's a true reference case
+        const bool isValid = (fo.valid_fit_default == 1);
+        const bool allowDraw = (!tierOn) || isValid || cfg.draw_invalid_fits;
+
+        if (allowDraw) {
           f->SetLineColor(col);
           f->SetLineWidth(2);
+          f->SetLineStyle(isValid ? 1 : 2); // solid=valid, dashed=invalid
           f->Draw("L SAME");
           fitFuncs.push_back(f);
         } else {
-          delete f; // don't draw invalid fit
+          delete f;
         }
       }
 
@@ -1153,6 +1404,71 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
     }
 
     leg->Draw();
+  }
+
+
+  // Write parsed (all) data points CSV: includes plotted and non-plotted rows
+  if (cfg.save_fit_csv && parsedcsv.is_open()) {
+    const std::string modeTag = isGroup ? "group" : "single";
+
+    auto MakeKeyAndLabel = [&](const Row& r)->CurveKey {
+      CurveKey k;
+      k.pt_bin = r.pt_bin;
+      if (isGroup) {
+        k.z_bin = -1;
+        k.setting_id = r.setting_id;
+        double zset = ParseZSetting(r.curve_label);
+        k.sort_z = zset;
+        if (std::isfinite(zset) && zset != kMissing) k.legend = Form("z = %.2f", zset);
+        else k.legend = r.curve_label.empty() ? r.setting_id : r.curve_label;
+      } else {
+        k.z_bin = r.z_bin;
+        k.setting_id = r.setting_id;
+        k.sort_z = r.z_center;
+        k.legend = Form("zbin%d", r.z_bin);
+      }
+      return k;
+    };
+
+    for (long long ir=0; ir<(long long)rows.size(); ++ir) {
+      const Row& r = rows[(size_t)ir];
+
+      std::string plotDropReason;
+      const bool isPlotted = PassPointDefaultReason(r, cfg, plotDropReason);
+
+      CurveKey k = MakeKeyAndLabel(r);
+      const std::string plotLabel = k.legend;
+
+      // Fit lookup (may not exist if curve had zero plotted points)
+      const FitOut* foPtr = nullptr;
+      auto itf = fitByCurve.find(k);
+      if (itf != fitByCurve.end()) foPtr = &itf->second;
+
+      // Fit inclusion/exclusion token
+      bool isUsedInFit = false;
+      std::string fitExclReason;
+      if (isPlotted) {
+        auto itm = fitReasonByCurve.find(k);
+        if (itm != fitReasonByCurve.end()) {
+          auto itp = itm->second.find(ir);
+          if (itp != itm->second.end()) {
+            fitExclReason = itp->second;
+            isUsedInFit = (fitExclReason == "FIT_INCLUDED");
+            if (!isUsedInFit && fitExclReason.empty()) fitExclReason = "FIT_EXCLUDED_UNKNOWN";
+          } else {
+            fitExclReason = "FIT_EXCLUDED_UNKNOWN";
+          }
+        } else {
+          fitExclReason = "FIT_EXCLUDED_NO_CURVE";
+        }
+      }
+
+      WriteParsedRow(parsedcsv, r, ir, modeTag, id, tierTag, plotLabel,
+                     isPlotted, plotDropReason,
+                     isUsedInFit, fitExclReason,
+                     foPtr);
+    }
+    parsedcsv.close();
   }
 
   if (cfg.save_fit_csv && fitcsv.is_open()) fitcsv.close();

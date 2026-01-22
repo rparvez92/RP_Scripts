@@ -279,6 +279,11 @@ struct PlotConfig {
   // output
   bool save_png = true;
   bool save_fit_csv = true;
+
+  // drawing behavior
+  bool draw_invalid_fits = true;   // draw dashed curves even when valid_fit_default==0
+  int invalid_fit_line_style = 2;  // dashed
+  int invalid_fit_line_width = 1;
 };
 
 // ---------- Row ----------
@@ -809,8 +814,8 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
       break;
     }
 
-    // Otherwise keep the *best* invalid attempt as backup (prefer higher tier,
-    // then fewer rejection bits, then higher prob).
+    // Otherwise keep the *best* invalid attempt as backup (prefer fewer rejection bits,
+    // then *simpler* tier, then higher prob).
     if (!foundValid) {
       const unsigned int catastrophic = FIT_STATUS_BAD | NONFINITE_PARAM | NONFINITE_ERR | NDF_NONPOSITIVE | COV_FAILED | NO_FIT_POINTS;
       const unsigned int defaultReject = catastrophic | COV_NOT_POSDEF | CHI2NDF_HUGE | PROB_TINY | PHI_UNIFORM_FAIL | DOMINANT_WEIGHT_PT;
@@ -820,7 +825,7 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
         const unsigned int rej = (o.fit_flag_bits & defaultReject);
         const int bitcnt = __builtin_popcount((unsigned int)rej);
         const double p = (std::isfinite(o.prob) ? o.prob : -1.0);
-        return std::make_tuple(-o.fit_tier, bitcnt, -p); // prefer higher tier, fewer bits, higher prob
+        return std::make_tuple(bitcnt, o.fit_tier, -p); // prefer fewer rejection bits, then *simpler* tier, then higher prob
       };
 
       if (!bestFunc) {
@@ -1136,6 +1141,14 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
         if (fo.valid_fit_default == 1) {
           f->SetLineColor(col);
           f->SetLineWidth(2);
+          f->SetLineStyle(1);
+          f->Draw("L SAME");
+          fitFuncs.push_back(f);
+        } else if (cfg.draw_invalid_fits) {
+          // For diagnostics only: draw invalid fits as dashed lines
+          f->SetLineColor(col);
+          f->SetLineWidth(cfg.invalid_fit_line_width);
+          f->SetLineStyle(cfg.invalid_fit_line_style);
           f->Draw("L SAME");
           fitFuncs.push_back(f);
         } else {
@@ -1152,6 +1165,13 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
       drawn++;
     }
 
+    if (cfg.draw_invalid_fits) {
+      TLatex* t = new TLatex();
+      t->SetNDC(true);
+      t->SetTextSize(0.035);
+      t->SetTextColor(kGray+2);
+      t->DrawLatex(0.12, 0.18, "dashed curves = invalid fits (diagnostic)");
+    }
     leg->Draw();
   }
 
