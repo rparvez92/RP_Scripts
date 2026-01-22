@@ -229,6 +229,21 @@ struct PlotConfig {
   double M0_min = 0.0;
   double M0_relerr_max = 1.0;
 
+  // --- Phase-A stabilizers ---
+  // Dynamic upper bound for M0 based on data scale: M0_max = M0_max_scale * max(y)
+  // (capped by M0_max_cap for safety). This greatly improves Minuit conditioning.
+  double M0_max_scale = 20.0;
+  double M0_max_cap   = 1e9;
+
+  // Error (sigma) floor for fitting only (does NOT change plotted error bars).
+  // floor = fit_sigma_floor_frac * median(ey). Helps prevent a single tiny-error point
+  // from dominating and improves covariance stability.
+  bool   use_fit_sigma_floor   = true;
+  double fit_sigma_floor_frac  = 0.10; // 10% of median ey
+
+  // Optional fractional systematic term added in quadrature: ey -> sqrt(ey^2 + (fit_sys_frac*y)^2)
+  double fit_sys_frac = 0.0;
+
   double A_abs_max_plot = 1.2;
   double A_err_max = 1.0;
   double A_sig_min = 1.0;
@@ -557,18 +572,73 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
   if (fo.npts <= 0) return fo;
 
   double xmin=1e99, xmax=-1e99;
-  double ysum=0.0, yMin=1e99, yMax=-1e99;
+  double yMin=1e99, yMax=-1e99;
   for (int i=0;i<fo.npts;i++) {
     xmin = std::min(xmin, cp.x[i]);
     xmax = std::max(xmax, cp.x[i]);
-    ysum += cp.y[i];
     yMin = std::min(yMin, cp.y[i]);
     yMax = std::max(yMax, cp.y[i]);
   }
   fo.phi_min = xmin;
   fo.phi_max = xmax;
   fo.phi_span = (xmax > xmin) ? (xmax - xmin) : 0.0;
-  const double ymean = ysum / fo.npts;
+
+  // --- Phase-A fit stabilization: build a "fit-only" sigma vector with optional floor/systematics ---
+  std::vector<double> ey_fit = cp.ey;
+
+  // Median ey (finite, >0)
+  double ey_median = kMissing;
+  {
+    std::vector<double> tmp;
+    tmp.reserve(ey_fit.size());
+    for (double e : ey_fit) {
+      if (std::isfinite(e) && e > 0.0) tmp.push_back(e);
+    }
+    if (!tmp.empty()) {
+      std::sort(tmp.begin(), tmp.end());
+      ey_median = tmp[tmp.size()/2];
+    }
+  }
+
+  double sigma_floor = 0.0;
+  if (cfg.use_fit_sigma_floor && std::isfinite(ey_median) && ey_median != kMissing) {
+    sigma_floor = cfg.fit_sigma_floor_frac * ey_median;
+    if (sigma_floor < 0.0) sigma_floor = 0.0;
+  }
+
+  for (int i=0;i<fo.npts;i++) {
+    double e = ey_fit[i];
+    if (!std::isfinite(e) || e <= 0.0) continue;
+
+    if (sigma_floor > 0.0 && e < sigma_floor) e = sigma_floor;
+
+    if (cfg.fit_sys_frac > 0.0 && std::isfinite(cp.y[i]) && cp.y[i] != kMissing) {
+      const double sys = cfg.fit_sys_frac * std::abs(cp.y[i]);
+      e = std::sqrt(e*e + sys*sys);
+    }
+    ey_fit[i] = e;
+  }
+
+  // Weighted mean seed for M0 (also used as analytic tier-0 uncertainty fallback)
+  double sumw = 0.0, sumwy = 0.0;
+  for (int i=0;i<fo.npts;i++) {
+    const double e = ey_fit[i];
+    if (!std::isfinite(e) || e <= 0.0) continue;
+    const double w = 1.0/(e*e);
+    sumw  += w;
+    sumwy += w * cp.y[i];
+  }
+  const double ymean = (sumw > 0.0) ? (sumwy/sumw)
+                                    : ((yMax < 1e98 && yMin < 1e98) ? 0.5*(yMax+yMin) : 0.0);
+  const double ymean_err = (sumw > 0.0) ? std::sqrt(1.0/sumw) : kMissing;
+
+  // Dynamic M0 upper bound to improve conditioning (avoid 1e9-scale for 1e-3 data)
+  double M0max = cfg.M0_max_cap;
+  if (std::isfinite(yMax) && yMax > 0.0) {
+    M0max = std::min(cfg.M0_max_cap, std::max(cfg.M0_min + 1e-12, cfg.M0_max_scale * yMax));
+  } else if (std::isfinite(ymean) && ymean > 0.0) {
+    M0max = std::min(cfg.M0_max_cap, std::max(cfg.M0_min + 1e-12, cfg.M0_max_scale * ymean));
+  }
 
   if (fo.phi_span < cfg.tier_span0_max) fo.fit_tier = 0;
   else if (fo.phi_span < cfg.tier_span1_max) fo.fit_tier = 1;
@@ -585,13 +655,13 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
                  const_cast<double*>(cp.x.data()),
                  const_cast<double*>(cp.y.data()),
                  ex.data(),
-                 const_cast<double*>(cp.ey.data()));
+                 const_cast<double*>(ey_fit.data()));
 
   TF1* f = nullptr;
   if (fo.fit_tier == 0) {
     f = new TF1(Form("f0_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()), "[0]", xmin, xmax);
     f->SetParameters(ymean);
-    f->SetParLimits(0, 0.0, 1e9);
+    f->SetParLimits(0, cfg.M0_min, M0max);
   } else if (fo.fit_tier == 1) {
     f = new TF1(Form("f1_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()),
                 "[0]*(1 + [1]*cos(x))", xmin, xmax);
@@ -601,7 +671,7 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
       A0 = std::max(-0.9, std::min(0.9, A0));
     }
     f->SetParameters(ymean, A0);
-    f->SetParLimits(0, 0.0, 1e9);
+    f->SetParLimits(0, cfg.M0_min, M0max);
     f->SetParLimits(1, -1.0, 1.0);
   } else {
     f = new TF1(Form("f2_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()),
@@ -612,7 +682,7 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
       A0 = std::max(-0.9, std::min(0.9, A0));
     }
     f->SetParameters(ymean, A0, 0.0);
-    f->SetParLimits(0, 0.0, 1e9);
+    f->SetParLimits(0, cfg.M0_min, M0max);
     f->SetParLimits(1, -1.0, 1.0);
     f->SetParLimits(2, -1.0, 1.0);
   }
@@ -634,6 +704,15 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, TF1*& outFu
 
   fo.M0 = f->GetParameter(0);
   fo.M0_err = f->GetParError(0);
+
+  // Tier-0 has a closed-form solution (weighted mean). If Minuit returns an absurd error
+  // due to covariance issues, fall back to the analytic weighted-mean uncertainty.
+  if (fo.fit_tier == 0 && std::isfinite(ymean_err) && ymean_err != kMissing) {
+    if (!std::isfinite(fo.M0_err) || fo.M0_err <= 0.0 || fo.M0_err > 100.0*ymean_err) {
+      fo.M0_err = ymean_err;
+      AppendNote(fo.note, "M0ERR_WMEAN");
+    }
+  }
   if (fo.fit_tier >= 1) { fo.A = f->GetParameter(1); fo.A_err = f->GetParError(1); }
   if (fo.fit_tier >= 2) { fo.B = f->GetParameter(2); fo.B_err = f->GetParError(2); }
 
@@ -727,14 +806,14 @@ void PlotCoinXsecFromTable(const char* manifestOrGroupPath,
     id = StripExtension(Basename(p));
     resultsDir = NormalizeSlashes(std::string(resultsRoot) + "/" + id);
     csvPath = resultsDir + "/tables/xsec_phipq_z_pt_overlayed_group.csv";
-    fitPath = resultsDir + "/tables/fit_parameters_group.csv";
-    pngPath = resultsDir + "/PNGs/xsec_phipq_z_pt_overlayed_group.png";
+    fitPath = resultsDir + "/tables/fit_parameters_group_wTierBadFits.csv";
+    pngPath = resultsDir + "/PNGs/xsec_phipq_z_pt_overlayed_group_wTierBadFits.png";
   } else {
     id = MakeSettingIdFromManifestPath(p, NormalizeSlashes(settingsRoot));
     resultsDir = NormalizeSlashes(std::string(resultsRoot) + "/" + id);
     csvPath = resultsDir + "/tables/xsec_phipq_z_pt_overlayed_single.csv";
-    fitPath = resultsDir + "/tables/fit_parameters_single.csv";
-    pngPath = resultsDir + "/PNGs/xsec_phipq_z_pt_overlayed_single.png";
+    fitPath = resultsDir + "/tables/fit_parameters_single_wTierBadFits.csv";
+    pngPath = resultsDir + "/PNGs/xsec_phipq_z_pt_overlayed_single_wTierBadFits.png";
   }
 
   MkdirP(resultsDir);
