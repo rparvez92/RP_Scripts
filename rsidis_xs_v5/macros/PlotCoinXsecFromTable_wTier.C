@@ -264,6 +264,12 @@ struct PlotConfig {
   double M0_min = 0.0;
   double M0_relerr_max = 1.0;
 
+
+  // Fit conditioning (Phase-A stability)
+  // Dynamic upper bound for M0: M0_max = min(M0_max_cap, M0_max_scale * max(y))
+  double M0_max_scale = 20.0;
+  double M0_max_cap   = 1e9;
+
   double A_abs_max_plot = 1.2;
   double A_err_max = 1.0;
   double A_sig_min = 1.0;
@@ -784,8 +790,32 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, bool tierOn
 
   // compute mean/range for initial guesses
   double ysum=0.0, yMin=1e99, yMax=-1e99;
-  for (double y : yf) { ysum += y; yMin = min(yMin, y); yMax = max(yMax, y); }
-  const double ymean = ysum / (double)fo.npts_fit;
+  double sumw=0.0, sumwy=0.0;
+  for (size_t i=0;i<yf.size();i++) {
+    const double y = yf[i];
+    ysum += y;
+    yMin = min(yMin, y);
+    yMax = max(yMax, y);
+    const double e = ef[i];
+    if (std::isfinite(e) && e > 0) {
+      const double w = 1.0/(e*e);
+      sumw  += w;
+      sumwy += w*y;
+    }
+  }
+  const double ymean  = ysum / (double)fo.npts_fit;
+  const double ywmean = (sumw > 0.0) ? (sumwy / sumw) : ymean;
+  const double ywerr  = (sumw > 0.0) ? (1.0 / std::sqrt(sumw)) : kMissing;
+
+  // Dynamic M0 upper bound to improve Minuit conditioning
+  double baseY = yMax;
+  if (!std::isfinite(baseY) || baseY <= 0.0)
+    baseY = (std::isfinite(ywmean) && ywmean > 0.0) ? ywmean : 1e-6;
+  double M0max = cfg.M0_max_scale * baseY;
+  if (std::isfinite(cfg.M0_max_cap) && cfg.M0_max_cap > 0.0)
+    M0max = std::min(M0max, cfg.M0_max_cap);
+  if (!std::isfinite(M0max) || M0max <= cfg.M0_min)
+    M0max = cfg.M0_min + std::max(1e-6, 10.0*baseY);
 
   // Build graph for fit once (data are the same for all tiers)
   std::vector<double> ex(fo.npts_fit, 0.0);
@@ -795,8 +825,8 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, bool tierOn
     TF1* f = nullptr;
     if (tier <= 0) {
       f = new TF1(Form("f0_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()), "[0]", fo.phi_min, fo.phi_max);
-      f->SetParameters(ymean);
-      f->SetParLimits(0, 0.0, 1e9);
+      f->SetParameters(ywmean);
+      f->SetParLimits(0, cfg.M0_min, M0max);
       return f;
     }
 
@@ -810,16 +840,16 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, bool tierOn
     if (tier == 1) {
       f = new TF1(Form("f1_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()),
                   "[0]*(1 + [1]*cos(x))", fo.phi_min, fo.phi_max);
-      f->SetParameters(ymean, A0);
-      f->SetParLimits(0, 0.0, 1e9);
+      f->SetParameters(ywmean, A0);
+      f->SetParLimits(0, cfg.M0_min, M0max);
       f->SetParLimits(1, -1.0, 1.0);
       return f;
     }
 
     f = new TF1(Form("f2_pt%d_%s", fo.pt_bin, fo.curve_label.c_str()),
                 "[0]*(1 + [1]*cos(x) + [2]*cos(2*x))", fo.phi_min, fo.phi_max);
-    f->SetParameters(ymean, A0, 0.0);
-    f->SetParLimits(0, 0.0, 1e9);
+    f->SetParameters(ywmean, A0, 0.0);
+    f->SetParLimits(0, cfg.M0_min, M0max);
     f->SetParLimits(1, -1.0, 1.0);
     f->SetParLimits(2, -1.0, 1.0);
     return f;
@@ -842,6 +872,18 @@ static FitOut FitCurve(const CurvePoints& cp, const PlotConfig& cfg, bool tierOn
 
     o.M0 = f->GetParameter(0);
     o.M0_err = f->GetParError(0);
+
+    // Phase-A stability: if tier-0 covariance is unreliable, fall back to analytic
+    // weighted-mean uncertainty (computed from fit vectors after sigma-floor).
+    if (o.fit_tier <= 0 && std::isfinite(ywerr) && ywerr > 0) {
+      const bool covBad = (o.cov_status < 2);
+      const bool errBad = (!std::isfinite(o.M0_err) || o.M0_err <= 0.0 ||
+                           (std::isfinite(o.M0) && o.M0 > 0.0 && (o.M0_err/o.M0) > cfg.M0_relerr_max));
+      if (covBad || errBad) {
+        o.M0_err = ywerr;
+        AppendNote(o.note, "M0ERR_WMEAN");
+      }
+    }
     if (o.fit_tier >= 1) { o.A = f->GetParameter(1); o.A_err = f->GetParError(1); }
     if (o.fit_tier >= 2) { o.B = f->GetParameter(2); o.B_err = f->GetParError(2); }
 
@@ -1247,7 +1289,7 @@ void PlotCoinXsecFromTable_wTier(const char* manifestOrGroupPath,
     fitcsv.open(fitPath, std::ios::out | std::ios::trunc);
     WriteFitHeader(fitcsv);
     fitcsv.flush();
-    std::cout << "Fit CSV: " << fitPath << "";
+    std::cout << "Fit CSV: " << fitPath << "\n";
   }
 
   std::ofstream parsedcsv;
@@ -1255,7 +1297,7 @@ void PlotCoinXsecFromTable_wTier(const char* manifestOrGroupPath,
     parsedcsv.open(parsedPath, std::ios::out | std::ios::trunc);
     WriteParsedHeader(parsedcsv);
     parsedcsv.flush();
-    std::cout << "Parsed points CSV: " << parsedPath << "";
+    std::cout << "Parsed points CSV: " << parsedPath << "\n";
   }
 
   // Cache fit outputs and per-point fit-usage reasons for the parsed-data export
