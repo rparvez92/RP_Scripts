@@ -4,7 +4,7 @@
 //   results/<setting_id or group_id>/tables/fit_parameters_<mode>_tierOn.csv
 //
 // Output:
-//   results/<setting_id or group_id>/PNGs/FitParamPlots_tierOn/ (or _tierOff)/*.png
+//   results/<setting_id or group_id>/PNGs/FitParamPlots/*.png
 //
 // Usage (from rsidis_xs_v5/):
 //   root -l -q 'macros/PlotFitParameters.C("results/.../tables/fit_parameters_group_tierOn.csv")'
@@ -300,22 +300,14 @@ static std::vector<Row> ReadRows(const std::string& csvPath) {
 }
 
 static std::string InferOutDir(const std::string& csvPath) {
-  // Decide tier tag from the input CSV path (keeps runtime simple)
-  std::string lower = csvPath;
-  for (auto& ch : lower) ch = std::tolower(static_cast<unsigned char>(ch));
-
-  std::string subdir = "FitParamPlots";
-  if (lower.find("tieron") != std::string::npos)  subdir = "FitParamPlots_tierOn";
-  if (lower.find("tieroff") != std::string::npos) subdir = "FitParamPlots_tierOff";
-
   std::string out = csvPath;
-  // Replace /tables/<file>.csv -> /PNGs/<subdir>
+  // Replace /tables/<file>.csv -> /PNGs/FitParamPlots/
   auto pos = out.rfind("/tables/");
   if (pos != std::string::npos) {
-    out = out.substr(0, pos) + "/PNGs/" + subdir;
+    out = out.substr(0, pos) + "/PNGs/FitParamPlots";
   } else {
     // fallback: sibling PNGs
-    out = std::string("PNGs/") + subdir;
+    out = "PNGs/FitParamPlots";
   }
   gSystem->mkdir(out.c_str(), kTRUE);
   return out;

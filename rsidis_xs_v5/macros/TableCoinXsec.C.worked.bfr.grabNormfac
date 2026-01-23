@@ -94,83 +94,6 @@ static std::string StripExtension(const std::string& path) {
   return base.substr(0, pos);
 }
 
-static std::string SwapExtension(const std::string& path, const std::string& newExtNoDot) {
-  auto pos = path.find_last_of('.');
-  if (pos == std::string::npos) return path + "." + newExtNoDot;
-  return path.substr(0, pos + 1) + newExtNoDot;
-}
-
-static std::string GetFirstRootFileFromChain(TChain& ch, std::ofstream& log, const std::string& simGlobForMsg) {
-  // Ensure the first file is actually opened.
-  if (ch.GetEntries() <= 0) {
-    log << "ERROR: SIM chain has 0 entries for: " << simGlobForMsg << "\n";
-    std::cerr << "ERROR: SIM chain has 0 entries for: " << simGlobForMsg << "\n";
-    gSystem->Exit(1);
-  }
-  ch.GetEntry(0);
-  TFile* f = ch.GetCurrentFile();
-  if (!f) {
-    log << "ERROR: could not open current SIM ROOT file for: " << simGlobForMsg << "\n";
-    std::cerr << "ERROR: could not open current SIM ROOT file for: " << simGlobForMsg << "\n";
-    gSystem->Exit(1);
-  }
-  return NormalizeSlashes(std::string(f->GetName()));
-}
-
-static double GrabNormfacFromHist(const std::string& simRootPath,
-                                  std::string* histPathOut,
-                                  std::ofstream& log)
-{
-  std::string histPath = simRootPath;
-  if (EndsWith(histPath, ".root")) {
-    histPath = SwapExtension(histPath, "hist");
-  } else {
-    // Defensive: still try to read a .hist next to whatever we were given.
-    histPath = simRootPath + ".hist";
-  }
-  if (histPathOut) *histPathOut = histPath;
-
-  std::ifstream f(histPath);
-  if (!f) {
-    log << "ERROR: cannot open SIMC .hist file: " << histPath << "\n";
-    std::cerr << "ERROR: cannot open SIMC .hist file: " << histPath << "\n";
-    gSystem->Exit(1);
-  }
-
-  bool inMisc = false;
-  std::string line;
-  while (std::getline(f, line)) {
-    if (!inMisc) {
-      if (line.find("MISCELLANEOUS") != std::string::npos) inMisc = true;
-      continue;
-    }
-
-    // normfac is always within MISCELLANEOUS, before RECON SUMMARY in SIMC output.
-    if (line.find("RECON SUMMARY") != std::string::npos) break;
-
-    auto p = line.find("normfac");
-    if (p == std::string::npos) continue;
-    auto eq = line.find('=', p);
-    if (eq == std::string::npos) continue;
-
-    std::string rhs = line.substr(eq + 1);
-    std::istringstream iss(rhs);
-    double v = 0.0;
-    if (!(iss >> v)) continue;
-    if (!std::isfinite(v) || v <= 0.0) {
-      log << "ERROR: parsed non-finite or non-positive normfac=" << v << " from: " << histPath << "\n";
-      std::cerr << "ERROR: parsed non-finite or non-positive normfac=" << v << " from: " << histPath << "\n";
-      gSystem->Exit(1);
-    }
-    return v;
-  }
-
-  log << "ERROR: could not find 'normfac' under MISCELLANEOUS in: " << histPath << "\n";
-  std::cerr << "ERROR: could not find 'normfac' under MISCELLANEOUS in: " << histPath << "\n";
-  gSystem->Exit(1);
-  return 0.0; // unreachable
-}
-
 // settingsRoot can be relative ("settings") or absolute ("/.../settings")
 static std::string MakeSettingIdFromManifestPath(const std::string& manifestPath,
                                                 const std::string& settingsRoot) {
@@ -895,29 +818,8 @@ static void TableCoinXsec_Single(const char* manifestPath,
     "(ssxptar>-0.045) && (ssxptar<0.045) && "
     "(ssyptar>-0.024) && (ssyptar<0.024)";
 
-  // --- SIM normalization: MUST come from the corresponding SIMC .hist file ---
-  // Directory layout assumption (your case):
-  //   <projectRoot>/simc_worksim/<settingId>/<stem>.root
-  //   <projectRoot>/simc_worksim/<settingId>/<stem>.hist
-  const std::string simRootPath = GetFirstRootFileFromChain(sim, log, simGlob);
-  std::string simHistPath;
-  const double simNormalizationFactor = GrabNormfacFromHist(simRootPath, &simHistPath, log);
-  log << "SIM root file: " << simRootPath << "\n";
-  log << "SIM hist file: " << simHistPath << "\n";
-  log << "SIM normfac:  " << simNormalizationFactor << "\n";
-
+  const double simNormalizationFactor = 0.842205e11;
   const double simTryScale = (nGenSim > 0) ? (1.0 / double(nGenSim)) : 0.0;
-  const double simEffectiveScale = simNormalizationFactor * simTryScale;
-  log << "SIM nGenSim:  " << nGenSim << "\n";
-  log << "SIM scale:   " << simTryScale << "  (1/nGenSim)\n";
-  log << "SIM eff:     " << simEffectiveScale << "  (normfac/nGenSim)\n";
-
-  std::cout << "SIM root file: " << simRootPath << "\n";
-  std::cout << "SIM hist file: " << simHistPath << "\n";
-  std::cout << "SIM normfac:  " << simNormalizationFactor << "\n";
-  std::cout << "SIM nGenSim:  " << nGenSim << "\n";
-  std::cout << "SIM eff:     " << simEffectiveScale << "  (normfac/nGenSim)\n";
-
   const TString simWeightExpr = Form("Weight*%e*%e", simNormalizationFactor, simTryScale);
 
   // Random subtraction config
@@ -1086,6 +988,8 @@ static void TableCoinXsec_Group(const char* groupPath,
     "(hsdelta>-8.0) && (hsdelta<8.0) && "
     "(ssdelta>-10.0) && (ssdelta<22.0)";
 
+  const double simNormalizationFactor = 0.842205e11;
+
   GuardCfg guards;
   // Use the same defaults as the plotting macro (can be tuned later in plotter)
   guards.minSimYield   = 0.05;
@@ -1143,27 +1047,7 @@ static void TableCoinXsec_Group(const char* groupPath,
       std::cerr << "ERROR: SIM chain empty for: " << simGlob << "\n";
       return;
     }
-
-    // --- SIM normalization: MUST come from the corresponding SIMC .hist file ---
-    const std::string simRootPath = GetFirstRootFileFromChain(*sim, log, simGlob);
-    std::string simHistPath;
-    const double simNormalizationFactor = GrabNormfacFromHist(simRootPath, &simHistPath, log);
-    log << "SIM root file: " << simRootPath << "\n";
-    log << "SIM hist file: " << simHistPath << "\n";
-    log << "SIM normfac:  " << simNormalizationFactor << "\n";
-
     const double simTryScale = (nGenSim > 0) ? (1.0 / double(nGenSim)) : 0.0;
-    const double simEffectiveScale = simNormalizationFactor * simTryScale;
-    log << "SIM nGenSim:  " << nGenSim << "\n";
-    log << "SIM scale:   " << simTryScale << "  (1/nGenSim)\n";
-    log << "SIM eff:     " << simEffectiveScale << "  (normfac/nGenSim)\n";
-
-    std::cout << "[GROUP] " << curve_label << " SIM root file: " << simRootPath << "\n";
-    std::cout << "[GROUP] " << curve_label << " SIM hist file: " << simHistPath << "\n";
-    std::cout << "[GROUP] " << curve_label << " SIM normfac:  " << simNormalizationFactor << "\n";
-    std::cout << "[GROUP] " << curve_label << " SIM nGenSim:  " << nGenSim << "\n";
-    std::cout << "[GROUP] " << curve_label << " SIM eff:     " << simEffectiveScale << "  (normfac/nGenSim)\n";
-
     const TString simWeightExpr = Form("Weight*%e*%e", simNormalizationFactor, simTryScale);
 
     // Coin cache for this curve
