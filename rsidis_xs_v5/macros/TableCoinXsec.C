@@ -23,6 +23,7 @@
 // Run examples:
 //   root -l -b -q 'macros/TableCoinXsec.C("settings/.../manifest.txt", "results", "settings")'
 //   root -l -b -q 'macros/TableCoinXsec.C("groups/.../grp_*.list", "results", "settings")'
+//   root -l -b -q 'macros/TableCoinXsec.C("/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/thpq2/grp_pass4_piplus_LH2_zOv_x0p25_q23p3_thpq2.list", "/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results", "/home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/settings")'
 
 #include <iostream>
 #include <fstream>

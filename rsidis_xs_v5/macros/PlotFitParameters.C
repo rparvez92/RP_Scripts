@@ -15,6 +15,11 @@
 //   - Increases marker size
 //   - Adds M0/A/B vs pt (in z bins) and chi2/ndf vs pt
 //   - Adds small "missing bin" note when an expected z or pt bin has no values
+//
+// Run command:
+//   root -l -b -q 'macros/PlotFitParameters.C(<csv link>)'
+//   root -l -b -q 'macros/PlotFitParameters.C("results/grp_pass4_piplus_LH2_zOv_x0p25_q23p3_thpq2/tables/fit_parameters_group_tierOff.csv")'
+//   root -l -b -q 'macros/PlotFitParameters.C("results/grp_pass4_piplus_LH2_zOv_x0p25_q23p3_thpq2/tables/fit_parameters_group_tierOn.csv")'
 
 #include <TROOT.h>
 #include <TStyle.h>
