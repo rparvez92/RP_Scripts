@@ -1,0 +1,8 @@
+# z-overlay group for pass=pass5 run_type=pi+sidis (token=piplus) target=LH2
+# nominal: x=x0p25 q2=q23p3 thpq=thpq2 (theta_pq=2.0)
+# format: <label> <path-to-manifest.json>
+
+z0p36   ../../../../../../../settings/pass5/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2/manifest.json
+z0p50   ../../../../../../../settings/pass5/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh10p305_thpq2/manifest.json
+z0p67   ../../../../../../../settings/pass5/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/manifest.json
+z0p90   ../../../../../../../settings/pass5/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh10p305_thpq2/manifest.json
