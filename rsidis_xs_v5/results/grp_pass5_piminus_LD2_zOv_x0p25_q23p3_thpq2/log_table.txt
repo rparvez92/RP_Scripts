@@ -1,0 +1,6 @@
+=== TableCoinXsec v5 (GROUP overlay) ===
+groupFile: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi-sidis/LD2/x0p25/q23p3/thpq2/grp_pass5_piminus_LD2_zOv_x0p25_q23p3_thpq2.list
+resultsDir: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_pass5_piminus_LD2_zOv_x0p25_q23p3_thpq2
+settingsRoot: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/settings
+ERROR: cannot open group file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi-sidis/LD2/x0p25/q23p3/thpq2/grp_pass5_piminus_LD2_zOv_x0p25_q23p3_thpq2.list
+ERROR: group file produced 0 entries.

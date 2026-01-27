@@ -13,10 +13,10 @@ sigma_model=0.00324496
 SIM glob: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
 SIM root file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/coin_pass4_piplus_LH2_hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2.root
 SIM hist file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi+sidis/LH2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/coin_pass4_piplus_LH2_hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2.hist
-SIM normfac:  8.08549e+10
+SIM normfac:  8.13396e+10
 SIM nGenSim:  1000000
 SIM scale:   1e-06  (1/nGenSim)
-SIM eff:     80854.9  (normfac/nGenSim)
+SIM eff:     81339.6  (normfac/nGenSim)
 SANITY (run 24442): entries(all)=36740 entries(baseCuts)=14201 entries(fullCuts)=7
 --- Curve: z0p50 settingId=pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2
 Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
@@ -27,10 +27,10 @@ sigma_model=0.00259622
 SIM glob: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
 SIM root file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/coin_pass4_piplus_LH2_hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2.root
 SIM hist file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi+sidis/LH2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/coin_pass4_piplus_LH2_hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2.hist
-SIM normfac:  8.42205e+10
+SIM normfac:  8.42238e+10
 SIM nGenSim:  1000000
 SIM scale:   1e-06  (1/nGenSim)
-SIM eff:     84220.5  (normfac/nGenSim)
+SIM eff:     84223.8  (normfac/nGenSim)
 SANITY (run 24322): entries(all)=57386 entries(baseCuts)=20704 entries(fullCuts)=10
 --- Curve: z0p67 settingId=pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2
 Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
@@ -41,10 +41,10 @@ sigma_model=0.00179632
 SIM glob: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
 SIM root file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/coin_pass4_piplus_LH2_hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2.root
 SIM hist file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi+sidis/LH2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2/coin_pass4_piplus_LH2_hmsPneg1p531_shmsP4p868_hmsTh29p045_shmsTh7p865_thpq2.hist
-SIM normfac:  8.22955e+10
+SIM normfac:  8.27753e+10
 SIM nGenSim:  1000000
 SIM scale:   1e-06  (1/nGenSim)
-SIM eff:     82295.5  (normfac/nGenSim)
+SIM eff:     82775.3  (normfac/nGenSim)
 SANITY (run 24222): entries(all)=63082 entries(baseCuts)=21177 entries(fullCuts)=17
 --- Curve: z0p90 settingId=pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2
 Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi+sidis/LH2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
@@ -55,9 +55,9 @@ sigma_model=0.000674216
 SIM glob: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
 SIM root file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2/coin_pass4_piplus_LH2_hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2.root
 SIM hist file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi+sidis/LH2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2/coin_pass4_piplus_LH2_hmsPneg1p531_shmsP6p538_hmsTh29p045_shmsTh7p865_thpq2.hist
-SIM normfac:  3.71802e+10
+SIM normfac:  3.7816e+10
 SIM nGenSim:  1000000
 SIM scale:   1e-06  (1/nGenSim)
-SIM eff:     37180.2  (normfac/nGenSim)
+SIM eff:     37816  (normfac/nGenSim)
 SANITY (run 24187): entries(all)=15748 entries(baseCuts)=4853 entries(fullCuts)=3
 Done (GROUP table).

@@ -1,0 +1,127 @@
+=== TableCoinXsec v5 (GROUP overlay) ===
+groupFile: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi-sidis/LD2/x0p25/q23p3/thpq2/grp_pass4_piminus_LD2_zOv_x0p25_q23p3_thpq2.list
+resultsDir: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_pass4_piminus_LD2_zOv_x0p25_q23p3_thpq2
+settingsRoot: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/settings
+Group entries: 4
+CSV: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_pass4_piminus_LD2_zOv_x0p25_q23p3_thpq2/tables/xsec_phipq_z_pt_overlayed_group.csv
+--- Curve: z0p36 settingId=pass4/pi-sidis/LD2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi-sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi-sidis/LD2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi-sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi-sidis/LD2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi-sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi-sidis/LD2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi-sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi-sidis/LD2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00342031
+SIM glob: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi-sidis/LD2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+SIM root file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi-sidis/LD2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/coin_pass4_piminus_LD2_hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2.root
+SIM hist file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi-sidis/LD2/z0p36/x0p25/q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/coin_pass4_piminus_LD2_hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2.hist
+SIM normfac:  9.59711e+10
+SIM nGenSim:  1000000
+SIM scale:   1e-06  (1/nGenSim)
+SIM eff:     95971.1  (normfac/nGenSim)
+SANITY (run 23878): entries(all)=18027 entries(baseCuts)=6866 entries(fullCuts)=7
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+--- Curve: z0p50 settingId=pass4/pi-sidis/LD2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi-sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi-sidis/LD2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi-sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi-sidis/LD2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi-sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi-sidis/LD2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi-sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi-sidis/LD2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.00259228
+SIM glob: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi-sidis/LD2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+SIM root file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi-sidis/LD2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2/coin_pass4_piminus_LD2_hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2.root
+SIM hist file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi-sidis/LD2/z0p5/x0p25/q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2/coin_pass4_piminus_LD2_hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2.hist
+SIM normfac:  9.95154e+10
+SIM nGenSim:  1000000
+SIM scale:   1e-06  (1/nGenSim)
+SIM eff:     99515.4  (normfac/nGenSim)
+SANITY (run 24097): entries(all)=3535 entries(baseCuts)=898 entries(fullCuts)=0
+--- Curve: z0p67 settingId=pass4/pi-sidis/LD2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsPneg4p868_hmsTh29p045_shmsTh7p865_thpq2
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi-sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi-sidis/LD2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsPneg4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi-sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi-sidis/LD2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsPneg4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi-sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi-sidis/LD2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsPneg4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi-sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi-sidis/LD2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsPneg4p868_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.0017263
+SIM glob: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi-sidis/LD2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsPneg4p868_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+SIM root file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi-sidis/LD2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsPneg4p868_hmsTh29p045_shmsTh7p865_thpq2/coin_pass4_piminus_LD2_hmsPneg1p531_shmsPneg4p868_hmsTh29p045_shmsTh7p865_thpq2.root
+SIM hist file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi-sidis/LD2/z0p67/x0p25/q23p3/hmsPneg1p531_shmsPneg4p868_hmsTh29p045_shmsTh7p865_thpq2/coin_pass4_piminus_LD2_hmsPneg1p531_shmsPneg4p868_hmsTh29p045_shmsTh7p865_thpq2.hist
+SIM normfac:  9.75342e+10
+SIM nGenSim:  1000000
+SIM scale:   1e-06  (1/nGenSim)
+SIM eff:     97534.2  (normfac/nGenSim)
+SANITY (run 23980): entries(all)=20299 entries(baseCuts)=2411 entries(fullCuts)=2
+--- Curve: z0p90 settingId=pass4/pi-sidis/LD2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsPneg6p538_hmsTh29p045_shmsTh7p865_thpq2
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi-sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi-sidis/LD2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsPneg6p538_hmsTh29p045_shmsTh7p865_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi-sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi-sidis/LD2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsPneg6p538_hmsTh29p045_shmsTh7p865_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi-sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi-sidis/LD2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsPneg6p538_hmsTh29p045_shmsTh7p865_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass4/pi-sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass4/pi-sidis/LD2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsPneg6p538_hmsTh29p045_shmsTh7p865_thpq2/runs_positron_dummy.txt
+sigma_model=0.000630707
+SIM glob: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi-sidis/LD2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsPneg6p538_hmsTh29p045_shmsTh7p865_thpq2/*.root added=1
+SIM root file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi-sidis/LD2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsPneg6p538_hmsTh29p045_shmsTh7p865_thpq2/coin_pass4_piminus_LD2_hmsPneg1p531_shmsPneg6p538_hmsTh29p045_shmsTh7p865_thpq2.root
+SIM hist file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass4/pi-sidis/LD2/z0p9/x0p25/q23p3/hmsPneg1p531_shmsPneg6p538_hmsTh29p045_shmsTh7p865_thpq2/coin_pass4_piminus_LD2_hmsPneg1p531_shmsPneg6p538_hmsTh29p045_shmsTh7p865_thpq2.hist
+SIM normfac:  4.45892e+10
+SIM nGenSim:  1000000
+SIM scale:   1e-06  (1/nGenSim)
+SIM eff:     44589.2  (normfac/nGenSim)
+SANITY (run 23964): entries(all)=56250 entries(baseCuts)=2084 entries(fullCuts)=2
+Done (GROUP table).
