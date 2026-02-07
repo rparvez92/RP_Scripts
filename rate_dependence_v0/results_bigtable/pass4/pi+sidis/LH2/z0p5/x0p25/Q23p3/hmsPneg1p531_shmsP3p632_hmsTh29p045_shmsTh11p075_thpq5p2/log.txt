@@ -1,0 +1,13 @@
+YieldVsCurrent_bigtable
+manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/settings/pass4/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/manifest.json
+setting_dir: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/settings/pass4/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2
+setting_id: hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2
+results_base: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/results_bigtable/pass4/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2
+
+Loaded rows from run_metadata.csv: 29
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/results_bigtable/pass4/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/tables/yield_vs_current_overlay.csv
+Plot points: category=dummy n=6
+Plot points: category=positron n=3
+Plot points: category=signal n=20
+Global ranges: X=[13.6136,55.7704]  Y=[-2.87833,34.0403]
+Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/results_bigtable/pass4/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/PNGs/yield_vs_current_overlay.png
