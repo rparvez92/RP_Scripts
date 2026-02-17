@@ -1,0 +1,17 @@
+TriggerVsCurrent.C
+manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass4/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p075_thpq5p2/manifest.json
+resultsTop: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results
+rel: pass4/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p075_thpq5p2
+WARN: skipping short CSV line: #FIT,fit_const,fit_const_err,chi2,ndf,chi2_ndf,prob,n_fit_points
+WARN: skipping short CSV line: #FIT,2.38911,0.0151596,64.0129,29,2.20734,0.000190754,30
+Read 30 rows from: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p075_thpq5p2/tables/yield_vs_current_signal.csv
+Loaded BCM2_Q for 1555 runs from bigtable. Bad lines: 0
+Repo root:   /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1
+Bigtable:    /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/bigtable/rsidis_bigtable_pass0.csv
+Report dir:  /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/Pass0_REPORTfiles/COIN/PRODUCTION
+Points: OK=30  skipped=0  missingReport=0  missingLine=0  missingBCM2_Q=0  badBCM2_Q=0
+Fit: c=20083.4 +/- 102.859
+chi2/ndf=317401 (29)  prob=0
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p075_thpq5p2/tables/hms_elclean_chargeNorm_vs_current.csv
+Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p075_thpq5p2/PNGs/hms_elclean_chargeNorm_vs_current.png
+Wrote ROOT: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p075_thpq5p2/canvases/hms_elclean_chargeNorm_vs_current.root

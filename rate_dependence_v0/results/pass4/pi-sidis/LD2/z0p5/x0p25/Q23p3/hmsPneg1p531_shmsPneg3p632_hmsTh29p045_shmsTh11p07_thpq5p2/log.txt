@@ -1,0 +1,14 @@
+YieldVsCurrent (myCTime only)
+manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/settings/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/manifest.json
+setting_dir: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/settings/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2
+setting_id: hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2
+results_base: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2
+
+Loaded rows from run_metadata.csv: 2
+
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/tables/yield_vs_current_overlay.csv
+Plot points: category=dummy n=1
+Plot points: category=signal n=1
+Global ranges: X=[22.5395,32.2175]  Y=[1.16755,5.69749]
+Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/PNGs/yield_vs_current_overlay.png
+Wrote Root File: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/canvases/yield_vs_current_overlay.root

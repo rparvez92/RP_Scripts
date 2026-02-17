@@ -1,0 +1,5 @@
+category,run,BCM2_I,Nnet,Nnet_err,norm_factor,yield,yield_err,BCM2_Q_mC,comp_livetime,h_esing_Eff,boil_corr,ps_choice,ps_factor,PeakCenterNs,CoinLoNs,CoinHiNs,RandomWindowListNs,rootfile,status
+signal,23861,39.922,210.412,6.59499,nan,nan,nan,88.218,1,0.9989,-999,"ps6",1,51.275,50.275,52.275,"42.275-44.275;58.275-60.275;38.275-40.275;62.275-64.275","./Skimmed_ROOTfiles/skimmed_coin_replay_production_23861_-1.root",BADMETA
+signal,23867,39.111,165.825,5.85745,0.0150541,2.49635,0.0881788,68.141,1,0.9989,1.02468,"ps6",1,51.125,50.125,52.125,"42.125-44.125;58.125-60.125;38.125-40.125;62.125-64.125","./Skimmed_ROOTfiles/skimmed_coin_replay_production_23867_-1.root",OK
+signal,23868,40.465,187.125,6.2311,0.0131808,2.46646,0.082131,77.787,1,0.9985,1.02376,"ps6",1,51.125,50.125,52.125,"42.125-44.125;58.125-60.125;38.125-40.125;62.125-64.125","./Skimmed_ROOTfiles/skimmed_coin_replay_production_23868_-1.root",OK
+dummy,23866,31.699,93,4.17582,0.0173944,1.61768,0.072636,57.553,1,0.9989,1,"ps6",1,51.425,50.425,52.425,"42.425-44.425;58.425-60.425;38.425-40.425;62.425-64.425","./Skimmed_ROOTfiles/skimmed_coin_replay_production_23866_-1.root",OK

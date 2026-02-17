@@ -1,0 +1,15 @@
+YieldVsCurrent (v1, signal-only)
+manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/manifest.json
+setting_dir: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2
+setting_id: hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2
+results_base: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2
+log: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/logs/YieldVsCurrent.log
+
+Loaded rows from run_metadata.csv: 2
+
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/tables/yield_vs_current_signal.csv
+WARNING [run -1]: Not enough fit-eligible points (need >=2 with yield_err>0). Will plot without fit.
+NOTE: not enough fit-eligible points for constant fit.
+Global ranges: X=[22.998,23.118]  Y=[4.95675,5.35301]
+Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/PNGs/yield_vs_current.png
+Wrote ROOT: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/canvases/yield_vs_current.root

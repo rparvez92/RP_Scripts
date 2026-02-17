@@ -1,0 +1,5 @@
+Reading startup commands from /home/cdaq/.root/rootlogon.C
+
+Processing macros/YieldVsCurrent.C("/home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/settings/pass5/pi-sidis/LD2/z0p36/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p755_shmsTh8p11_thpqneg0p2/manifest.json","/home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/results")...
+Info in <TCanvas::Print>: png file /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/results/pass5/pi-sidis/LD2/z0p36/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p755_shmsTh8p11_thpqneg0p2/PNGs/yield_vs_current_overlay.png has been created
+Info in <TCanvas::SaveAs>: ROOT file /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/results/pass5/pi-sidis/LD2/z0p36/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p755_shmsTh8p11_thpqneg0p2/canvases/yield_vs_current_overlay.root has been created

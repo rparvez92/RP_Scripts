@@ -1,0 +1,28 @@
+category,run,BCM2_I,shms_elclean_kHz,yield,yield_err,rootfile,status
+signal,24428,7.95,5.662,10.9149,0.462092,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24428_-1.root",OK
+signal,24429,8.084,5.88,10.3588,0.441155,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24429_-1.root",OK
+signal,24430,7.776,5.651,10.9542,0.466701,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24430_-1.root",OK
+signal,24431,7.921,5.772,11.4282,0.466082,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24431_-1.root",OK
+signal,24432,7.911,5.768,10.3489,0.456399,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24432_-1.root",OK
+signal,24433,8.055,5.919,11.6433,0.44478,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24433_-1.root",OK
+signal,24434,8.065,5.92,11.3933,0.453089,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24434_-1.root",OK
+signal,24435,8.075,5.913,11.0891,0.447994,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24435_-1.root",OK
+signal,24436,8.058,5.908,10.669,0.439573,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24436_-1.root",OK
+signal,24437,8.074,5.934,11.2351,0.446936,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24437_-1.root",OK
+signal,24501,7.963,5.91,10.1446,0.460351,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24501_-1.root",OK
+signal,24502,8.026,5.961,10.986,0.453715,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24502_-1.root",OK
+signal,24503,8.161,6.086,10.5725,0.440097,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24503_-1.root",OK
+signal,24504,8.007,5.932,11.2548,0.469699,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24504_-1.root",OK
+signal,24505,8.049,5.976,10.6693,0.451432,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24505_-1.root",OK
+signal,24506,8.156,6.077,11.4338,0.454003,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24506_-1.root",OK
+signal,24507,8.036,5.96,9.83768,0.449504,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24507_-1.root",OK
+# FIT_MODEL,pol1
+# FIT_a,-3.06539304314
+# FIT_aerr,1.2867779188
+# FIT_b,1.11713744332
+# FIT_berr,0.16040381893
+# FIT_b_over_berr,6.9645314605
+# FIT_chi2,0.055472857033
+# FIT_ndf,15
+# FIT_chi2ndf,0.00369819046887
+# FIT_prob,1

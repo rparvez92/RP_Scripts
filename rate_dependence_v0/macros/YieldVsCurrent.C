@@ -18,6 +18,8 @@
 #include "TString.h"
 #include "TPad.h"
 #include "TH1.h"
+#include "TLatex.h"
+
 
 #include "../include/CoincidenceRandomSubtraction.h"
 
@@ -57,6 +59,40 @@ static std::string RelUnderSettings(const std::string& settingDirAbs) {
   std::string rel = settingDirAbs.substr(pos + needle.size());
   while (!rel.empty() && rel.front()=='/') rel.erase(0,1);
   return rel.empty() ? BaseName(settingDirAbs) : rel;
+}
+
+
+static std::vector<std::string> SplitPath(const std::string& s) {
+  std::vector<std::string> out;
+  std::string cur;
+  for (char c : s) {
+    if (c=='/') {
+      if (!cur.empty()) out.push_back(cur);
+      cur.clear();
+    } else cur.push_back(c);
+  }
+  if (!cur.empty()) out.push_back(cur);
+  return out;
+}
+
+static void BuildSettingLabel(const std::string& relUnderSettings,
+                              std::string& line1, std::string& line2)
+{
+  // relUnderSettings expected:
+  // pass4/pi+sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg...
+  auto tok = SplitPath(relUnderSettings);
+
+  if (tok.size() >= 7) {
+    // line 1: pass/run_type/target + z x Q
+    line1 = tok[0] + " / " + tok[1] + " / " + tok[2] + " / " +
+            tok[3] + " / " + tok[4] + " / " + tok[5];
+    // line 2: setting_id
+    line2 = tok[6];
+  } else {
+    // fallback
+    line1 = relUnderSettings;
+    line2 = "";
+  }
 }
 
 static void SortByX(std::vector<double>& x, std::vector<double>& y,
@@ -169,8 +205,10 @@ void YieldVsCurrent(const char* manifestPath,
 
   const std::string outPNGs = outBase + "/PNGs";
   const std::string outTabs = outBase + "/tables";
+  const std::string outCanv = outBase + "/canvases";
   EnsureDir(outPNGs);
   EnsureDir(outTabs);
+  EnsureDir(outCanv);
 
   std::ofstream log((outBase + "/log.txt").c_str());
   log << "YieldVsCurrent (myCTime only)\n";
@@ -355,15 +393,23 @@ void YieldVsCurrent(const char* manifestPath,
     }
   }
 
-  const std::string outPng = outPNGs + "/yield_vs_current_overlay.png";
+  const std::string outPng      = outPNGs + "/yield_vs_current_overlay.png";
+  const std::string outRootFile = outCanv + "/yield_vs_current_overlay.root";
   if (!any) {
     warn(-1, "No finite points to plot. Saving empty canvas.");
     TCanvas c("c_yield_vs_current_overlay", "Yield vs Current (myCTime)", 1200, 850);
+
     c.SaveAs(outPng.c_str());
+    c.SaveAs(outRootFile.c_str());
+
     log << "Wrote PNG (empty): " << outPng << "\n";
+    log << "Wrote canvas ROOT (empty): " << outRootFile << "\n";
+
     log.close();
     return;
   }
+
+
 
   double dx = maxX - minX; if (dx <= 0) dx = 1.0;
   double dy = maxY - minY; if (dy <= 0) dy = 1.0;
@@ -401,7 +447,7 @@ void YieldVsCurrent(const char* manifestPath,
   frame->GetYaxis()->SetLabelSize(0.04);
 
   // Legend in top margin band (won't cover points)
-  TLegend leg(0.15, 0.82, 0.60, 0.98);
+  TLegend leg(0.10, 0.82, 0.55, 0.98);
   leg.SetBorderSize(0);
   leg.SetFillStyle(0);
   leg.SetTextSize(0.035);
@@ -432,12 +478,28 @@ void YieldVsCurrent(const char* manifestPath,
     leg.AddEntry(g, cat.c_str(), "p");
   }
 
+  // Setting label box in top margin (beside legend)
+  std::string lbl1, lbl2;
+  BuildSettingLabel(rel, lbl1, lbl2);
+
+  TLatex t;
+  t.SetNDC();
+  t.SetTextAlign(13);     // left aligned
+  t.SetTextSize(0.028);   // tune as needed
+
+  // two lines in the top margin; adjust the y values to control gap
+  t.DrawLatex(0.39, 0.94, lbl1.c_str());
+  t.DrawLatex(0.39, 0.89, lbl2.c_str());
+
   // Only draw legend entries for non-empty categories (already handled by AddEntry)
   leg.Draw();
 
   c.SaveAs(outPng.c_str());
+  c.SaveAs(outRootFile.c_str());
+
   log << "Global ranges: X=[" << xmin << "," << xmax << "]  Y=[" << ymin << "," << ymax << "]\n";
   log << "Wrote PNG: " << outPng << "\n";
+  log << "Wrote Root File: " << outRootFile << "\n";
 
   for (auto* g : keepAlive) delete g;
   log.close();
