@@ -9,7 +9,7 @@
 // Notes:
 //  * All physics cuts live in BuildCuts(Spec). No CTime gates are used.
 //  * Uses branch-status pruning to disable unused branches and enable only what is needed.
-//  * Batch mode; outputs PNGs under ./%specPNGs/ .
+//  * Batch mode; outputs PNGs under ./results/%specPNGs/ .
 //
 // Usage examples:
 //   root -l -b -q 'hodo_calib_qc_batch.C+("hms","./ROOTfiles","6126,6128-6130")'
@@ -44,8 +44,9 @@
 #include <algorithm>
 #include <cmath>
 
-#include "runs_vec_hms.hh" // HMS run numbers listed in a vector
-#include "runs_vec_coin_minus_heep_minus_positron.hh" // COIN run numbers listed in a vector
+#include "../include/runs_vec_hmsdis.hh" // HMSDIS run numbers listed in a vector
+#include "../include/runs_vec_shmsdis.hh" // SHMSDIS run numbers listed in a vector
+#include "../include/runs_vec_coin_minus_positron.hh" // COIN - POSITRON run numbers listed in a vector (PI±SIDIS, HMS p<0)
 
 //-------------------------------------------------
 // MakeFileName: build file name from Spec and Run
@@ -177,9 +178,9 @@ static void DrawBetaVsXfp(TTree *T, const TString &Spec, int Run) {
 
   // Build output png name
   TString Out;
-  if      (Spec=="hms")  Out = TString::Format("hmsPNGs/hms_run%d_beta_vs_xfp.png", Run);
-  else if (Spec=="shms") Out = TString::Format("shmsPNGs/shms_run%d_beta_vs_xfp.png", Run);
-  else if (Spec=="coin") Out = TString::Format("coinPNGs/coin_hms_run%d_beta_vs_xfp.png", Run);
+  if      (Spec=="hms")  Out = TString::Format("results/hmsPNGs/hms_run%d_beta_vs_xfp.png", Run);
+  else if (Spec=="shms") Out = TString::Format("results/shmsPNGs/shms_run%d_beta_vs_xfp.png", Run);
+  else if (Spec=="coin") Out = TString::Format("results/coinPNGs/coin_hms_run%d_beta_vs_xfp.png", Run);
   C->SaveAs(Out);
   delete C; delete H2;
 }
@@ -212,7 +213,7 @@ static void DrawCoinTime1D(TTree *T, int Run){
 
   // Optional green visual band (no cut is applied)
   //TBox Band(48.0, 0.0, 53.0, H1->GetMaximum()); Band.SetFillColor(kGreen+1); Band.SetFillStyle(3001); Band.Draw("SAME");
-  C->SaveAs(TString::Format("coinPNGs/coin_run%d_ctime1D_ROC2.png",Run));
+  C->SaveAs(TString::Format("results/coinPNGs/coin_run%d_ctime1D_ROC2.png",Run));
   delete C; delete H1;
 }
 
@@ -340,7 +341,7 @@ static void DrawBetaTrends(const std::vector<int> &Runs,
   leg->Draw();
 
   // Save into per-spec folder (e.g., hmsPNGs/hms_beta_trends.png)
-  C->SaveAs(TString::Format("%sPNGs/%s_beta_trends.png", Spec.Data(), Spec.Data()));
+  C->SaveAs(TString::Format("results/%sPNGs/%s_beta_trends.png", Spec.Data(), Spec.Data()));
 
   delete leg; delete axisR; delete frame; delete gMean; delete gSigma; delete C;
 }
@@ -412,7 +413,7 @@ static void DrawCoinTimeTrends(const std::vector<int> &Runs,
   leg->Draw();
 
   // Save into coin folder
-  C->SaveAs("coinPNGs/coin_ctime_trends_ROC2.png");
+  C->SaveAs("results/coinPNGs/coin_ctime_trends_ROC2.png");
 
   delete leg; delete axisR; delete frame; delete gMean; delete gSigma; delete C;
 }
@@ -469,7 +470,7 @@ static void ProcessOneRun(const TString &Spec, const TString &RootDir, int Run,
       L1.SetLineStyle(2); L2.SetLineStyle(2); L1.SetLineColor(kBlack); L2.SetLineColor(kBlack); L1.SetLineWidth(5); L2.SetLineWidth(5);
       L1.Draw("SAME"); L2.Draw("SAME");
 
-      C->SaveAs(TString::Format("coinPNGs/coin_shms_run%d_beta_vs_xfp.png",Run));
+      C->SaveAs(TString::Format("results/coinPNGs/coin_shms_run%d_beta_vs_xfp.png",Run));
       delete C; delete H2;
     }
     // Coin time 1D + metrics
@@ -487,18 +488,37 @@ static void ProcessOneRun(const TString &Spec, const TString &RootDir, int Run,
 //--------------------------------------------------------------
 void hodo_calib_qc_batch(const char *Spec="", const char *RootDir="", const char *RunsList=""){
   gROOT->SetBatch(kTRUE);
-  gSystem->mkdir("hmsPNGs",  true);
-  gSystem->mkdir("shmsPNGs", true);
-  gSystem->mkdir("coinPNGs", true);
+  gSystem->mkdir("results/hmsPNGs",  true);
+  gSystem->mkdir("results/shmsPNGs", true);
+  gSystem->mkdir("results/coinPNGs", true);
 
   TString S(Spec?Spec:"");
   if (!(S=="hms" || S=="shms" || S=="coin")) { std::cerr << "[ERROR] Spec must be 'hms', 'shms', or 'coin'" << std::endl; return; }
 
-  //std::vector<int> Runs = ParseRunsList(RunsList?RunsList:"");
+  // Default ROOT directory for v1
+  TString RD(RootDir ? RootDir : "");
+  if (RD.IsNull()) RD = "./Skimmed_ROOTfiles";
+
+  // 1) If RunsList is provided, it always wins.
+  // 2) Otherwise, fall back to the appropriate <SPEC>Runs vector from the included header.
+  std::vector<int> Runs = ParseRunsList(RunsList ? RunsList : "");
+
+  // Keep these convenient explicit toggles as commented debug options:
   //std::vector<int> Runs = HMSRuns;
   //std::vector<int> Runs = SHMSRuns;
-  std::vector<int> Runs = COINRuns;
-  if (Runs.empty()) { std::cerr << "[INFO] No runs provided. Exiting."; return; }
+  //std::vector<int> Runs = COINRuns;
+
+  if (Runs.empty()) {
+    if (S == "hms") {
+      Runs = HMSRuns;
+    } else if (S == "shms") {
+      Runs = SHMSRuns;
+    } else if (S == "coin") {
+      Runs = COINRuns;
+    }
+  }
+
+  if (Runs.empty()) { std::cerr << "[ERROR] No runs provided/selected. Exiting." << std::endl; return; }
 
   std::vector<int> TrendRuns; TrendRuns.reserve(Runs.size());
   std::vector<double> Means, Sigmas; Means.reserve(Runs.size()); Sigmas.reserve(Runs.size());
@@ -506,9 +526,9 @@ void hodo_calib_qc_batch(const char *Spec="", const char *RootDir="", const char
 
   for (int R : Runs) {
     if (S == "coin") {
-      ProcessOneRun(S, RootDir, R, TrendRuns, Means, Sigmas, /*ForCoinTime=*/true, &CoinMeans, &CoinSigmas);
+      ProcessOneRun(S, RD, R, TrendRuns, Means, Sigmas, /*ForCoinTime=*/true, &CoinMeans, &CoinSigmas);
     } else {
-      ProcessOneRun(S, RootDir, R, TrendRuns, Means, Sigmas);
+      ProcessOneRun(S, RD, R, TrendRuns, Means, Sigmas);
     }
   }
 
