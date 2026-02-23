@@ -1,17 +1,17 @@
 TriggerVsCurrent.C
 manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass4/pi-sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/manifest.json
-resultsTop: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results
+resultsTop: results
 rel: pass4/pi-sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2
 WARN: skipping short CSV line: #FIT,fit_const,fit_const_err,chi2,ndf,chi2_ndf,prob,n_fit_points
 WARN: skipping short CSV line: #FIT,3.34137,0.0354513,58.3576,26,2.24452,0.000277688,27
-Read 28 rows from: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/tables/yield_vs_current_signal.csv
+Read 28 rows from: results/pass4/pi-sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/tables/yield_vs_current_signal.csv
 Loaded BCM2_Q for 1555 runs from bigtable. Bad lines: 0
 Repo root:   /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1
 Bigtable:    /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/bigtable/rsidis_bigtable_pass0.csv
 Report dir:  /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/Pass0_REPORTfiles/COIN/PRODUCTION
-Points: OK=28  skipped=0  missingReport=0  missingLine=0  missingBCM2_Q=0  badBCM2_Q=0
-Fit: c=20097.9 +/- 13.2817
-chi2/ndf=4939.32 (27)  prob=0
-Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/tables/hms_elclean_chargeNorm_vs_current.csv
-Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/PNGs/hms_elclean_chargeNorm_vs_current.png
-Wrote ROOT: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/canvases/hms_elclean_chargeNorm_vs_current.root
+Points: OK=28  skipped=0  missingReport=0  missingLine=0  missingBCM2_Q=0  badBCM2_Q=0  badCounts=0
+Fit: c=20079.3 +/- 5.00191
+chi2/ndf=3.92733 (27)  prob=2.57082e-11
+Wrote CSV: results/pass4/pi-sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/tables/hms_elclean_chargeNorm_vs_current.csv
+Wrote PNG: results/pass4/pi-sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/PNGs/hms_elclean_chargeNorm_vs_current.png
+Wrote ROOT: results/pass4/pi-sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/canvases/hms_elclean_chargeNorm_vs_current.root

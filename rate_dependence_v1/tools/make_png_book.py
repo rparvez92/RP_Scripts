@@ -2,8 +2,13 @@
 """
 make_png_book.py
 
-Create a single PDF that contains all PNGs under:
-  results/**/PNGs/*.png
+Create a single PDF that contains selected PNGs under:
+  results/**/PNGs/
+
+Only includes (if present) these filenames per setting:
+  - yield_vs_current.png
+  - yield_vs_trigger_shms34.png
+  - hms_elclean_chargeNorm_vs_current.png
 
 Ordering of settings:
   pass4, then pass5
@@ -18,15 +23,24 @@ Requires:
 Usage:
   cd rate_dependence_v1
   python3 tools/make_png_book.py --results results -o results/all_settings_pngs.pdf
+
+Optional:
+  --include yield_vs_current.png --include yield_vs_trigger_shms34.png --include hms_elclean_chargeNorm_vs_current.png
 """
 
 import argparse
-import glob
 import os
 import re
 import subprocess
 import sys
 from collections import defaultdict
+
+
+DEFAULT_INCLUDES = [
+    "yield_vs_current.png",
+    "yield_vs_trigger_shms34.png",
+    "hms_elclean_chargeNorm_vs_current.png",
+]
 
 
 def natural_key(s: str):
@@ -117,12 +131,26 @@ def setting_sort_key(setting_dir: str):
 
 
 def find_convert() -> str:
-    """Return path to convert or raise."""
+    """Return 'convert' if available, else raise."""
     try:
         subprocess.check_call(["bash", "-lc", "command -v convert >/dev/null 2>&1"])
         return "convert"
     except subprocess.CalledProcessError:
         raise RuntimeError("ImageMagick 'convert' not found in PATH.")
+
+
+def discover_settings_with_pngs(results_top: str):
+    """
+    Find all settings under results_top that have a PNGs/ directory.
+    Returns dict: setting_dir -> png_dir
+    where setting_dir is .../<setting_id> (parent of PNGs).
+    """
+    settings = {}
+    for root, dirs, files in os.walk(results_top):
+        if os.path.basename(root) == "PNGs":
+            setting_dir = os.path.dirname(root)
+            settings[setting_dir] = root
+    return settings
 
 
 def main():
@@ -132,39 +160,50 @@ def main():
     ap.add_argument("--density", type=int, default=150, help="Raster density for title pages/PDF (default: 150)")
     ap.add_argument("--title_pointsize", type=int, default=28, help="Font size for setting title pages (default: 28)")
     ap.add_argument("--quality", type=int, default=95, help="PDF quality/compression (default: 95)")
+    ap.add_argument("--include", action="append", default=[],
+                    help="PNG basename to include (repeatable). Default includes 3 standard files.")
     args = ap.parse_args()
+
+    includes = args.include if args.include else list(DEFAULT_INCLUDES)
 
     convert = find_convert()
 
-    # Find PNGs
-    pattern = os.path.join(args.results, "**", "PNGs", "*.png")
-    pngs = glob.glob(pattern, recursive=True)
-    if not pngs:
-        print(f"ERROR: No PNGs found: {pattern}")
+    settings = discover_settings_with_pngs(args.results)
+    if not settings:
+        print(f"ERROR: No PNGs directories found under: {args.results}")
         sys.exit(1)
 
-    # Group by setting directory (parent of PNGs/)
-    groups = defaultdict(list)
-    for p in pngs:
-        setting_dir = os.path.dirname(os.path.dirname(p))  # .../<setting_id>
-        groups[setting_dir].append(p)
+    groups = defaultdict(list)  # setting_dir -> [png_paths]
+    total_found = 0
+    for setting_dir, png_dir in settings.items():
+        for base in includes:
+            p = os.path.join(png_dir, base)
+            if os.path.isfile(p):
+                groups[setting_dir].append(p)
+                total_found += 1
 
-    # Sort setting dirs with physics order
+    groups = {sd: paths for sd, paths in groups.items() if paths}
+
+    if not groups:
+        print("ERROR: No matching PNGs found.")
+        print("Searched for basenames:", ", ".join(includes))
+        sys.exit(1)
+
     setting_dirs = sorted(groups.keys(), key=setting_sort_key)
 
-    # For each setting, sort images naturally
+    include_rank = {name: i for i, name in enumerate(includes)}
     for sd in setting_dirs:
-        groups[sd] = sorted(groups[sd], key=natural_key)
+        groups[sd] = sorted(
+            groups[sd],
+            key=lambda p: (include_rank.get(os.path.basename(p), 999), natural_key(p))
+        )
 
-    # Build ordered page list for convert, inserting a title page per setting
     ordered_pages = []
     for sd in setting_dirs:
         setting_id = os.path.basename(sd)
-        # ImageMagick "label:" page
         ordered_pages.append(f"label:Setting: {setting_id}\\n{sd}")
         ordered_pages.extend(groups[sd])
 
-    # Ensure output directory exists
     out_dir = os.path.dirname(args.out) or "."
     os.makedirs(out_dir, exist_ok=True)
 
@@ -179,17 +218,18 @@ def main():
     cmd += ordered_pages
     cmd += ["-quality", str(args.quality), args.out]
 
-    print(f"[INFO] Found PNGs: {len(pngs)}")
-    print(f"[INFO] Settings:   {len(setting_dirs)}")
-    print(f"[INFO] Writing:    {args.out}")
-    print(f"[INFO] Running:    convert (pages={len(ordered_pages)})")
+    print(f"[INFO] Settings with selected PNGs: {len(setting_dirs)}")
+    print(f"[INFO] Selected PNG pages found:   {total_found}")
+    print(f"[INFO] Writing:                   {args.out}")
+    print(f"[INFO] Running:                   convert (pages={len(ordered_pages)})")
+    print(f"[INFO] Including files:           {', '.join(includes)}")
 
     try:
         subprocess.check_call(cmd)
     except subprocess.CalledProcessError as e:
         print("\nERROR: 'convert' failed.")
         print("If you see a 'security policy PDF' error, PDF writing may be disabled on this node.")
-        print("Paste the exact error line and I’ll give the gs-based fallback that always works.")
+        print("In that case we can switch to a gs-based merge workflow.")
         sys.exit(e.returncode)
 
     print(f"[OK] Wrote: {args.out}")

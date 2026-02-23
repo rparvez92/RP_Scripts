@@ -1,0 +1,32 @@
+# YieldRatioVsTrigger
+# manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh7p51_thpqneg0p8/manifest.json
+# rel_under_settings: pass5/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh7p51_thpqneg0p8
+# inputs:
+#   /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh7p51_thpqneg0p8/tables/yield_vs_trigger_shms34.csv
+#   /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh7p51_thpqneg0p8/tables/hms_elclean_chargeNorm_vs_current.csv
+# reference_lowN: 2
+# r_ref: 0.000374945472369
+# r_ref_err: 3.7770969276e-06
+# N_total: 8
+# N_used_in_fit: 8
+#REF,ref_index,run,rate_kHz,raw_ratio,raw_ratio_err
+#REF,1,25002,433.732,0.000379557125157,5.4001661803e-06
+#REF,2,24974,438.602,0.000370528520897,5.28494093206e-06
+# fit_model: y = 1 + m * x   (x in kHz)
+# m_per_kHz: -3.23321243558e-05
+# m_per_kHz_err: 7.87004389601e-06
+# tau_ns: 32.3321243558
+# tau_ns_err: 7.87004389601
+# chi2: 14.6379076324
+# ndf: 7
+# prob: 0.04093137498
+
+run,shms34_rate_kHz,yield,yield_err,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,raw_ratio,raw_ratio_err,scaled_ratio,scaled_ratio_err,status_yield_csv,status_elclean_csv,join_flag,use_in_fit,reason
+24969,854.032,51.328,0.601065,141676.0751,67.91392953,0.0003622912335,4.246083076e-06,0.9662504555,0.01493287576,OK,OK,OK,1,""
+24970,853.8,49.974,0.563041,141824.0958,64.42283207,0.0003523660752,3.973220653e-06,0.9397795176,0.01420977356,OK,OK,OK,1,""
+24971,850.425,51.6972,0.578796,141823.104,65.09859116,0.0003645188869,4.084540654e-06,0.9721917284,0.01464878658,OK,OK,OK,1,""
+24972,863.077,52.127,0.578187,141689.4152,64.76957169,0.0003678962181,4.084128694e-06,0.9811992549,0.01470879236,OK,OK,OK,1,""
+24974,438.602,52.9617,0.754646,142935.5556,91.42649735,0.0003705285209,5.284940932e-06,0.9882197498,0.01725625811,OK,OK,OK,1,""
+24975,439.951,54.973,0.776329,143017.7307,92.24648813,0.0003843789139,5.43385991e-06,1.025159503,0.01779550994,OK,OK,OK,1,""
+25002,433.732,54.2754,0.771409,142996.6569,92.39374545,0.0003795571252,5.40016618e-06,1.012299529,0.01764722769,OK,OK,OK,1,""
+25003,438.888,54.1186,0.800681,143020.9677,96.0581033,0.000378396265,5.60411262e-06,1.009203452,0.01807632433,OK,OK,OK,1,""

@@ -1,8 +1,9 @@
 // TriggerVsCurrent.C
-// v2: HMS_hEL_CLEAN counts / BCM2_Q (mC) vs BCM2_I (current), constant fit (pol0)
+// HMS_hEL_CLEAN (total counts) / BCM2_Q (mC) vs BCM2_I (current), constant fit (pol0)
+// Includes Poisson statistical uncertainties: sigma_y = sqrt(N)/Q
 //
 // Purpose:
-//   Study rate dependence using HMS EL_CLEAN *signal-like* trigger counts normalized by beam charge.
+//   Rate-dependence diagnostic using a "signal-like" trigger (HMS_hEL_CLEAN) normalized by beam charge.
 //
 // Inputs:
 //   TriggerVsCurrent("<abs path>/settings/.../manifest.json", "<abs path>/results")
@@ -10,14 +11,18 @@
 // Reads:
 //   <results>/<same rel path as manifest>/tables/yield_vs_current_signal.csv
 // Bigtable:
-//   <repo_root>/bigtable/rsidis_bigtable_pass0.csv  (column: run, BCM2_Q)
+//   <repo_root>/bigtable/rsidis_bigtable_pass0.csv  (columns: run, BCM2_Q)
 //
 // Report files:
 //   <repo_root>/Pass0_REPORTfiles/COIN/PRODUCTION/replay_coin_production_<RUN>_-1.report
 //
 // Extracts from report line like:
 //   HMS_hEL_CLEAN : 590009    [ 0.327 kHz ]
-// Uses the total counts (590009).
+// Uses the total counts (590009) as N.
+//
+// Computes:
+//   y = N / Q   (counts/mC)
+//   sigma_y = sqrt(N) / Q    (Poisson, charge uncertainty neglected)
 //
 // Writes:
 //   <results>/<rel>/tables/hms_elclean_chargeNorm_vs_current.csv
@@ -26,7 +31,7 @@
 //   <results>/<rel>/logs/TriggerVsCurrent.log
 
 #include <TCanvas.h>
-#include <TGraph.h>
+#include <TGraphErrors.h>
 #include <TLegend.h>
 #include <TLatex.h>
 #include <TStyle.h>
@@ -135,7 +140,6 @@ static bool ParseReport_HMS_ELCLEAN_counts(const std::string& reportPath, double
   while (std::getline(in, line)) {
     if (line.find("HMS_hEL_CLEAN") == std::string::npos) continue;
 
-    // Require ':' and '[' to define the numeric region
     auto cpos = line.find(':');
     auto lb   = line.find('[');
     if (cpos == std::string::npos || lb == std::string::npos || lb <= cpos) continue;
@@ -161,8 +165,9 @@ struct Row {
   double yerr = NAN;        // for context only
   double bcm2_q = NAN;      // mC, from bigtable
 
-  double hms_elclean_counts = NAN;
-  double hms_elclean_cnorm  = NAN; // counts/mC
+  double hms_elclean_counts = NAN;       // N
+  double hms_elclean_cnorm  = NAN;       // y = N/Q (counts/mC)
+  double hms_elclean_cnorm_err = NAN;    // sigma_y = sqrt(N)/Q
 
   std::string status;
   std::string rootfile;
@@ -345,7 +350,7 @@ void TriggerVsCurrent(const char* manifest_json, const char* results_top) {
   // Report dir
   const std::string reportDir = repoRoot + "/Pass0_REPORTfiles/COIN/PRODUCTION";
 
-  int nOK = 0, nSkip = 0, nNoReport = 0, nNoLine = 0, nNoQ = 0, nBadQ = 0;
+  int nOK = 0, nSkip = 0, nNoReport = 0, nNoLine = 0, nNoQ = 0, nBadQ = 0, nBadN = 0;
 
   for (auto& r : rows) {
     if (!IsFinite(r.current)) {
@@ -380,9 +385,18 @@ void TriggerVsCurrent(const char* manifest_json, const char* results_top) {
       nSkip++;
       continue;
     }
+    if (!IsFinite(counts) || counts < 0) {
+      r.status = "BAD_COUNTS";
+      nBadN++;
+      nSkip++;
+      continue;
+    }
 
     r.hms_elclean_counts = counts;
-    r.hms_elclean_cnorm  = counts / r.bcm2_q; // counts per mC
+
+    // y = N/Q and sigma_y = sqrt(N)/Q (Poisson)
+    r.hms_elclean_cnorm = counts / r.bcm2_q;
+    r.hms_elclean_cnorm_err = (counts > 0 ? std::sqrt(counts) / r.bcm2_q : 0.0);
 
     r.status = "OK";
     nOK++;
@@ -397,6 +411,7 @@ void TriggerVsCurrent(const char* manifest_json, const char* results_top) {
       << "  missingLine=" << nNoLine
       << "  missingBCM2_Q=" << nNoQ
       << "  badBCM2_Q=" << nBadQ
+      << "  badCounts=" << nBadN
       << "\n";
 
   // Output naming
@@ -407,7 +422,9 @@ void TriggerVsCurrent(const char* manifest_json, const char* results_top) {
 
   // Write table (include all rows)
   std::ofstream csv(outCSV.c_str());
-  csv << "category,run,BCM2_I,BCM2_Q_mC,hms_elclean_counts,hms_elclean_counts_per_mC,yield,yield_err,rootfile,status\n";
+  csv << "category,run,BCM2_I,BCM2_Q_mC,hms_elclean_counts,"
+         "hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,"
+         "yield,yield_err,rootfile,status\n";
   for (const auto& r : rows) {
     csv << "signal,"
         << r.run << ","
@@ -415,6 +432,7 @@ void TriggerVsCurrent(const char* manifest_json, const char* results_top) {
         << std::setprecision(10) << (IsFinite(r.bcm2_q) ? r.bcm2_q : NAN) << ","
         << std::setprecision(10) << (IsFinite(r.hms_elclean_counts) ? r.hms_elclean_counts : NAN) << ","
         << std::setprecision(10) << (IsFinite(r.hms_elclean_cnorm)  ? r.hms_elclean_cnorm  : NAN) << ","
+        << std::setprecision(10) << (IsFinite(r.hms_elclean_cnorm_err) ? r.hms_elclean_cnorm_err : NAN) << ","
         << std::setprecision(10) << (IsFinite(r.yield) ? r.yield : NAN) << ","
         << std::setprecision(10) << (IsFinite(r.yerr)  ? r.yerr  : NAN) << ","
         << "\"" << r.rootfile << "\"" << ","
@@ -422,17 +440,21 @@ void TriggerVsCurrent(const char* manifest_json, const char* results_top) {
   }
 
   // Build graph from OK points
-  std::vector<double> xs, ys;
+  std::vector<double> xs, ys, exs, eys;
   xs.reserve(rows.size());
   ys.reserve(rows.size());
+  exs.reserve(rows.size());
+  eys.reserve(rows.size());
 
   double xmin = +1e99, xmax = -1e99, ymin = +1e99, ymax = -1e99;
   for (const auto& r : rows) {
     if (r.status != "OK") continue;
-    if (!IsFinite(r.current) || !IsFinite(r.hms_elclean_cnorm)) continue;
+    if (!IsFinite(r.current) || !IsFinite(r.hms_elclean_cnorm) || !IsFinite(r.hms_elclean_cnorm_err)) continue;
 
     xs.push_back(r.current);
     ys.push_back(r.hms_elclean_cnorm);
+    exs.push_back(0.0);
+    eys.push_back(r.hms_elclean_cnorm_err);
 
     xmin = std::min(xmin, r.current);
     xmax = std::max(xmax, r.current);
@@ -443,7 +465,7 @@ void TriggerVsCurrent(const char* manifest_json, const char* results_top) {
   TCanvas c("c_hms_elclean_chargeNorm_vs_current",
             "HMS EL_CLEAN (counts/charge) vs Current", 1200, 850);
   c.SetTopMargin(0.22);
-  c.SetLeftMargin(0.12);
+  c.SetLeftMargin(0.18);   // prevents y-title cutoff
   c.SetRightMargin(0.06);
   c.SetBottomMargin(0.12);
 
@@ -468,7 +490,7 @@ void TriggerVsCurrent(const char* manifest_json, const char* results_top) {
   const double ylo = ymin - ypad;
   const double yhi = ymax + ypad;
 
-  TGraph g((int)xs.size(), xs.data(), ys.data());
+  TGraphErrors g((int)xs.size(), xs.data(), ys.data(), exs.data(), eys.data());
   g.SetName("g_hms_elclean_chargeNorm_vs_current");
   g.SetMarkerStyle(21);
   g.SetMarkerSize(1.35);
@@ -482,12 +504,12 @@ void TriggerVsCurrent(const char* manifest_json, const char* results_top) {
   g.GetYaxis()->SetTitleSize(0.045);
   g.GetXaxis()->SetLabelSize(0.04);
   g.GetYaxis()->SetLabelSize(0.04);
-  g.GetYaxis()->SetTitleOffset(1.25);
+  g.GetYaxis()->SetTitleOffset(1.6);
   g.GetXaxis()->SetLimits(xlo, xhi);
   g.SetMinimum(ylo);
   g.SetMaximum(yhi);
 
-  // Constant fit
+  // Constant fit (uses y-errors)
   TF1 f("f_const", "pol0", xlo, xhi);
   f.SetLineColor(kBlack);
   f.SetLineStyle(2);
