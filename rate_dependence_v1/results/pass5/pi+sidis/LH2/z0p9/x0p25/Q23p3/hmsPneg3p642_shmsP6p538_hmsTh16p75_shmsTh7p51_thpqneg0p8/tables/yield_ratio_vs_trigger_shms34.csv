@@ -4,26 +4,29 @@
 # inputs:
 #   /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh7p51_thpqneg0p8/tables/yield_vs_trigger_shms34.csv
 #   /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh7p51_thpqneg0p8/tables/hms_elclean_chargeNorm_vs_current.csv
-# reference_lowN: 2
-# r_ref: 0.00032151270979
-# r_ref_err: 1.98141371145e-06
 # N_total: 5
-# N_used_in_fit: 5
-#REF,ref_index,run,rate_kHz,raw_ratio,raw_ratio_err
-#REF,1,24890,154.412,0.000325229773421,3.25636022896e-06
-#REF,2,24889,317.422,0.000319327407071,2.496825822e-06
-# fit_model: y = 1 + m * x   (x in kHz)
-# m_per_kHz: -4.05942083333e-05
-# m_per_kHz_err: 1.14400589455e-05
-# tau_ns: 40.5942083333
-# tau_ns_err: 11.4400589455
-# chi2: 5.89258457229
-# ndf: 4
-# prob: 0.207315019378
+# N_valid_for_fit1: 5
+# N_valid_for_fit2: 5
+# fit1_model: raw_ratio = a + b*x   (x in kHz)
+# fit1_a: 0.000330219552544
+# fit1_a_err: 4.49550698771e-06
+# fit1_b_per_kHz: -3.44029582927e-08
+# fit1_b_err_per_kHz: 1.13230535521e-08
+# fit1_chi2: 5.45894118088
+# fit1_ndf: 3
+# fit1_prob: 0.141115118275
+# fit2_model: y_norm = 1 + m*x   (x in kHz)
+# fit2_m_per_kHz: -0.000104325359909
+# fit2_m_err_per_kHz: 1.76477135955e-05
+# tau_ns: 104.325359909
+# tau_ns_err: 17.6477135955
+# fit2_chi2: 1.25647282784
+# fit2_ndf: 4
+# fit2_prob: 0.86871606956
 
-run,shms34_rate_kHz,yield,yield_err,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,raw_ratio,raw_ratio_err,scaled_ratio,scaled_ratio_err,status_yield_csv,status_elclean_csv,join_flag,use_in_fit,reason
-24886,450.418,43.1432,0.319553,138593.9058,42.25705592,0.0003112921867,2.307631274e-06,0.9682111382,0.009333753733,OK,OK,OK,1,""
-24887,427.428,43.6889,0.358659,138869.1081,47.10469816,0.0003146048866,2.584916356e-06,0.9785146185,0.01005011111,OK,OK,OK,1,""
-24888,459.095,44.1402,0.327564,138543.8401,42.83341968,0.0003186009567,2.366385601e-06,0.9909435832,0.00956384304,OK,OK,OK,1,""
-24889,317.422,44.8615,0.350451,140487.4715,47.03802019,0.0003193274071,2.496825822e-06,0.9932030596,0.00988807929,OK,OK,OK,1,""
-24890,154.412,46.1397,0.461511,141868.0077,63.5337197,0.0003252297734,3.256360229e-06,1.011561172,0.01189304727,OK,OK,OK,1,""
+run,shms34_rate_kHz,yield,yield_err,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,raw_ratio,raw_ratio_err,ynorm,ynorm_err,status_yield_csv,status_elclean_csv,join_flag,use_in_fit,reason
+24886,450.418,43.1432,0.319553,138593.9058,42.25705592,0.0003112921867,2.307631274e-06,0.9426824799,0.01461267971,OK,OK,OK,1,""
+24887,427.428,43.6889,0.358659,138869.1081,47.10469816,0.0003146048866,2.584916356e-06,0.95271429,0.01514910528,OK,OK,OK,1,""
+24888,459.095,44.1402,0.327564,138543.8401,42.83341968,0.0003186009567,2.366385601e-06,0.9648155424,0.01496239693,OK,OK,OK,1,""
+24889,317.422,44.8615,0.350451,140487.4715,47.03802019,0.0003193274071,2.496825822e-06,0.9670154435,0.01518151368,OK,OK,OK,1,""
+24890,154.412,46.1397,0.461511,141868.0077,63.5337197,0.0003252297734,3.256360229e-06,0.9848895104,0.01664383328,OK,OK,OK,1,""

@@ -71,7 +71,6 @@ static std::vector<std::string> SplitPath(const std::string& s) {
 static void BuildSettingLabel(const std::string& relUnderSettings,
                               std::string& line1, std::string& line2)
 {
-  // pass4/pi+sidis/LH2/z0p36/x0p25/Q23p3/<setting_id>
   auto tok = SplitPath(relUnderSettings);
   if (tok.size() >= 7) {
     line1 = tok[0] + " / " + tok[1] + " / " + tok[2] + " / " +

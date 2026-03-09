@@ -6,11 +6,20 @@ log: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sid
 
 Loaded /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LD2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2/tables/yield_vs_trigger_shms34.csv: rows=10, signal=3, runs=3
 Loaded /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LD2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2/tables/hms_elclean_chargeNorm_vs_current.csv: rows=10, signal=3, runs=3
-Reference (lowest N=2 by rate):
-  REF1 run=25124 rate_kHz=141.423 raw_ratio=9.41832e-05 +/- 1.26312e-06
-  REF2 run=25123 rate_kHz=190.4 raw_ratio=5.17556e-05 +/- 7.21093e-07
-  r_ref=6.218433829e-05 +/- 6.26230728495e-07
+Fit1 (raw): r = a + b*R
+  range_kHz: [141.423, 241.981]
+  a = 6.07192857012e-05 +/- 3.29271240478e-06
+  b = 4.38818456753e-08 +/- 1.68051283973e-08 (per kHz)
+  chi2/ndf = 1381.8381935 (1), prob=1.85800374077e-302
 
+WARNING (STRONG): Fit1 probability is very small (<1e-4). Linear model may be insufficient or data inconsistent.
+Fit2 (norm): y = 1 + m*R
+  range_kHz: [141.423, 241.981]
+  m = 0.000584161187911 +/- 0.000193225771603 (per kHz)
+  tau_ns = -584.161187911 +/- 193.225771603
+  chi2/ndf = 39.3351614446 (2), prob=8.25955101277e-18
+
+WARNING (STRONG): Fit2 probability is very small (<1e-4). Linear deadtime approx may be insufficient or data inconsistent.
 Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LD2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2/tables/yield_ratio_vs_trigger_shms34.csv
 Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LD2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2/PNGs/yield_ratio_vs_trigger_shms34.png
 Wrote ROOT: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LD2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2/canvases/yield_ratio_vs_trigger_shms34.root

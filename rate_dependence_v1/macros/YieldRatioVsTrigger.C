@@ -13,12 +13,24 @@
 //   canvases/yield_ratio_vs_trigger_shms34.root
 //   logs/YieldRatioVsTrigger.log
 //
-// Method:
-//   raw_ratio r = yield / elclean_per_mC
-//   r_ref = weighted mean of lowest N=2 rate points
-//   scaled_ratio y = r / r_ref  (so y ~ 1 at low rate; "y-intercept = 1" normalization)
-//   Fit scaled_ratio with intercept fixed: y(x)=1+m x, x in kHz
-//   tau[s] = -m/1000 ; tau[ns] = tau*1e9
+// Method (your requested "fit intercept free, then normalize"):
+//   1) Build raw_ratio r = yield / elclean_per_mC
+//   2) Fit raw_ratio vs rate with free intercept: r(R) = a + b R   (weighted least squares)
+//   3) Define normalized ratio: y_norm(R) = r(R) / a   so y_norm(0)=1
+//      Propagate error including a uncertainty:
+//        (σ_y/y)^2 = (σ_r/r)^2 + (σ_a/a)^2
+//   4) Fit normalized ratio with intercept fixed: y_norm(R) = 1 + m R  (weighted)
+//   5) Convert m (per kHz) -> tau:
+//        tau [s]  = -m/1000
+//        tau [ns] = tau*1e9
+//
+// Notes:
+// - signal only, status==OK only
+// - no outlier rejection (C1)
+// - full valid range (A1)
+// - warnings:
+//     warn if prob < 0.01
+//     strong warn if prob < 1e-4
 
 #include <algorithm>
 #include <cmath>
@@ -100,13 +112,25 @@ static void EnsureDir(const std::string& p) { gSystem->mkdir(p.c_str(), kTRUE); 
 static std::string DirName(const std::string& p) { return std::string(gSystem->DirName(p.c_str())); }
 static std::string BaseName(const std::string& p) { return std::string(gSystem->BaseName(p.c_str())); }
 
-static std::string RelUnderSettings(const std::string& settingDirAbs) {
-  const std::string needle = "/settings/";
-  auto pos = settingDirAbs.find(needle);
-  if (pos == std::string::npos) return BaseName(settingDirAbs);
-  std::string rel = settingDirAbs.substr(pos + needle.size());
-  while (!rel.empty() && rel.front()=='/') rel.erase(0,1);
-  return rel.empty() ? BaseName(settingDirAbs) : rel;
+// Robust rel path under settings: works for absolute "/.../settings/..." and relative "settings/..."
+static std::string RelUnderSettings(const std::string& settingDir) {
+  // try absolute form first
+  const std::string needleAbs = "/settings/";
+  auto pos = settingDir.find(needleAbs);
+  if (pos != std::string::npos) {
+    std::string rel = settingDir.substr(pos + needleAbs.size());
+    while (!rel.empty() && rel.front()=='/') rel.erase(0,1);
+    return rel.empty() ? BaseName(settingDir) : rel;
+  }
+  // try relative form
+  const std::string needleRel = "settings/";
+  pos = settingDir.find(needleRel);
+  if (pos != std::string::npos) {
+    std::string rel = settingDir.substr(pos + needleRel.size());
+    while (!rel.empty() && rel.front()=='/') rel.erase(0,1);
+    return rel.empty() ? BaseName(settingDir) : rel;
+  }
+  return BaseName(settingDir);
 }
 
 static std::vector<std::string> SplitPath(const std::string& s) {
@@ -156,8 +180,13 @@ struct OutRow {
   double rate_kHz=NAN;
   double yield=NAN, yield_err=NAN;
   double el=NAN, el_err=NAN;
+
+  // raw ratio
   double raw_ratio=NAN, raw_ratio_err=NAN;
-  double scaled_ratio=NAN, scaled_ratio_err=NAN;
+
+  // normalized ratio (raw/a)
+  double ynorm=NAN, ynorm_err=NAN;
+
   std::string status_yield="MISSING";
   std::string status_el="MISSING";
   std::string join_flag="";
@@ -269,8 +298,6 @@ static bool ReadElCSV(const std::string& path, std::map<int,ElRow>& out, std::os
 // ---------- main ----------
 void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
 {
-  const int N_LOW = 2; // user-selected
-
   const std::string manifestP = manifestPath ? manifestPath : "";
   const std::string outRoot   = resultsDir   ? resultsDir   : "";
   if (manifestP.empty() || outRoot.empty()) {
@@ -294,9 +321,13 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
   const std::string logPath = outLogs + "/YieldRatioVsTrigger.log";
   std::ofstream log(logPath.c_str());
 
-  auto warn = [&](int run, const std::string& msg){
-    std::cerr << "WARNING [run " << run << "]: " << msg << "\n";
-    log       << "WARNING [run " << run << "]: " << msg << "\n";
+  auto warn = [&](const std::string& msg){
+    std::cerr << "WARNING: " << msg << "\n";
+    log       << "WARNING: " << msg << "\n";
+  };
+  auto strong_warn = [&](const std::string& msg){
+    std::cerr << "WARNING (STRONG): " << msg << "\n";
+    log       << "WARNING (STRONG): " << msg << "\n";
   };
 
   log << "YieldRatioVsTrigger (v1, signal-only)\n";
@@ -322,9 +353,8 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
   std::vector<OutRow> rows;
   rows.reserve(allRuns.size());
 
-  // Candidates for reference selection
-  struct Cand { int run; double rate; double r; double rerr; };
-  std::vector<Cand> cands;
+  // First pass: build raw ratio candidates for fit1
+  std::vector<double> x_raw, r_raw, ex_raw, er_raw;
 
   int nTotal=0;
   for (int run : allRuns) {
@@ -397,91 +427,115 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
     o.join_flag="OK";
     rows.push_back(o);
 
-    cands.push_back({run, o.rate_kHz, o.raw_ratio, o.raw_ratio_err});
+    x_raw.push_back(o.rate_kHz);
+    r_raw.push_back(o.raw_ratio);
+    ex_raw.push_back(0.0);
+    er_raw.push_back(o.raw_ratio_err);
   }
 
-  // Select lowest N_LOW by rate
-  std::sort(cands.begin(), cands.end(), [](const Cand& a, const Cand& b){ return a.rate < b.rate; });
-
-  if ((int)cands.size() < N_LOW) {
-    warn(-1, "Not enough valid runs to define reference (need N_LOW=2). Will write CSV without fit.");
-  }
-
-  std::vector<Cand> refPts;
-  for (int i=0;i<std::min(N_LOW,(int)cands.size());++i) refPts.push_back(cands[i]);
-
-  // Weighted mean r_ref and its error
-  double sumW=0, sumWR=0;
-  for (const auto& c : refPts) {
-    double w = 1.0/(c.rerr*c.rerr);
-    sumW  += w;
-    sumWR += w*c.r;
-  }
-  double r_ref = (sumW>0) ? (sumWR/sumW) : NAN;
-  double r_ref_err = (sumW>0) ? std::sqrt(1.0/sumW) : NAN;
-
-  log << "Reference (lowest N=" << N_LOW << " by rate):\n";
-  for (size_t i=0;i<refPts.size();++i) {
-    log << "  REF" << i+1 << " run=" << refPts[i].run
-        << " rate_kHz=" << refPts[i].rate
-        << " raw_ratio=" << refPts[i].r << " +/- " << refPts[i].rerr << "\n";
-  }
-  log << "  r_ref=" << std::setprecision(12) << r_ref << " +/- " << r_ref_err << "\n\n";
-
-  // Build plot/fit vectors using scaled ratio
-  std::vector<double> x, y, ex, ey;
-  int nUsed=0;
-
-  for (auto& o : rows) {
-    if (o.join_flag != "OK") { o.use_in_fit=0; continue; }
-    if (!std::isfinite(r_ref) || r_ref<=0 || !std::isfinite(r_ref_err)) {
-      o.use_in_fit=0;
-      o.join_flag="INVALID_VALUES";
-      o.reason="invalid r_ref";
-      continue;
-    }
-
-    o.scaled_ratio = o.raw_ratio / r_ref;
-
-    // include ref uncertainty
-    // (σy/y)^2 = (σr/r)^2 + (σref/ref)^2
-    double term1 = o.raw_ratio_err / o.raw_ratio;
-    double term2 = r_ref_err / r_ref;
-    o.scaled_ratio_err = std::fabs(o.scaled_ratio) * std::sqrt(term1*term1 + term2*term2);
-
-    if (!std::isfinite(o.scaled_ratio) || !std::isfinite(o.scaled_ratio_err) || o.scaled_ratio_err<=0) {
-      o.use_in_fit=0;
-      o.join_flag="INVALID_VALUES";
-      o.reason="invalid scaled_ratio or scaled_ratio_err";
-      continue;
-    }
-
-    o.use_in_fit=1;
-    x.push_back(o.rate_kHz);
-    y.push_back(o.scaled_ratio);
-    ex.push_back(0.0);
-    ey.push_back(o.scaled_ratio_err);
-    nUsed++;
-  }
-
-  // Sort by x for plotting
-  SortByX(x, y, ex, ey);
+  // Sort by x for fit stability / plotting
+  SortByX(x_raw, r_raw, ex_raw, er_raw);
 
   // Output paths
   const std::string outCsv      = outTabs + "/yield_ratio_vs_trigger_shms34.csv";
   const std::string outPng      = outPNGs + "/yield_ratio_vs_trigger_shms34.png";
   const std::string outRootFile = outCanv + "/yield_ratio_vs_trigger_shms34.root";
 
-  // ---------- Fit + plot (style matched to YieldVsCurrent.C) ----------
-  double fit_m=NAN, fit_merr=NAN, chi2=NAN, prob=NAN;
-  int ndf=-1;
+  // Fit results
+  // Fit1: raw ratio r = a + bR
+  double a=NAN, aerr=NAN, b=NAN, berr=NAN, chi2_1=NAN, prob_1=NAN;
+  int ndf_1=-1;
+
+  // Fit2: normalized y = 1 + mR
+  double m=NAN, merr=NAN, chi2_2=NAN, prob_2=NAN;
+  int ndf_2=-1;
   double tau_ns=NAN, tau_ns_err=NAN;
 
+  // Need at least 2 points for fit1
+  if ((int)x_raw.size() < 2) {
+    warn("Not enough valid points for fit1 (need >=2). Will write CSV and produce an empty plot.");
+  } else {
+    TGraphErrors gRaw((int)x_raw.size(), x_raw.data(), r_raw.data(), ex_raw.data(), er_raw.data());
+    const double fxmin = x_raw.front();
+    const double fxmax = x_raw.back();
+
+    TF1 f1("f_raw_pol1", "pol1", fxmin, fxmax);
+    // reasonable starting values
+    f1.SetParameter(0, r_raw.front());
+    f1.SetParameter(1, 0.0);
+
+    // weighted fit (uses y-errors)
+    gRaw.Fit(&f1, "Q"); // quiet
+
+    a    = f1.GetParameter(0);
+    aerr = f1.GetParError(0);
+    b    = f1.GetParameter(1);
+    berr = f1.GetParError(1);
+    chi2_1 = f1.GetChisquare();
+    ndf_1  = f1.GetNDF();
+    prob_1 = (ndf_1 > 0) ? TMath::Prob(chi2_1, ndf_1) : NAN;
+
+    log << "Fit1 (raw): r = a + b*R\n";
+    log << "  range_kHz: [" << fxmin << ", " << fxmax << "]\n";
+    log << std::setprecision(12);
+    log << "  a = " << a << " +/- " << aerr << "\n";
+    log << "  b = " << b << " +/- " << berr << " (per kHz)\n";
+    if (ndf_1 > 0) log << "  chi2/ndf = " << (chi2_1/ndf_1) << " (" << ndf_1 << "), prob=" << prob_1 << "\n\n";
+
+    if (std::isfinite(prob_1)) {
+      if (prob_1 < 1e-4) strong_warn("Fit1 probability is very small (<1e-4). Linear model may be insufficient or data inconsistent.");
+      else if (prob_1 < 0.01) warn("Fit1 probability is small (<0.01). Interpret a (intercept) with caution.");
+    }
+
+    if (!std::isfinite(a) || a == 0.0 || !std::isfinite(aerr) || aerr <= 0.0) {
+      strong_warn("Fit1 returned invalid a or aerr; cannot normalize. Will write CSV/empty plot.");
+    }
+  }
+
+  // Second pass: compute ynorm, ynorm_err and build fit2 vectors (only if a is valid)
+  std::vector<double> x, y, ex, ey;
+  int nUsed2=0;
+
+  const bool canNorm = (std::isfinite(a) && std::isfinite(aerr) && a != 0.0 && aerr > 0.0);
+  for (auto& o : rows) {
+    if (o.join_flag != "OK") { o.use_in_fit=0; continue; }
+    if (!canNorm) {
+      o.use_in_fit=0;
+      o.reason = "cannot normalize (invalid a/aerr)";
+      continue;
+    }
+    // y_norm = raw/a
+    o.ynorm = o.raw_ratio / a;
+
+    // include a uncertainty:
+    // (σy/y)^2 = (σr/r)^2 + (σa/a)^2
+    const double term1 = o.raw_ratio_err / o.raw_ratio;
+    const double term2 = aerr / a;
+    o.ynorm_err = std::fabs(o.ynorm) * std::sqrt(term1*term1 + term2*term2);
+
+    if (!std::isfinite(o.ynorm) || !std::isfinite(o.ynorm_err) || o.ynorm_err <= 0) {
+      o.use_in_fit=0;
+      o.join_flag="INVALID_VALUES";
+      o.reason="invalid ynorm or ynorm_err";
+      continue;
+    }
+
+    o.use_in_fit=1;
+    x.push_back(o.rate_kHz);
+    y.push_back(o.ynorm);
+    ex.push_back(0.0);
+    ey.push_back(o.ynorm_err);
+    nUsed2++;
+  }
+
+  SortByX(x, y, ex, ey);
+
+  // ---------- Fit2 + plot (style matched to YieldVsCurrent.C) ----------
   gStyle->SetOptStat(0);
   gStyle->SetOptFit(0);
   TGaxis::SetMaxDigits(3);
 
-  // Compute ranges
+  // Compute ranges for normalized plot
   bool any = (!x.empty());
   double minX=0,maxX=0,minY=0,maxY=0;
   if (any) {
@@ -503,11 +557,12 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
 
   const double xmin = minX - xpad;
   const double xmax = maxX + xpad;
-  const double ymin = minY - ypad;
-  const double ymax = maxY + ypad;
+  double ymin = minY - ypad;
+  double ymax = maxY + ypad;
+  if (ymax < 1.02) ymax = 1.02;
 
   TCanvas c("c_yield_ratio_vs_trigger", "Yield Ratio vs SHMS34 (signal)", 1200, 850);
-  c.SetTopMargin(0.22);     // match YieldVsCurrent.C
+  c.SetTopMargin(0.22);
   c.SetRightMargin(0.06);
   c.SetLeftMargin(0.12);
   c.SetBottomMargin(0.12);
@@ -520,7 +575,7 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
   frame->GetXaxis()->SetLabelSize(0.04);
   frame->GetYaxis()->SetLabelSize(0.04);
 
-  // Graph (red, like other v1 plots)
+  // Normalized graph (red)
   TGraphErrors g((int)x.size(), x.data(), y.data(), ex.data(), ey.data());
   g.SetMarkerStyle(20);
   g.SetMarkerSize(1.55);
@@ -528,56 +583,70 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
   g.SetLineColor(kRed+1);
   g.Draw("P SAME");
 
-  // y=1 reference line (dashed)
-  TLine y1(xmin, 1.0, xmax, 1.0);
+  // y=1 reference line
+  const double xlo = frame->GetXaxis()->GetXmin();
+  const double xhi = frame->GetXaxis()->GetXmax();
+  TLine y1(xlo, 1.0, xhi, 1.0);
   y1.SetLineColor(kBlack);
   y1.SetLineStyle(2);
   y1.SetLineWidth(2);
   y1.Draw("SAME");
 
-  // Fit (if enough points)
-  TF1* f = nullptr;
+  // Fit2 if enough points
+  TF1* f2 = nullptr;
   if ((int)x.size() >= 2) {
-    // Fit only on the data x-range (not padded)
     const double fxmin = x.front();
     const double fxmax = x.back();
 
-    f = new TF1("f_ratio", "1 + [0]*x", fxmin, fxmax);
-    f->SetParameter(0, -1e-4);
-    f->SetLineColor(kBlack);
-    f->SetLineStyle(1);
-    f->SetLineWidth(2);
+    f2 = new TF1("f_norm", "1 + [0]*x", fxmin, fxmax);
+    f2->SetParameter(0, -1e-4);
+    f2->SetLineColor(kBlack);
+    f2->SetLineStyle(1);
+    f2->SetLineWidth(2);
 
-    g.Fit(f, "Q"); // quiet
+    g.Fit(f2, "Q");
 
-    fit_m    = f->GetParameter(0);
-    fit_merr = f->GetParError(0);
-    chi2 = f->GetChisquare();
-    ndf  = f->GetNDF();
-    prob = (ndf>0) ? TMath::Prob(chi2, ndf) : NAN;
+    m    = f2->GetParameter(0);
+    merr = f2->GetParError(0);
+    chi2_2 = f2->GetChisquare();
+    ndf_2  = f2->GetNDF();
+    prob_2 = (ndf_2 > 0) ? TMath::Prob(chi2_2, ndf_2) : NAN;
 
     // tau conversion
-    double tau_s     = -fit_m / 1000.0;
-    double tau_s_err =  fit_merr / 1000.0;
+    double tau_s     = -m / 1000.0;
+    double tau_s_err =  merr / 1000.0;
     tau_ns     = tau_s * 1e9;
     tau_ns_err = tau_s_err * 1e9;
 
-    f->Draw("SAME");
+    f2->Draw("SAME");
+
+    log << "Fit2 (norm): y = 1 + m*R\n";
+    log << "  range_kHz: [" << fxmin << ", " << fxmax << "]\n";
+    log << std::setprecision(12);
+    log << "  m = " << m << " +/- " << merr << " (per kHz)\n";
+    log << "  tau_ns = " << tau_ns << " +/- " << tau_ns_err << "\n";
+    if (ndf_2 > 0) log << "  chi2/ndf = " << (chi2_2/ndf_2) << " (" << ndf_2 << "), prob=" << prob_2 << "\n\n";
+
+    if (std::isfinite(prob_2)) {
+      if (prob_2 < 1e-4) strong_warn("Fit2 probability is very small (<1e-4). Linear deadtime approx may be insufficient or data inconsistent.");
+      else if (prob_2 < 0.01) warn("Fit2 probability is small (<0.01). Interpret slope/tau with caution.");
+    }
+
   } else {
-    warn(-1, "Not enough points to fit (need >=2).");
+    warn("Not enough points to do Fit2 (need >=2).");
   }
 
-  // Legend (same placement/style)
+  // Legend
   TLegend leg(0.10, 0.82, 0.50, 0.98);
   leg.SetBorderSize(0);
   leg.SetFillStyle(0);
   leg.SetTextSize(0.035);
   leg.AddEntry(&g, "signal", "p");
   leg.AddEntry(&y1, "y = 1", "l");
-  if (f) leg.AddEntry(f, "fit: y = 1 + m x", "l");
+  if (f2) leg.AddEntry(f2, "fit: y = 1 + m x", "l");
   leg.Draw();
 
-  // Setting label (same placement/style)
+  // Setting label
   std::string lbl1, lbl2;
   BuildSettingLabel(rel, lbl1, lbl2);
 
@@ -588,28 +657,34 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
   t.DrawLatex(0.39, 0.94, lbl1.c_str());
   t.DrawLatex(0.39, 0.89, lbl2.c_str());
 
-  // Middle text (blue), like your other plots
-  if (f && std::isfinite(chi2) && ndf > 0) {
+  // Middle text (blue) — show Fit2 plus show 'a' from Fit1 (so you see how far off intercept was)
+  if (f2 && std::isfinite(chi2_2) && ndf_2 > 0) {
     TLatex tf;
     tf.SetNDC();
-    tf.SetTextAlign(22);        // centered
+    tf.SetTextAlign(22);
     tf.SetTextColor(kBlue+2);
     tf.SetTextSize(0.040);
-    tf.DrawLatex(0.60, 0.52, Form("#chi^{2}/ndf = %.2f (%d), Prob = %.3g", chi2/ndf, ndf, prob));
+    tf.DrawLatex(0.60, 0.52, Form("#chi^{2}/ndf = %.2f (%d), Prob = %.3g", chi2_2/ndf_2, ndf_2, prob_2));
     tf.SetTextSize(0.033);
     tf.DrawLatex(0.60, 0.47, Form("m = %.4g #pm %.2g (per kHz)    #tau = %.3g #pm %.3g ns",
-                                  fit_m, fit_merr, tau_ns, tau_ns_err));
+                                  m, merr, tau_ns, tau_ns_err));
+    // smaller line for fit1 intercept
+    if (std::isfinite(a) && std::isfinite(aerr)) {
+      tf.SetTextSize(0.028);
+      tf.DrawLatex(0.60, 0.42, Form("Fit1 raw intercept a = %.4g #pm %.2g", a, aerr));
+    }
   }
 
   // Save outputs
   c.SaveAs(outPng.c_str());
   c.SaveAs(outRootFile.c_str());
 
-  // ---------- Write CSV (with REF diagnostics) ----------
+  // ---------- Write CSV ----------
   {
     std::ofstream csv(outCsv.c_str());
     if (!csv.is_open()) {
       std::cerr << "ERROR: cannot write " << outCsv << "\n";
+      if (f2) delete f2;
       return;
     }
 
@@ -619,40 +694,49 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
     csv << "# inputs:\n";
     csv << "#   " << inYieldCSV << "\n";
     csv << "#   " << inElCSV << "\n";
-    csv << "# reference_lowN: " << N_LOW << "\n";
-    csv << std::setprecision(12);
-    csv << "# r_ref: " << r_ref << "\n";
-    csv << "# r_ref_err: " << r_ref_err << "\n";
     csv << "# N_total: " << nTotal << "\n";
-    csv << "# N_used_in_fit: " << nUsed << "\n";
+    csv << "# N_valid_for_fit1: " << x_raw.size() << "\n";
+    csv << "# N_valid_for_fit2: " << x.size() << "\n";
+    csv << std::setprecision(12);
 
-    // --- Requested diagnostic lines: exactly which 2 runs formed the reference ---
-    csv << "#REF,ref_index,run,rate_kHz,raw_ratio,raw_ratio_err\n";
-    for (size_t i=0;i<refPts.size();++i) {
-      csv << "#REF," << (i+1) << ","
-          << refPts[i].run << ","
-          << refPts[i].rate << ","
-          << refPts[i].r << ","
-          << refPts[i].rerr << "\n";
+    // Fit1 summary
+    if (std::isfinite(a) && std::isfinite(b) && ndf_1 > 0) {
+      csv << "# fit1_model: raw_ratio = a + b*x   (x in kHz)\n";
+      csv << "# fit1_a: " << a << "\n";
+      csv << "# fit1_a_err: " << aerr << "\n";
+      csv << "# fit1_b_per_kHz: " << b << "\n";
+      csv << "# fit1_b_err_per_kHz: " << berr << "\n";
+      csv << "# fit1_chi2: " << chi2_1 << "\n";
+      csv << "# fit1_ndf: " << ndf_1 << "\n";
+      csv << "# fit1_prob: " << prob_1 << "\n";
+    } else {
+      csv << "# fit1_model: raw_ratio = a + b*x   (x in kHz)\n";
+      csv << "# fit1_status: FAILED_OR_INSUFFICIENT_POINTS\n";
     }
 
-    if (f && ndf > 0) {
-      csv << "# fit_model: y = 1 + m * x   (x in kHz)\n";
-      csv << "# m_per_kHz: " << fit_m << "\n";
-      csv << "# m_per_kHz_err: " << fit_merr << "\n";
+    // Fit2 summary
+    if (f2 && ndf_2 > 0) {
+      csv << "# fit2_model: y_norm = 1 + m*x   (x in kHz)\n";
+      csv << "# fit2_m_per_kHz: " << m << "\n";
+      csv << "# fit2_m_err_per_kHz: " << merr << "\n";
       csv << "# tau_ns: " << tau_ns << "\n";
       csv << "# tau_ns_err: " << tau_ns_err << "\n";
-      csv << "# chi2: " << chi2 << "\n";
-      csv << "# ndf: " << ndf << "\n";
-      csv << "# prob: " << prob << "\n";
+      csv << "# fit2_chi2: " << chi2_2 << "\n";
+      csv << "# fit2_ndf: " << ndf_2 << "\n";
+      csv << "# fit2_prob: " << prob_2 << "\n";
+    } else {
+      csv << "# fit2_model: y_norm = 1 + m*x   (x in kHz)\n";
+      csv << "# fit2_status: FAILED_OR_INSUFFICIENT_POINTS\n";
     }
+
     csv << "\n";
 
+    // Columns (include raw columns + ynorm columns)
     csv << "run,shms34_rate_kHz,"
         << "yield,yield_err,"
         << "hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,"
         << "raw_ratio,raw_ratio_err,"
-        << "scaled_ratio,scaled_ratio_err,"
+        << "ynorm,ynorm_err,"
         << "status_yield_csv,status_elclean_csv,join_flag,use_in_fit,reason\n";
 
     csv << std::setprecision(10);
@@ -665,8 +749,8 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
           << r.el_err << ","
           << r.raw_ratio << ","
           << r.raw_ratio_err << ","
-          << r.scaled_ratio << ","
-          << r.scaled_ratio_err << ","
+          << r.ynorm << ","
+          << r.ynorm_err << ","
           << r.status_yield << ","
           << r.status_el << ","
           << r.join_flag << ","
@@ -680,5 +764,5 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
   log << "Wrote ROOT: " << outRootFile << "\n";
   log.close();
 
-  if (f) delete f;
+  if (f2) delete f2;
 }

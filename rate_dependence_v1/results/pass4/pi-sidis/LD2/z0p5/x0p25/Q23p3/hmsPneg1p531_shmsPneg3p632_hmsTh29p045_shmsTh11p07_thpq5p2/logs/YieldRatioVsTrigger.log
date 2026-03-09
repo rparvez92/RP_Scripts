@@ -6,12 +6,8 @@ log: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sid
 
 Loaded /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/tables/yield_vs_trigger_shms34.csv: rows=8, signal=1, runs=1
 Loaded /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/tables/hms_elclean_chargeNorm_vs_current.csv: rows=8, signal=1, runs=1
-WARNING [run -1]: Not enough valid runs to define reference (need N_LOW=2). Will write CSV without fit.
-Reference (lowest N=2 by rate):
-  REF1 run=23862 rate_kHz=402.675 raw_ratio=0.000135005 +/- 4.32554e-06
-  r_ref=0.000135005083463 +/- 4.32553907802e-06
-
-WARNING [run -1]: Not enough points to fit (need >=2).
+WARNING: Not enough valid points for fit1 (need >=2). Will write CSV and produce an empty plot.
+WARNING: Not enough points to do Fit2 (need >=2).
 Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/tables/yield_ratio_vs_trigger_shms34.csv
 Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/PNGs/yield_ratio_vs_trigger_shms34.png
 Wrote ROOT: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/canvases/yield_ratio_vs_trigger_shms34.root
