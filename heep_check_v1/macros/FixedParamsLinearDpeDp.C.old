@@ -1,0 +1,694 @@
+// FixedParamsLinearDpeDp.C
+//
+// Phase-2 HEEP check macro:
+//   * Fix (dthe, dthp, dpp) to user-provided anchor values per setting
+//   * Fit dpe(dp_idx) = a0 + a1 * dp_idx
+//   * Use TMinuit chi2 minimization
+//   * Fit Setting A and Setting B separately
+//   * Use sub-bins only in fit; keep full bin (dp_idx=0) as diagnostic only
+//
+// Default input:
+//   results/tables/heep_check_dpBinnedOffsets.csv
+//
+// Default outputs:
+//   results/tables/FixedParamsLinearDpeDp_summary.csv
+//   results/tables/FixedParamsLinearDpeDp_residuals.csv
+//   results/PNGs/FixedParamsLinearDpeDp/*.png
+//
+// Observable mapping:
+//   W   -> dW
+//   Em  -> dE_m
+//   Pmz -> dp_m(par)
+//   Pmy -> dp_m(perp)
+//
+// Units:
+//   dthe, dthp in mrad
+//   dpe, dpp   in 0.1%
+//   measured offsets and predictions in MeV
+//
+// Notes:
+//   * full-bin rows are NOT used in the fit. They are written to the detailed
+//     residual CSV with used_in_fit=0 as a diagnostic.
+//   * For full-bin diagnostic rows, the fitted line is evaluated at x=0
+//     because the input table uses dp_idx=0 for the full bin.
+
+#include <TMinuit.h>
+
+#include <TCanvas.h>
+#include <TError.h>
+#include <TFile.h>
+#include <TGraph.h>
+#include <TGraphErrors.h>
+#include <TAxis.h>
+#include <TLegend.h>
+#include <TH1D.h>
+#include <TLatex.h>
+#include <TLine.h>
+#include <TMarker.h>
+#include <TROOT.h>
+#include <TStyle.h>
+#include <TPad.h>
+#include <TSystem.h>
+
+#include <algorithm>
+#include <cerrno>
+#include <cmath>
+#include <cstdlib>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <limits>
+#include <map>
+#include <memory>
+#include <set>
+#include <sstream>
+#include <string>
+#include <vector>
+
+namespace FixedParamsLinearDpeDpNS {
+
+struct InputRow {
+  int run = -1;
+  int dp_idx = -999;
+  std::string dp_label;
+  double dp_lo = 0.0;
+  double dp_hi = 0.0;
+  std::string var;
+  double y_obs = 0.0;     // dmu_MeV
+  double y_err = 0.0;     // dmu_err_MeV
+  int fit_valid = 0;
+};
+
+struct Coeffs {
+  double c_dthe = 0.0;
+  double c_dpe  = 0.0;
+  double c_dthp = 0.0;
+  double c_dpp  = 0.0;
+};
+
+struct FixedParams {
+  double dthe = 0.0;
+  double dthp = 0.0;
+  double dpp  = 0.0;
+};
+
+struct FitPoint {
+  InputRow in;
+  std::string setting;
+  bool used_in_fit = false;
+  double x = 0.0;             // dp_idx
+  Coeffs coeff;
+  double fixed_term = 0.0;    // contribution from fixed dthe,dthp,dpp
+  double dpe_fit = 0.0;       // a0 + a1*x
+  double y_pred = 0.0;
+  double resid = 0.0;
+  double pull = 0.0;
+};
+
+struct FitResult {
+  std::string setting;
+  FixedParams fixed;
+  double a0 = 0.0;
+  double a0_err = 0.0;
+  double a1 = 0.0;
+  double a1_err = 0.0;
+  double corr_a0_a1 = 0.0;
+  double chi2 = 0.0;
+  int ndf = 0;
+  int n_rows_fit = 0;
+  int n_runs_fit = 0;
+  std::set<int> used_bins;
+  std::vector<FitPoint> all_points;
+};
+
+static std::vector<std::string> Split(const std::string& s, char delim) {
+  std::vector<std::string> out;
+  std::stringstream ss(s);
+  std::string item;
+  while (std::getline(ss, item, delim)) out.push_back(item);
+  return out;
+}
+
+static std::string Trim(const std::string& s) {
+  const char* ws = " \t\r\n";
+  const std::size_t b = s.find_first_not_of(ws);
+  if (b == std::string::npos) return "";
+  const std::size_t e = s.find_last_not_of(ws);
+  return s.substr(b, e - b + 1);
+}
+
+static bool ParseDouble(const std::string& s, double& v) {
+  char* end = nullptr;
+  errno = 0;
+  v = std::strtod(s.c_str(), &end);
+  return (errno == 0 && end != s.c_str());
+}
+
+static bool ParseInt(const std::string& s, int& v) {
+  char* end = nullptr;
+  errno = 0;
+  long x = std::strtol(s.c_str(), &end, 10);
+  if (!(errno == 0 && end != s.c_str())) return false;
+  v = static_cast<int>(x);
+  return true;
+}
+
+static void EnsureDir(const std::string& path) {
+  if (path.empty()) return;
+  const int rc = gSystem->mkdir(path.c_str(), kTRUE); // recursive
+  if (rc != 0 && gSystem->AccessPathName(path.c_str())) {
+    std::cerr << "[ERROR] Failed to create directory: " << path << std::endl;
+  }
+}
+
+static std::string ParentDir(const std::string& path) {
+  std::size_t pos = path.find_last_of('/');
+  if (pos == std::string::npos) return "";
+  return path.substr(0, pos);
+}
+
+static bool IsRunInSettingA(int run) {
+  if (run == 23843) return false;
+  return (run >= 23839 && run <= 23848);
+}
+
+static bool IsRunInSettingB(int run) {
+  return (run >= 23849 && run <= 23851);
+}
+
+static std::string GetSettingFromRun(int run) {
+  if (IsRunInSettingA(run)) return "A";
+  if (IsRunInSettingB(run)) return "B";
+  return "";
+}
+
+static bool AllowedFitBin(const std::string& setting, int dp_idx) {
+  if (setting == "A") return (dp_idx >= 1 && dp_idx <= 4);
+  if (setting == "B") return (dp_idx >= 1 && dp_idx <= 5);
+  return false;
+}
+
+static bool IsSupportedVar(const std::string& v) {
+  return (v == "W" || v == "Em" || v == "Pmz" || v == "Pmy");
+}
+
+static Coeffs GetCoeffs(const std::string& setting, const std::string& var) {
+  Coeffs c;
+  if (setting == "A") {
+    if (var == "W")   { c.c_dthe = -14.08; c.c_dpe = -8.62; c.c_dthp =  0.00; c.c_dpp =  0.00; }
+    if (var == "Em")  { c.c_dthe =   0.00; c.c_dpe = -7.06; c.c_dthp =  0.00; c.c_dpp = -2.10; }
+    if (var == "Pmz") { c.c_dthe =  -5.75; c.c_dpe =  4.10; c.c_dthp =  0.00; c.c_dpp =  2.27; }
+    if (var == "Pmy") { c.c_dthe =   4.10; c.c_dpe =  5.75; c.c_dthp = -2.27; c.c_dpp =  0.00; }
+  } else if (setting == "B") {
+    if (var == "W")   { c.c_dthe = -17.33; c.c_dpe = -8.62; c.c_dthp =  0.00; c.c_dpp =  0.00; }
+    if (var == "Em")  { c.c_dthe =   0.00; c.c_dpe = -5.66; c.c_dthp =  0.00; c.c_dpp = -3.63; }
+    if (var == "Pmz") { c.c_dthe =  -4.30; c.c_dpe =  3.69; c.c_dthp =  0.00; c.c_dpp =  3.74; }
+    if (var == "Pmy") { c.c_dthe =   3.69; c.c_dpe =  4.30; c.c_dthp = -3.74; c.c_dpp =  0.00; }
+  }
+  return c;
+}
+
+static std::vector<InputRow> ReadMeasuredCsv(const std::string& csvPath) {
+  std::ifstream fin(csvPath.c_str());
+  std::vector<InputRow> rows;
+  if (!fin) {
+    std::cerr << "[ERROR] Cannot open input CSV: " << csvPath << std::endl;
+    return rows;
+  }
+
+  std::string headerLine;
+  if (!std::getline(fin, headerLine)) {
+    std::cerr << "[ERROR] Empty input CSV: " << csvPath << std::endl;
+    return rows;
+  }
+
+  std::vector<std::string> headers = Split(headerLine, ',');
+  std::map<std::string, int> idx;
+  for (std::size_t i = 0; i < headers.size(); ++i) idx[Trim(headers[i])] = static_cast<int>(i);
+
+  const std::vector<std::string> need = {
+    "run","dp_idx","dp_label","dp_lo","dp_hi","var","dmu_MeV","dmu_err_MeV","fit_valid"
+  };
+  for (std::size_t i = 0; i < need.size(); ++i) {
+    if (idx.find(need[i]) == idx.end()) {
+      std::cerr << "[ERROR] Missing required column: " << need[i] << std::endl;
+      return {};
+    }
+  }
+
+  std::string line;
+  int lineNo = 1;
+  while (std::getline(fin, line)) {
+    ++lineNo;
+    if (Trim(line).empty()) continue;
+    std::vector<std::string> tok = Split(line, ',');
+    if (tok.size() < headers.size()) tok.resize(headers.size());
+
+    InputRow r;
+    if (!ParseInt(Trim(tok[idx["run"]]), r.run)) continue;
+    if (!ParseInt(Trim(tok[idx["dp_idx"]]), r.dp_idx)) continue;
+    r.dp_label = Trim(tok[idx["dp_label"]]);
+    ParseDouble(Trim(tok[idx["dp_lo"]]), r.dp_lo);
+    ParseDouble(Trim(tok[idx["dp_hi"]]), r.dp_hi);
+    r.var = Trim(tok[idx["var"]]);
+    if (!ParseDouble(Trim(tok[idx["dmu_MeV"]]), r.y_obs)) continue;
+    if (!ParseDouble(Trim(tok[idx["dmu_err_MeV"]]), r.y_err)) continue;
+    if (!ParseInt(Trim(tok[idx["fit_valid"]]), r.fit_valid)) r.fit_valid = 0;
+
+    rows.push_back(r);
+  }
+
+  return rows;
+}
+
+static const std::vector<FitPoint>* gChi2Pts = nullptr;
+
+static double EvalChi2(const std::vector<FitPoint>* pts, double a0, double a1) {
+  if (!pts) return 1e30;
+  double chi2 = 0.0;
+  for (std::size_t i = 0; i < pts->size(); ++i) {
+    const FitPoint& p = (*pts)[i];
+    if (!p.used_in_fit) continue;
+    if (p.in.y_err <= 0.0) continue;
+    const double dpe = a0 + a1 * p.x;
+    const double ypred = p.fixed_term + p.coeff.c_dpe * dpe;
+    const double resid = p.in.y_obs - ypred;
+    chi2 += (resid * resid) / (p.in.y_err * p.in.y_err);
+  }
+  return chi2;
+}
+
+static void MinuitFCN(int& /*npar*/, double* /*grad*/, double& fval, double* par, int /*iflag*/) {
+  fval = EvalChi2(gChi2Pts, par[0], par[1]);
+}
+
+static FitResult FitOneSetting(const std::string& setting,
+                               const std::vector<InputRow>& allRows,
+                               const FixedParams& fixed,
+                               double initA0 = 0.0,
+                               double initA1 = 0.0) {
+  FitResult out;
+  out.setting = setting;
+  out.fixed = fixed;
+
+  std::set<int> runsFit;
+  for (std::size_t i = 0; i < allRows.size(); ++i) {
+    const InputRow& r = allRows[i];
+    const std::string s = GetSettingFromRun(r.run);
+    if (s != setting) continue;
+    if (!IsSupportedVar(r.var)) continue;
+    if (r.fit_valid != 1) continue;
+    if (r.y_err <= 0.0) continue;
+
+    FitPoint p;
+    p.in = r;
+    p.setting = setting;
+    p.x = static_cast<double>(r.dp_idx);
+    p.coeff = GetCoeffs(setting, r.var);
+    p.fixed_term = p.coeff.c_dthe * fixed.dthe
+                 + p.coeff.c_dthp * fixed.dthp
+                 + p.coeff.c_dpp  * fixed.dpp;
+    p.used_in_fit = AllowedFitBin(setting, r.dp_idx);
+    out.all_points.push_back(p);
+
+    if (p.used_in_fit) {
+      runsFit.insert(r.run);
+      out.used_bins.insert(r.dp_idx);
+    }
+  }
+
+  out.n_rows_fit = 0;
+  for (std::size_t i = 0; i < out.all_points.size(); ++i) {
+    if (out.all_points[i].used_in_fit) ++out.n_rows_fit;
+  }
+  out.n_runs_fit = static_cast<int>(runsFit.size());
+  out.ndf = out.n_rows_fit - 2;
+
+  if (out.n_rows_fit < 3) {
+    std::cerr << "[ERROR] Not enough fit rows for Setting " << setting << std::endl;
+    return out;
+  }
+
+  gChi2Pts = &out.all_points;
+
+  TMinuit minuit(2);
+  minuit.SetPrintLevel(1);
+  minuit.SetFCN(MinuitFCN);
+
+  double arglist[10];
+  int ierflg = 0;
+
+  arglist[0] = 1.0;
+  minuit.mnexcm("SET ERR", arglist, 1, ierflg);
+
+  minuit.DefineParameter(0, "a0", initA0, 0.10, 0.0, 0.0);
+  minuit.DefineParameter(1, "a1", initA1, 0.10, 0.0, 0.0);
+
+  arglist[0] = 100000;
+  arglist[1] = 1e-6;
+  minuit.mnexcm("MIGRAD", arglist, 2, ierflg);
+
+  if (ierflg != 0) {
+    std::cerr << "[WARN] MIGRAD returned non-zero status for Setting "
+              << setting << ": " << ierflg << std::endl;
+  }
+
+  double amin = 0.0, edm = 0.0, errdef = 0.0;
+  int nvpar = 0, nparx = 0, icstat = 0;
+  minuit.mnstat(amin, edm, errdef, nvpar, nparx, icstat);
+
+  minuit.GetParameter(0, out.a0, out.a0_err);
+  minuit.GetParameter(1, out.a1, out.a1_err);
+  out.chi2 = amin;
+
+  double cov[4] = {0.0, 0.0, 0.0, 0.0};
+  minuit.mnemat(cov, 2);
+  const double v00 = cov[0];
+  const double v11 = cov[3];
+  const double v01 = cov[1];
+  if (v00 > 0.0 && v11 > 0.0) out.corr_a0_a1 = v01 / std::sqrt(v00 * v11);
+
+  for (std::size_t i = 0; i < out.all_points.size(); ++i) {
+    FitPoint& p = out.all_points[i];
+    p.dpe_fit = out.a0 + out.a1 * p.x;
+    p.y_pred = p.fixed_term + p.coeff.c_dpe * p.dpe_fit;
+    p.resid = p.in.y_obs - p.y_pred;
+    p.pull = (p.in.y_err > 0.0 ? p.resid / p.in.y_err : 0.0);
+  }
+
+  std::cout << "\n============================================================\n";
+  std::cout << "FixedParamsLinearDpeDp : Setting " << setting << "\n";
+  std::cout << "  fixed dthe = " << fixed.dthe << " mrad\n";
+  std::cout << "  fixed dthp = " << fixed.dthp << " mrad\n";
+  std::cout << "  fixed dpp  = " << fixed.dpp  << " (0.1%)\n";
+  std::cout << "  fit model  : dpe(dp_idx) = a0 + a1*dp_idx\n";
+  std::cout << "  a0 = " << out.a0 << " +/- " << out.a0_err << " (0.1%)\n";
+  std::cout << "  a1 = " << out.a1 << " +/- " << out.a1_err << " (0.1% / dp_idx)\n";
+  std::cout << "  corr(a0,a1) = " << out.corr_a0_a1 << "\n";
+  std::cout << "  chi2 = " << out.chi2 << "\n";
+  std::cout << "  ndf  = " << out.ndf << "\n";
+  std::cout << "  chi2/ndf = " << (out.ndf > 0 ? out.chi2 / out.ndf : 0.0) << "\n";
+  std::cout << "  n_rows_fit = " << out.n_rows_fit << "\n";
+  std::cout << "  n_runs_fit = " << out.n_runs_fit << "\n";
+  std::cout << "  used bins  = ";
+  for (std::set<int>::const_iterator it = out.used_bins.begin(); it != out.used_bins.end(); ++it) {
+    if (it != out.used_bins.begin()) std::cout << ",";
+    std::cout << *it;
+  }
+  std::cout << "\n";
+  for (std::set<int>::const_iterator it = out.used_bins.begin(); it != out.used_bins.end(); ++it) {
+    const double x = static_cast<double>(*it);
+    const double dpe = out.a0 + out.a1 * x;
+    std::cout << "    dpe(dp_idx=" << *it << ") = " << dpe << " (0.1%)\n";
+  }
+  std::cout << "============================================================\n";
+
+  return out;
+}
+
+static std::string JoinBins(const std::set<int>& bins) {
+  std::ostringstream os;
+  for (std::set<int>::const_iterator it = bins.begin(); it != bins.end(); ++it) {
+    if (it != bins.begin()) os << "|";
+    os << *it;
+  }
+  return os.str();
+}
+
+static void WriteSummaryCsv(const std::string& outCsv,
+                            const std::vector<FitResult>& results) {
+  EnsureDir(ParentDir(outCsv));
+  std::ofstream fout(outCsv.c_str());
+
+  fout << "setting,fixed_dthe_mrad,fixed_dthp_mrad,fixed_dpp_tenthpct,"
+          "model,a0_tenthpct,a0_err_tenthpct,a1_tenthpct_per_dpidx,a1_err_tenthpct_per_dpidx,"
+          "corr_a0_a1,chi2,ndf,chi2_ndf,n_rows_fit,n_runs_fit,used_bins,"
+          "dpe_dpidx0,dpe_dpidx1,dpe_dpidx2,dpe_dpidx3,dpe_dpidx4,dpe_dpidx5\n";
+
+  for (std::size_t i = 0; i < results.size(); ++i) {
+    const FitResult& r = results[i];
+    fout << r.setting << ","
+         << r.fixed.dthe << ","
+         << r.fixed.dthp << ","
+         << r.fixed.dpp  << ","
+         << "linear_dpe_vs_dpidx" << ","
+         << r.a0 << ","
+         << r.a0_err << ","
+         << r.a1 << ","
+         << r.a1_err << ","
+         << r.corr_a0_a1 << ","
+         << r.chi2 << ","
+         << r.ndf << ","
+         << (r.ndf > 0 ? r.chi2 / r.ndf : 0.0) << ","
+         << r.n_rows_fit << ","
+         << r.n_runs_fit << ","
+         << JoinBins(r.used_bins) << ",";
+    for (int x = 0; x <= 5; ++x) {
+      if (x > 0) fout << ",";
+      fout << (r.a0 + r.a1 * x);
+    }
+    fout << "\n";
+  }
+
+  std::cout << "[INFO] Wrote summary CSV: " << outCsv << std::endl;
+}
+
+static void WriteResidualCsv(const std::string& outCsv,
+                             const std::vector<FitResult>& results) {
+  EnsureDir(ParentDir(outCsv));
+  std::ofstream fout(outCsv.c_str());
+
+  fout << "setting,run,dp_idx,dp_label,var,used_in_fit,fit_valid,"
+          "x_dpidx,y_obs_MeV,y_err_MeV,"
+          "coeff_dthe,coeff_dpe,coeff_dthp,coeff_dpp,"
+          "fixed_dthe_mrad,fixed_dthp_mrad,fixed_dpp_tenthpct,"
+          "fixed_term_MeV,dpe_fit_tenthpct,y_pred_MeV,resid_MeV,pull\n";
+
+  for (std::size_t ir = 0; ir < results.size(); ++ir) {
+    const FitResult& r = results[ir];
+    for (std::size_t i = 0; i < r.all_points.size(); ++i) {
+      const FitPoint& p = r.all_points[i];
+      fout << r.setting << ","
+           << p.in.run << ","
+           << p.in.dp_idx << ","
+           << p.in.dp_label << ","
+           << p.in.var << ","
+           << (p.used_in_fit ? 1 : 0) << ","
+           << p.in.fit_valid << ","
+           << p.x << ","
+           << p.in.y_obs << ","
+           << p.in.y_err << ","
+           << p.coeff.c_dthe << ","
+           << p.coeff.c_dpe << ","
+           << p.coeff.c_dthp << ","
+           << p.coeff.c_dpp << ","
+           << r.fixed.dthe << ","
+           << r.fixed.dthp << ","
+           << r.fixed.dpp  << ","
+           << p.fixed_term << ","
+           << p.dpe_fit << ","
+           << p.y_pred << ","
+           << p.resid << ","
+           << p.pull << "\n";
+    }
+  }
+
+  std::cout << "[INFO] Wrote residual CSV: " << outCsv << std::endl;
+}
+
+static void DrawDpeLinePng(const std::string& outDir,
+                           const std::vector<FitResult>& results) {
+  EnsureDir(outDir);
+
+  TCanvas* c = new TCanvas("c_dpe_line", "c_dpe_line", 900, 900);
+  c->Divide(1, 2);
+
+  for (std::size_t ir = 0; ir < results.size(); ++ir) {
+    const FitResult& r = results[ir];
+    c->cd(static_cast<int>(ir + 1));
+    gPad->SetGrid();
+
+    std::vector<double> xfit, yfit, xpts, ypts;
+    for (int x = 0; x <= 5; ++x) {
+      xfit.push_back(x);
+      yfit.push_back(r.a0 + r.a1 * x);
+      if (r.used_bins.count(x)) {
+        xpts.push_back(x);
+        ypts.push_back(r.a0 + r.a1 * x);
+      }
+    }
+
+    TGraph* gline = new TGraph(static_cast<int>(xfit.size()), &xfit[0], &yfit[0]);
+    gline->SetTitle(Form("Setting %s;dp_{idx};fitted dpe (0.1%%)", r.setting.c_str()));
+    gline->SetLineWidth(2);
+    gline->SetMarkerStyle(20);
+    gline->Draw("AL");
+
+    if (!xpts.empty()) {
+      TGraph* gpts = new TGraph(static_cast<int>(xpts.size()), &xpts[0], &ypts[0]);
+      gpts->SetMarkerStyle(20);
+      gpts->SetMarkerSize(1.2);
+      gpts->Draw("P SAME");
+    }
+
+    TLine* l0 = new TLine(gline->GetXaxis()->GetXmin(), 0.0,
+                          gline->GetXaxis()->GetXmax(), 0.0);
+    l0->SetLineStyle(2);
+    l0->Draw();
+
+    TLatex lat;
+    lat.SetNDC();
+    lat.SetTextSize(0.040);
+    lat.DrawLatex(0.15, 0.86,
+                  Form("a0 = %.3f #pm %.3f, a1 = %.3f #pm %.3f",
+                       r.a0, r.a0_err, r.a1, r.a1_err));
+  }
+
+  const std::string outName = outDir + "/dpe_line_vs_dpidx.png";
+  std::cout << "[INFO] Writing PNG: " << outName << std::endl;
+  c->SaveAs(outName.c_str());
+  delete c;
+}
+
+static void DrawResidualMeansPng(const std::string& outDir, const FitResult& r) {
+  EnsureDir(outDir);
+
+  TCanvas* c = new TCanvas(Form("c_resid_%s", r.setting.c_str()),
+                           Form("c_resid_%s", r.setting.c_str()), 1100, 900);
+  c->Divide(2, 2);
+
+  const std::vector<std::string> vars = {"W", "Em", "Pmz", "Pmy"};
+
+  for (int iv = 0; iv < 4; ++iv) {
+    c->cd(iv + 1);
+    gPad->SetGrid();
+
+    std::vector<double> xs, ys, exs, eys;
+    for (int dp = 0; dp <= 5; ++dp) {
+      if (r.setting == "A" && dp == 5) continue;
+
+      double sw = 0.0, swy = 0.0;
+      for (std::size_t i = 0; i < r.all_points.size(); ++i) {
+        const FitPoint& p = r.all_points[i];
+        if (p.in.var != vars[iv]) continue;
+        if (p.in.dp_idx != dp) continue;
+        if (p.in.y_err <= 0.0) continue;
+
+        const double w = 1.0 / (p.in.y_err * p.in.y_err);
+        sw += w;
+        swy += w * p.resid;
+      }
+
+      if (sw <= 0.0) continue;
+
+      xs.push_back(dp);
+      ys.push_back(swy / sw);
+      exs.push_back(0.0);
+      eys.push_back(std::sqrt(1.0 / sw));
+    }
+
+    if (xs.empty()) continue;
+
+    TGraphErrors* g = new TGraphErrors(static_cast<int>(xs.size()),
+                                       &xs[0], &ys[0], &exs[0], &eys[0]);
+    g->SetTitle(Form("Setting %s residual means: %s;dp_{idx};weighted mean residual (MeV)",
+                     r.setting.c_str(), vars[iv].c_str()));
+    g->SetMarkerStyle(20);
+    g->SetLineWidth(2);
+    g->Draw("AP");
+
+    TLine* l0 = new TLine(g->GetXaxis()->GetXmin(), 0.0,
+                          g->GetXaxis()->GetXmax(), 0.0);
+    l0->SetLineStyle(2);
+    l0->Draw();
+
+    TLatex lat;
+    lat.SetNDC();
+    lat.SetTextSize(0.035);
+    lat.DrawLatex(0.16, 0.86, "dp_{idx}=0 shown as diagnostic only");
+  }
+
+  const std::string outName = outDir + Form("/residual_means_setting%s.png", r.setting.c_str());
+  std::cout << "[INFO] Writing PNG: " << outName << std::endl;
+  c->SaveAs(outName.c_str());
+  delete c;
+}
+
+static void DrawPullPng(const std::string& outDir, const FitResult& r) {
+  EnsureDir(outDir);
+
+  TCanvas* c = new TCanvas(Form("c_pull_%s", r.setting.c_str()),
+                           Form("c_pull_%s", r.setting.c_str()), 800, 600);
+  gPad->SetGrid();
+
+  TH1D* h = new TH1D(Form("h_pull_%s", r.setting.c_str()),
+                     Form("Setting %s pulls;pull=(obs-pred)/#sigma;entries",
+                          r.setting.c_str()),
+                     40, -10.0, 10.0);
+
+  for (std::size_t i = 0; i < r.all_points.size(); ++i) {
+    const FitPoint& p = r.all_points[i];
+    h->Fill(p.pull);
+  }
+
+  h->Draw();
+
+  TLine* l0 = new TLine(0.0, 0.0, 0.0, h->GetMaximum() * 1.05);
+  l0->SetLineStyle(2);
+  l0->Draw();
+
+  const std::string outName = outDir + Form("/pulls_setting%s.png", r.setting.c_str());
+  std::cout << "[INFO] Writing PNG: " << outName << std::endl;
+  c->SaveAs(outName.c_str());
+  delete c;
+}
+
+} // namespace FixedParamsLinearDpeDpNS
+
+void FixedParamsLinearDpeDp(
+    const char* inputCsv = "results/tables/heep_check_dpBinnedOffsets.csv",
+    const char* outSummaryCsv = "results/tables/FixedParamsLinearDpeDp_summary.csv",
+    const char* outResidualCsv = "results/tables/FixedParamsLinearDpeDp_residuals.csv",
+    const char* outPngDir = "results/PNGs/FixedParamsLinearDpeDp") {
+
+  using namespace FixedParamsLinearDpeDpNS;
+
+  gROOT->SetBatch(kTRUE);
+  gStyle->SetOptStat(0);
+
+  std::vector<InputRow> rows = ReadMeasuredCsv(inputCsv);
+  if (rows.empty()) {
+    std::cerr << "[ERROR] No input rows loaded. Aborting." << std::endl;
+    return;
+  }
+
+  FixedParams fixedA;
+  fixedA.dthe = -0.30;
+  fixedA.dthp = -7.20;
+  fixedA.dpp  = -3.30;
+
+  FixedParams fixedB;
+  fixedB.dthe = -1.15;
+  fixedB.dthp = -4.30;
+  fixedB.dpp  = -1.46;
+
+  std::vector<FitResult> results;
+  results.push_back(FitOneSetting("A", rows, fixedA, 0.0, 0.0));
+  results.push_back(FitOneSetting("B", rows, fixedB, 0.0, 0.0));
+
+  WriteSummaryCsv(outSummaryCsv, results);
+  WriteResidualCsv(outResidualCsv, results);
+
+  EnsureDir(outPngDir);
+
+  DrawDpeLinePng(outPngDir, results);
+  for (std::size_t i = 0; i < results.size(); ++i) {
+    DrawResidualMeansPng(outPngDir, results[i]);
+    DrawPullPng(outPngDir, results[i]);
+  }
+
+  std::cout << "[INFO] FixedParamsLinearDpeDp finished.\n"
+            << "       Summary CSV   : " << outSummaryCsv << "\n"
+            << "       Residual CSV  : " << outResidualCsv << "\n"
+            << "       PNG directory : " << outPngDir << std::endl;
+}
