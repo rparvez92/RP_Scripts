@@ -760,6 +760,7 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
   }
 
   log << "Wrote CSV: " << outCsv << "\n";
+  std::cout << "Wrote CSV: " << outCsv << "\n";
   log << "Wrote PNG: " << outPng << "\n";
   log << "Wrote ROOT: " << outRootFile << "\n";
   log.close();

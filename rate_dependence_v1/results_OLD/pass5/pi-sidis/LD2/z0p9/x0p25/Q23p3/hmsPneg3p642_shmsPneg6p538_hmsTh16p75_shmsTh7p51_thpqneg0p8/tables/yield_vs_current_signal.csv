@@ -1,0 +1,6 @@
+category,run,BCM2_I,Nnet,Nnet_err,norm_factor,yield,yield_err,BCM2_Q_mC,comp_livetime,h_esing_Eff,boil_corr,ps_choice,ps_factor,PeakCenterNs,CoinLoNs,CoinHiNs,RandomWindowListNs,rootfile,status,fit_included,fit_excluded_reason
+signal,25010,25.699,1649.85,17.4367,0.0217724,35.9211,0.379637,46.421,1,0.9983,1.00898,"ps6",1,51.125,50.125,52.125,"42.125-44.125;58.125-60.125;38.125-40.125;62.125-64.125","./Skimmed_ROOTfiles/skimmed_coin_replay_production_25010_-1.root",OK,1,""
+signal,25011,26.12,1707.11,17.687,0.0212167,36.2193,0.375259,47.639,1,0.9984,1.00912,"ps6",1,51.125,50.125,52.125,"42.125-44.125;58.125-60.125;38.125-40.125;62.125-64.125","./Skimmed_ROOTfiles/skimmed_coin_replay_production_25011_-1.root",OK,1,""
+signal,25012,13.007,875.325,12.1037,0.0434755,38.0552,0.526215,23.143,1,0.9984,1.00454,"ps6",1,51.125,50.125,52.125,"42.125-44.125;58.125-60.125;38.125-40.125;62.125-64.125","./Skimmed_ROOTfiles/skimmed_coin_replay_production_25012_-1.root",OK,1,""
+#FIT,fit_const,fit_const_err,chi2,ndf,chi2_ndf,prob,n_fit_points
+#FIT,36.4777,0.23802,11.6101,2,5.80506,0.00301229,3

@@ -1,0 +1,15 @@
+YieldVsCurrent (v1, signal-only)
+manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2/manifest.json
+setting_dir: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2
+setting_id: hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2
+results_base: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2
+log: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2/logs/YieldVsCurrent.log
+
+Loaded rows from run_metadata.csv: 8
+
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2/tables/yield_vs_current_signal.csv
+Fit constant C = 9.07507 +- 0.0764055
+chi2=4.88653 ndf=5 chi2/ndf=0.977307 prob=0.429884
+Global ranges: X=[20.3376,43.4914]  Y=[7.40164,10.5172]
+Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2/PNGs/yield_vs_current.png
+Wrote ROOT: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2/canvases/yield_vs_current.root

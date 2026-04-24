@@ -1,0 +1,13 @@
+YieldVsTrigger.C
+manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi+sidis/LD2/z0p36/x0p25/Q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2/manifest.json
+resultsTop: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results
+rel: pass5/pi+sidis/LD2/z0p36/x0p25/Q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2
+WARN: skipping short CSV line: #FIT,fit_const,fit_const_err,chi2,ndf,chi2_ndf,prob,n_fit_points
+WARN: skipping short CSV line: #FIT,84.519,0.461586,35.9476,7,5.13537,7.41629e-06,8
+Read 8 rows from: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p36/x0p25/Q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2/tables/yield_vs_current_signal.csv
+Report dir: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/Pass0_REPORTfiles/COIN/PRODUCTION
+Points: OK=8  skipped=0  badErr=0  missingReport=0  missingLine=0
+Fit: C=84.519 +/- 0.461587  chi2/ndf=5.13538 (7)  prob=7.41611e-06
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p36/x0p25/Q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2/tables/yield_vs_trigger_shms34.csv
+Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p36/x0p25/Q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2/PNGs/yield_vs_trigger_shms34.png
+Wrote ROOT: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p36/x0p25/Q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2/canvases/yield_vs_trigger_shms34.root

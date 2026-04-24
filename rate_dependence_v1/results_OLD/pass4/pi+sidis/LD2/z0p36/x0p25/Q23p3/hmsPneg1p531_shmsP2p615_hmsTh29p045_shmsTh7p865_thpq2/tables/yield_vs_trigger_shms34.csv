@@ -1,0 +1,25 @@
+category,run,BCM2_I,yield,yield_err,shms34_rate_kHz,rootfile,status
+signal,24428,7.95,10.9149,0.462092,886.973,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24428_-1.root",OK
+signal,24429,8.084,10.3588,0.441155,901.294,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24429_-1.root",OK
+signal,24430,7.776,10.9542,0.466701,867.517,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24430_-1.root",OK
+signal,24431,7.921,11.4282,0.466082,883.495,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24431_-1.root",OK
+signal,24432,7.911,10.3489,0.456399,882.385,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24432_-1.root",OK
+signal,24433,8.055,11.6433,0.44478,897.825,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24433_-1.root",OK
+signal,24434,8.065,11.3933,0.453089,898.869,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24434_-1.root",OK
+signal,24435,8.075,11.0891,0.447994,900.134,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24435_-1.root",OK
+signal,24436,8.058,10.669,0.439573,898.323,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24436_-1.root",OK
+signal,24437,8.074,11.2351,0.446936,900.05,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24437_-1.root",OK
+signal,24501,7.963,10.1446,0.460351,886.904,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24501_-1.root",OK
+signal,24502,8.026,10.986,0.453715,893.843,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24502_-1.root",OK
+signal,24503,8.161,10.5725,0.440097,908.479,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24503_-1.root",OK
+signal,24504,8.007,11.2548,0.469699,892.001,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24504_-1.root",OK
+signal,24505,8.049,10.6693,0.451432,896.536,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24505_-1.root",OK
+signal,24506,8.156,11.4338,0.454003,908.004,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24506_-1.root",OK
+signal,24507,8.036,9.83768,0.449504,894.87,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24507_-1.root",OK
+# FIT_MODEL,pol0
+# FIT_C,10.8744085704
+# FIT_Cerr,0.109839146444
+# FIT_chi2,20.2840011507
+# FIT_ndf,16
+# FIT_chi2ndf,1.26775007192
+# FIT_prob,0.207700866054

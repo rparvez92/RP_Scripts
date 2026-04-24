@@ -1,0 +1,10 @@
+category,run,BCM2_I,Nnet,Nnet_err,norm_factor,yield,yield_err,BCM2_Q_mC,comp_livetime,h_esing_Eff,boil_corr,ps_choice,ps_factor,PeakCenterNs,CoinLoNs,CoinHiNs,RandomWindowListNs,rootfile,status,fit_included,fit_excluded_reason
+signal,25434,56.506,1822.61,18.4665,0.0104553,19.056,0.193073,97.927,1,0.9982,1.02201,"ps6",1,51.275,50.275,52.275,"42.275-44.275;58.275-60.275;38.275-40.275;62.275-64.275","./Skimmed_ROOTfiles/skimmed_coin_replay_production_25434_-1.root",OK,1,""
+signal,25435,53.279,1881.15,18.6709,0.0102951,19.3666,0.192219,99.479,1,0.9983,1.0224,"ps6",1,51.275,50.275,52.275,"42.275-44.275;58.275-60.275;38.275-40.275;62.275-64.275","./Skimmed_ROOTfiles/skimmed_coin_replay_production_25435_-1.root",OK,1,""
+signal,25436,58.873,2026.84,19.4006,0.00969411,19.6484,0.188072,105.54,1,0.9981,1.02117,"ps6",1,51.125,50.125,52.125,"42.125-44.125;58.125-60.125;38.125-40.125;62.125-64.125","./Skimmed_ROOTfiles/skimmed_coin_replay_production_25436_-1.root",OK,1,""
+signal,25437,57.544,1855.42,18.551,0.010423,19.3391,0.193357,98.153,1,0.9983,1.02131,"ps5",1,51.125,50.125,52.125,"42.125-44.125;58.125-60.125;38.125-40.125;62.125-64.125","./Skimmed_ROOTfiles/skimmed_coin_replay_production_25437_-1.root",OK,1,""
+signal,25438,29.291,978.712,12.8763,0.0195078,19.0926,0.251188,52.187,1,0.9985,1.01653,"ps6",1,51.125,50.125,52.125,"42.125-44.125;58.125-60.125;38.125-40.125;62.125-64.125","./Skimmed_ROOTfiles/skimmed_coin_replay_production_25438_-1.root",OK,1,""
+signal,25439,28.038,878.1,12.1296,0.02242,19.687,0.271945,45.381,1,0.9985,1.01591,"ps6",1,51.275,50.275,52.275,"42.275-44.275;58.275-60.275;38.275-40.275;62.275-64.275","./Skimmed_ROOTfiles/skimmed_coin_replay_production_25439_-1.root",OK,1,""
+signal,25442,55.125,2087.7,19.6762,0.00930946,19.4354,0.183174,109.88,1,0.9983,1.02118,"ps6",1,51.275,50.275,52.275,"42.275-44.275;58.275-60.275;38.275-40.275;62.275-64.275","./Skimmed_ROOTfiles/skimmed_coin_replay_production_25442_-1.root",OK,1,""
+#FIT,fit_const,fit_const_err,chi2,ndf,chi2_ndf,prob,n_fit_points
+#FIT,19.3722,0.0771322,7.56691,6,1.26115,0.271579,7

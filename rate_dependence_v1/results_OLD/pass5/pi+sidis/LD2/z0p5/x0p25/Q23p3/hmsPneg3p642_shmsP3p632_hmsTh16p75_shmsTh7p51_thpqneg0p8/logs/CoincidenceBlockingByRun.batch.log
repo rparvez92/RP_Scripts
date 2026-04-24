@@ -1,0 +1,19 @@
+Reading startup commands from /home/cdaq/.root/rootlogon.C
+
+Processing macros/CoincidenceBlockingByRun.C("/home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh7p51_thpqneg0p8/manifest.json","/home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results")...
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_24960_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_24961_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_24962_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_24964_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_24965_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_24966_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_24998_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_24999_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_25000_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_25001_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_25007_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_25008_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_24981_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_24982_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_25004_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_25005_-1.root not a ROOT file

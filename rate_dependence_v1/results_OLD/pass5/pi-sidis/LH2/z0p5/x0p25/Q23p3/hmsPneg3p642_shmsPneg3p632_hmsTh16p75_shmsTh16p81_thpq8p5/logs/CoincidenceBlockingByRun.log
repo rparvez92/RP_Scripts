@@ -1,0 +1,21 @@
+CoincidenceBlockingByRun
+manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p75_shmsTh16p81_thpq8p5/manifest.json
+setting_dir: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p75_shmsTh16p81_thpq8p5
+setting_id: hmsPneg3p642_shmsPneg3p632_hmsTh16p75_shmsTh16p81_thpq8p5
+results_base: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p75_shmsTh16p81_thpq8p5
+log: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p75_shmsTh16p81_thpq8p5/logs/CoincidenceBlockingByRun.log
+
+Loaded rows from run_metadata.csv: 11
+WARNING [run 25423]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25423_-1.root
+WARNING [run 25424]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25424_-1.root
+WARNING [run 25425]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25425_-1.root
+WARNING [run 25426]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25426_-1.root
+WARNING [run 25427]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25427_-1.root
+WARNING [run 25428]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25428_-1.root
+WARNING [run 25429]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25429_-1.root
+WARNING [run 25430]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25430_-1.root
+WARNING [run 25463]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25463_-1.root
+WARNING [run 25432]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25432_-1.root
+WARNING [run 25433]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25433_-1.root
+
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p75_shmsTh16p81_thpq8p5/tables/coincidence_blocking_by_run.csv

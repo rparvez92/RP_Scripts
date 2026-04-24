@@ -1,0 +1,9 @@
+category,run,BCM2_I,BCM2_Q_mC,hms_elclean_counts,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,yield,yield_err,rootfile,status
+signal,23862,23.058,41.77,1594898,38182.85851,30.23444365,5.15488,0.165111,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_23862_-1.root",OK
+# FIT_MODEL,pol0
+# FIT_c,38182.8585109
+# FIT_cerr,30.2344436485
+# FIT_chi2,0
+# FIT_ndf,0
+# FIT_chi2ndf,nan
+# FIT_prob,0

@@ -1,0 +1,23 @@
+YieldRatioVsTrigger (v1, signal-only)
+manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/manifest.json
+setting_dir: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2
+results_base: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2
+log: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/logs/YieldRatioVsTrigger.log
+
+Loaded /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/tables/yield_vs_trigger_shms34.csv: rows=12, signal=5, runs=5
+Loaded /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/tables/hms_elclean_chargeNorm_vs_current.csv: rows=12, signal=5, runs=5
+Fit1 (raw): r = a + b*R
+  range_kHz: [372.15, 711.226]
+  a = 0.00037584707797 +/- 3.63600701456e-06
+  b = -4.70488727635e-08 +/- 6.19722574113e-09 (per kHz)
+  chi2/ndf = 2.17005009293 (3), prob=0.089263060461
+
+Fit2 (norm): y = 1 + m*R
+  range_kHz: [372.15, 711.226]
+  m = -0.000126660274222 +/- 8.10035239133e-06 (per kHz)
+  tau_ns = 126.660274222 +/- 8.10035239133
+  chi2/ndf = 0.522174494092 (4), prob=0.719449032495
+
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/tables/yield_ratio_vs_trigger_shms34.csv
+Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/PNGs/yield_ratio_vs_trigger_shms34.png
+Wrote ROOT: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/canvases/yield_ratio_vs_trigger_shms34.root

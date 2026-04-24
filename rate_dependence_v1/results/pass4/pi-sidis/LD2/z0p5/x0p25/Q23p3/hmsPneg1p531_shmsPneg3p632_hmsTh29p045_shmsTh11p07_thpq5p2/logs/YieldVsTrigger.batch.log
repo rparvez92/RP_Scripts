@@ -1,6 +1,8 @@
 Reading startup commands from /home/cdaq/.root/rootlogon.C
 
 Processing macros/YieldVsTrigger.C("/home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/manifest.json","/home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results")...
-Error in <TCanvas::Range>: illegal world coordinates range: x1=402.675000, y1=4.875692, x2=402.675000, y2=5.496109
-Error in <TCanvas::RangeAxis>: illegal axis coordinates range: xmin=402.675000, ymin=4.950142, xmax=402.675000, ymax=5.359618
+Error in <TCanvas::Range>: illegal world coordinates range: x1=425.381000, y1=6.118222, x2=425.381000, y2=6.893662
+Error in <TCanvas::RangeAxis>: illegal axis coordinates range: xmin=425.381000, ymin=6.211275, xmax=425.381000, ymax=6.723065
 Info in <TCanvas::Print>: png file /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/PNGs/yield_vs_trigger_shms34.png has been created
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/tables/yield_vs_trigger_shms34.csv
+Wrote ROOT: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/canvases/yield_vs_trigger_shms34.root

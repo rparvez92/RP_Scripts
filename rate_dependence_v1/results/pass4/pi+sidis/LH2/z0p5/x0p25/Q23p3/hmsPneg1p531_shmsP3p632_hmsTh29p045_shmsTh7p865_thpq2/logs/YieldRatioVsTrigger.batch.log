@@ -4,3 +4,4 @@ Processing macros/YieldRatioVsTrigger.C("/home/cdaq/users/rparvez/RP_Scripts/rat
 WARNING: Fit1 probability is small (<0.01). Interpret a (intercept) with caution.
 Info in <TCanvas::Print>: png file /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/PNGs/yield_ratio_vs_trigger_shms34.png has been created
 Info in <TCanvas::SaveAs>: ROOT file /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/canvases/yield_ratio_vs_trigger_shms34.root has been created
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/tables/yield_ratio_vs_trigger_shms34.csv

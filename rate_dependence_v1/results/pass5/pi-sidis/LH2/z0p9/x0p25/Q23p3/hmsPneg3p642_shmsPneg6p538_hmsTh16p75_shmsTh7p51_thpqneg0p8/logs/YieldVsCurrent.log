@@ -6,10 +6,5 @@ results_base: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pas
 log: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh7p51_thpqneg0p8/logs/YieldVsCurrent.log
 
 Loaded rows from run_metadata.csv: 7
-
-Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh7p51_thpqneg0p8/tables/yield_vs_current_signal.csv
-Fit constant C = 12.8971 +- 0.0927176
-chi2=26.8035 ndf=4 chi2/ndf=6.70089 prob=2.17821e-05
-Global ranges: X=[14.1697,47.9803]  Y=[11.898,14.309]
-Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh7p51_thpqneg0p8/PNGs/yield_vs_current.png
-Wrote ROOT: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh7p51_thpqneg0p8/canvases/yield_vs_current.root
+ERROR: cannot open /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh7p51_thpqneg0p8/tables/coincidence_blocking_by_run.csv
+ERROR: no blocking rows. Run CoincidenceBlockingByRun.C first.

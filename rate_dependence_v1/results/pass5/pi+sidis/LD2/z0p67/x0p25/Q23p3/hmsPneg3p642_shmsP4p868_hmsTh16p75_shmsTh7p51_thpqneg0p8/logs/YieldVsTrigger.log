@@ -3,11 +3,11 @@ manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/
 resultsTop: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results
 rel: pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh7p51_thpqneg0p8
 WARN: skipping short CSV line: #FIT,fit_const,fit_const_err,chi2,ndf,chi2_ndf,prob,n_fit_points
-WARN: skipping short CSV line: #FIT,92.4565,0.254017,111.634,10,11.1634,2.49733e-19,11
+WARN: skipping short CSV line: #FIT,96.6774,0.265165,75.0333,10,7.50333,4.68732e-12,11
 Read 11 rows from: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh7p51_thpqneg0p8/tables/yield_vs_current_signal.csv
-Report dir: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/Pass0_REPORTfiles/COIN/PRODUCTION
+Report dir: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/Pass0p1_REPORTfiles/COIN/PRODUCTION
 Points: OK=11  skipped=0  badErr=0  missingReport=0  missingLine=0
-Fit: C=92.4565 +/- 0.254017  chi2/ndf=11.1633 (10)  prob=2.4986e-19
+Fit: C=96.6774 +/- 0.265165  chi2/ndf=7.50319 (10)  prob=4.69017e-12
 Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh7p51_thpqneg0p8/tables/yield_vs_trigger_shms34.csv
 Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh7p51_thpqneg0p8/PNGs/yield_vs_trigger_shms34.png
 Wrote ROOT: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh7p51_thpqneg0p8/canvases/yield_vs_trigger_shms34.root

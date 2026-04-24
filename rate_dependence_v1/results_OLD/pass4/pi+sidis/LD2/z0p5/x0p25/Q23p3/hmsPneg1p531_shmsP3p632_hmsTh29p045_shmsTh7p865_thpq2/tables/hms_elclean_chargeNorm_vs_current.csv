@@ -1,0 +1,34 @@
+category,run,BCM2_I,BCM2_Q_mC,hms_elclean_counts,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,yield,yield_err,rootfile,status
+signal,24310,13.699,24.935,973219,39030.23862,39.56361044,11.103,0.319482,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24310_-1.root",OK
+signal,24311,14.109,24.782,968839,39094.46372,39.71819043,11.6204,0.326206,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24311_-1.root",OK
+signal,24312,14.298,27.413,1070110,39036.58848,37.73615483,11.3784,0.309154,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24312_-1.root",OK
+signal,24313,13.837,35.183,1374487,39066.79362,33.32249028,11.4116,0.271977,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24313_-1.root",OK
+signal,24314,13.797,23.21,907881,39115.9414,41.05247291,11.1645,0.33351,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24314_-1.root",OK
+signal,24315,14.054,19.997,779953,39003.50053,44.1640985,11.4288,0.360536,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24315_-1.root",OK
+signal,24316,13.701,23.471,916824,39061.99139,40.79541855,11.0829,0.33027,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24316_-1.root",OK
+signal,24317,14.034,24.729,966109,39067.85555,39.74719719,11.0274,0.319895,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24317_-1.root",OK
+signal,24318,6.472,4.679,183090,39130.15602,91.44906451,11.0776,0.673214,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24318_-1.root",OK
+signal,24376,13.818,15.754,612994,38910.37197,49.69781221,11.4444,0.407864,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24376_-1.root",OK
+signal,24377,13.876,24.277,948036,39050.78881,40.10674311,11.056,0.323985,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24377_-1.root",OK
+signal,24378,13.86,20.015,782324,39086.88484,44.19139715,11.3065,0.358204,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24378_-1.root",OK
+signal,24379,13.988,24.072,938630,38992.60552,40.24714151,11.1067,0.32626,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24379_-1.root",OK
+signal,24380,13.915,24.348,951194,39066.61738,40.05633938,11.1747,0.324355,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24380_-1.root",OK
+signal,24381,13.998,24.597,960267,39040.00488,39.83949833,11.4312,0.325915,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24381_-1.root",OK
+signal,24382,14.031,24.929,972850,39024.83052,39.56562988,11.5712,0.32437,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24382_-1.root",OK
+signal,24383,14.167,25.181,981504,38977.95957,39.3435065,11.4567,0.323575,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24383_-1.root",OK
+signal,24384,6.952,12.635,494916,39170.24139,55.6788813,12.5012,0.433223,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24384_-1.root",OK
+signal,24415,13.873,3.257,126579,38863.67823,109.2353166,11.2845,0.903831,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24415_-1.root",OK
+signal,24416,13.383,21.409,836434,39069.26993,42.71884055,11.5416,0.353954,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24416_-1.root",OK
+signal,24417,14.216,25.727,1008588,39203.48272,39.03621954,12.154,0.328754,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24417_-1.root",OK
+signal,24418,13.785,26.266,1028235,39146.99612,38.60577288,11.8136,0.322304,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24418_-1.root",OK
+signal,24419,14.083,23.851,935382,39217.72672,40.54972486,11.6043,0.335548,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24419_-1.root",OK
+signal,24421,13.71,3.37,132061,39187.24036,107.8344158,12.8002,0.909588,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24421_-1.root",OK
+signal,24422,13.728,15.345,601207,39179.34181,50.52951404,11.9493,0.421867,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24422_-1.root",OK
+signal,24423,6.955,12.147,475971,39184.24302,56.79645307,12.9252,0.447757,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24423_-1.root",OK
+# FIT_MODEL,pol0
+# FIT_c,39074.7410361
+# FIT_cerr,8.54154206878
+# FIT_chi2,73.2706116249
+# FIT_ndf,25
+# FIT_chi2ndf,2.930824465
+# FIT_prob,1.24350681351e-06

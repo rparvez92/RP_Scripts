@@ -1,15 +1,15 @@
 category,run,BCM2_I,BCM2_Q_mC,hms_elclean_counts,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,yield,yield_err,rootfile,status
-signal,24877,39.88,10.598,2809440,265091.5267,158.1561067,69.8204,1.15008,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24877_-1.root",OK
-signal,24878,50.226,56.906,15090895,265189.8745,68.26521135,66.5451,0.498546,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24878_-1.root",OK
-signal,24879,42.653,11.334,3005034,265134.4627,152.9471845,69.2948,1.11299,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24879_-1.root",OK
-signal,24880,39.009,74.598,19802198,265452.1301,59.65261893,69.9244,0.432203,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24880_-1.root",OK
-signal,24881,38.68,74.874,19867247,265342.4019,59.53026427,70.3924,0.432477,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24881_-1.root",OK
-signal,24882,26.707,46.445,12348231,265867.8222,75.65948929,72.3945,0.534695,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24882_-1.root",OK
-signal,24883,12.845,22.421,5996586,267453.994,109.218713,74.954,0.745862,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24883_-1.root",OK
+signal,24877,40.23,10.609,2808768,264753.3227,157.9732252,74.5122,1.21893,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24877_-1.root",OK
+signal,24878,50.276,56.963,15090895,264924.5124,68.1969018,71.9952,0.535335,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24878_-1.root",OK
+signal,24879,42.704,11.348,3005034,264807.3669,152.7584939,73.4406,1.1772,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24879_-1.root",OK
+signal,24880,39.258,74.681,19798000,265100.8958,59.580005,74.4457,0.45797,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24880_-1.root",OK
+signal,24881,38.886,74.96,19863639,264989.8479,59.45656692,74.915,0.458014,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24881_-1.root",OK
+signal,24882,26.907,46.52,12343983,265347.8719,75.52451611,76.4047,0.562136,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24882_-1.root",OK
+signal,24883,12.99,22.494,5990645,266321.9081,108.8103235,78.1344,0.774178,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24883_-1.root",OK
 # FIT_MODEL,pol0
-# FIT_c,265564.013252
-# FIT_cerr,29.893567385
-# FIT_chi2,379.797847166
+# FIT_c,265145.966407
+# FIT_cerr,29.8499969586
+# FIT_chi2,153.046407802
 # FIT_ndf,6
-# FIT_chi2ndf,63.2996411944
-# FIT_prob,6.14517491502e-79
+# FIT_chi2ndf,25.5077346336
+# FIT_prob,1.755094465e-30

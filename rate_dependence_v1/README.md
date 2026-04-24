@@ -1,10 +1,16 @@
-# rate_dependence_v1 — RSIDIS Rate Dependence Diagnostic (Yield/Current/Trigger)
+# rate_dependence_v1 — RSIDIS Rate Dependence Diagnostic
 
 This directory contains the **v1** workflow for a **rate-dependence diagnostic** study in the Hall‑C RSIDIS coincidence analysis.
 
 The goal is to check whether the **charge-normalized coincidence yield** (computed with **my coincidence-time random subtraction**) depends on **beam current** and/or correlates with **trigger rates**.
 
 This is a *diagnostic* workflow: we intentionally do **minimal filtering** so we can spot problematic runs/outliers.
+
+The current workflow is based on **Pass0p1** inputs:
+- `bigtable/rsidis_bigtable_pass0p1.csv`
+- `Pass0p1_ROOTfiles/`
+- `Pass0p1_REPORTfiles/`
+- `Skimmed_ROOTfiles/` symlinked to the Pass0p1 skim files
 
 ---
 
@@ -21,11 +27,23 @@ For each kinematic **setting** (one `manifest.json`), v1 generates:
    - Uses the **yield already computed** by (1), then parses report files to get SHMS 3/4 trigger rate in kHz
    - Fits a **constant** (`pol0`) and reports fit quality.
 
-3. **SHMS_EL_CLEAN Trigger Rate vs Current** (signal only)
-   - Parses report files to get `SHMS_pEL_CLEAN` rate (kHz)
-   - Fits a **line** (`pol1`) and reports slope, slope error, **slope significance** `b/σ_b`, plus `chi2/ndf`, `Prob`.
+3. **HMS_hEL_CLEAN Charge-Normalized Counts vs Current** (signal only)
+   - Parses report files to get `HMS_hEL_CLEAN` total counts
+   - Charge-normalizes by BCM2_Q from the Pass0p1 bigtable
+   - Fits a **constant** (`pol0`) as another current-stability diagnostic.
 
-All three outputs are saved as **PNG** and **ROOT canvases** (interactive), plus **CSV tables** and **logs**.
+4. **Yield Ratio vs SHMS 3/4 Trigger Rate**
+   - Combines yield and HMS EL-clean diagnostics into a normalized ratio.
+   - Fits the normalized ratio vs trigger rate and converts the slope to a tau estimate.
+
+5. **Coincidence Blocking by Run**
+   - Uses Pass0p1 replay ROOT files to measure a simple coincidence-blocking ratio from raw coincidence time.
+
+6. **Outliers by Current**
+   - Scans existing `yield_vs_current_signal.csv` files and writes a combined list of flagged runs.
+   - Flags both pull outliers and runs excluded from the fit.
+
+Most per-setting products are saved as **PNG**, **ROOT canvases**, **CSV tables**, and **logs**. Summary macros write combined CSV/PNG products under `results/`.
 
 ---
 
@@ -40,13 +58,18 @@ All three outputs are saved as **PNG** and **ROOT canvases** (interactive), plus
 - **Signal-only** plots (focus on diagnosing primary yield stability vs current)
 - Adds **trigger-based diagnostics** using report files:
   - Yield vs SHMS 3/4 trigger rate (kHz)
-  - SHMS_EL_CLEAN vs current (kHz vs current) with **linear** trend test
+  - HMS_hEL_CLEAN counts / BCM2_Q vs current with a **constant** stability test
 - Standardizes output layout:
   - `PNGs/`, `tables/`, `canvases/`, `logs/`
-- Keeps the workflow modular with **three separate macros**:
+- Keeps the workflow modular with separate macros:
   - `YieldVsCurrent.C`
   - `YieldVsTrigger.C`
   - `TriggerVsCurrent.C`
+  - `YieldRatioVsTrigger.C`
+  - `CoincidenceBlockingByRun.C`
+  - `OutlierByCurrent.C`
+  - `TauHistogram.C`
+  - `TauVsRateAndCurrent.C`
 - Does **not** draw a top x-axis (we intentionally decided against multi-axis plots for simplicity)
 
 ---
@@ -56,7 +79,7 @@ All three outputs are saved as **PNG** and **ROOT canvases** (interactive), plus
 ```
 rate_dependence_v1/
   bigtable/
-    rsidis_bigtable_pass0.csv   # master metadata table (current, charge, efficiencies, boil_corr, etc.)
+    rsidis_bigtable_pass0p1.csv # master metadata table (current, charge, efficiencies, boil_corr, etc.)
 
   settings/
     pass4/pi+sidis/LH2/z.../x.../Q.../<setting_id>/
@@ -74,7 +97,12 @@ rate_dependence_v1/
   macros/
     YieldVsCurrent.C            # compute yield (myCTime) from ROOT + random subtraction; plot vs current; const fit
     YieldVsTrigger.C            # read YieldVsCurrent CSV + parse report files; plot yield vs SHMS 3/4 rate; const fit
-    TriggerVsCurrent.C          # parse report files; plot SHMS_EL_CLEAN vs current; linear fit
+    TriggerVsCurrent.C          # HMS_hEL_CLEAN counts / BCM2_Q vs current; const fit
+    YieldRatioVsTrigger.C       # normalized yield/EL-clean ratio vs SHMS 3/4 rate; tau extraction
+    CoincidenceBlockingByRun.C  # coincidence-blocking ratio by run from Pass0p1 replay ROOT files
+    OutlierByCurrent.C          # combined current-yield outlier/problem-run CSV
+    TauHistogram.C              # histogram tau values from yield-ratio outputs
+    TauVsRateAndCurrent.C       # tau summaries vs SHMS 3/4 rate and current
 
   results/
     pass4/pi+sidis/LH2/z.../x.../Q.../<setting_id>/
@@ -83,13 +111,27 @@ rate_dependence_v1/
       canvases/
       logs/
 
-  Skimmed_ROOTfiles -> /work/hallc/c-rsidis/skimfiles/pass0     (symlink)
-  Pass0_REPORTfiles -> ...                                       (symlink; see below)
+  Skimmed_ROOTfiles    -> Pass0p1 skim files                     (symlink)
+  Pass0p1_ROOTfiles    -> Pass0p1 replay ROOT files              (symlink)
+  Pass0p1_REPORTfiles  -> Pass0p1 report files                   (symlink; see below)
 ```
 
 ---
 
 ## Inputs and Conventions
+
+### Generate `settings/`
+The settings tree is generated from the Pass0p1 bigtable. From `rate_dependence_v1/`:
+
+```bash
+python3 tools/generate_settings_tree_rate_v1.py \
+  --bigtable bigtable/rsidis_bigtable_pass0p1.csv \
+  --outdir settings \
+  --targets LH2 LD2 \
+  --run-types coin
+```
+
+This creates `settings/<pass>/<run_type>/<target>/<z>/<x>/<Q2>/<setting_id>/` directories with run lists, `run_metadata.csv`, and `manifest.json`.
 
 ### ROOT files (skimmed)
 We use **skimmed coin ROOT files** via the symlink:
@@ -99,15 +141,20 @@ We use **skimmed coin ROOT files** via the symlink:
 - Branch naming uses underscore format, e.g. `CTime_ePiCoinTime_ROC2`.
 
 ### Report files (trigger rates)
-We use report files via symlink `Pass0_REPORTfiles`:
+We use report files via symlink `Pass0p1_REPORTfiles`:
 
-- `Pass0_REPORTfiles/COIN/PRODUCTION/replay_coin_production_<RUN>_-1.report`
+- `Pass0p1_REPORTfiles/COIN/PRODUCTION/replay_coin_production_<RUN>_-1.report`
 
-We parse two lines (kHz values):
+The macros parse lines such as:
 - SHMS 3/4 trigger rate:
   - `SHMS 3/4 Trigger Rate         : 864.802 kHz`
-- SHMS EL_CLEAN rate:
-  - `SHMS_pEL_CLEAN :    11827351    [ 6.555 kHz ]`
+- HMS EL_CLEAN counts:
+  - `HMS_hEL_CLEAN : 590009    [ 0.327 kHz ]`
+
+### Pass0p1 replay ROOT files
+`CoincidenceBlockingByRun.C` reads full replay ROOT files via:
+
+- `Pass0p1_ROOTfiles/coin_replay_production_<RUN>_-1.root`
 
 ### Bigtable metadata
 Per run metadata is read from `settings/.../run_metadata.csv` (generated from the bigtable).
@@ -120,15 +167,17 @@ Columns used include:
 - `ps5`, `ps6` (prescale; the generator selects which is valid)
 
 ### Cuts (signal yield)
-The signal selection uses the same baseline cuts as used in development:
-- HMS dp cut
-- HMS calorimeter cut
-- HMS Cer cut
-- SHMS dp cut
-- SHMS calorimeter cut
-and coincidence time random subtraction applied to all events passing cuts.
+The signal selection in `YieldVsCurrent.C` uses:
+- HMS acceptance: `-8 < H_gtr_dp < 8`
+- HMS electron ID: `H_cal_etottracknorm > 0.7`, `H_cer_npeSum > 2.0`
+- SHMS acceptance: `-10 < P_gtr_dp < 22`
+- SHMS pion/hadron selection: `P_cal_etottracknorm < 0.8`
 
-(See `YieldVsCurrent.C` for the exact cut string and random subtraction windows.)
+Coincidence-time random subtraction uses:
+- branch: `CTime_ePiCoinTime_ROC2`
+- peak-search window: `5 ns < CTime_ePiCoinTime_ROC2 < 70 ns`
+- signal window: peak center ± 1 ns
+- random windows: side windows with the same half-width, shifted by ±2 and ±3 RF periods with RF period = 4 ns
 
 ---
 
@@ -172,15 +221,72 @@ Includes constant-fit summary (C, chi2/ndf, Prob) in plot and/or CSV summary lin
 
 ### 3) TriggerVsCurrent.C
 - PNG:
-  - `PNGs/shms_elclean_vs_current.png`
+  - `PNGs/hms_elclean_chargeNorm_vs_current.png`
 - ROOT canvas:
-  - `canvases/shms_elclean_vs_current.root`
+  - `canvases/hms_elclean_chargeNorm_vs_current.root`
 - CSV:
-  - `tables/shms_elclean_vs_current.csv`
+  - `tables/hms_elclean_chargeNorm_vs_current.csv`
 - Log:
   - `logs/TriggerVsCurrent.log`
 
-This plot uses a linear fit. The slope significance `b/σ_b` is a quick “how many sigmas away from zero slope” metric.
+This diagnostic uses `HMS_hEL_CLEAN` total counts divided by BCM2_Q, with Poisson uncertainty `sqrt(N)/Q`, plotted against BCM2 current and fit with a constant.
+
+### 4) YieldRatioVsTrigger.C
+- PNG:
+  - `PNGs/yield_ratio_vs_trigger_shms34.png`
+- ROOT canvas:
+  - `canvases/yield_ratio_vs_trigger_shms34.root`
+- CSV:
+  - `tables/yield_ratio_vs_trigger_shms34.csv`
+- Log:
+  - `logs/YieldRatioVsTrigger.log`
+
+This macro reads `yield_vs_trigger_shms34.csv` and `hms_elclean_chargeNorm_vs_current.csv`.
+It builds a raw ratio, normalizes it by the zero-rate intercept, then fits the normalized ratio vs SHMS 3/4 rate to extract a tau estimate.
+
+### 5) CoincidenceBlockingByRun.C
+- CSV:
+  - `tables/coincidence_blocking_by_run.csv`
+- Log:
+  - `logs/CoincidenceBlockingByRun.log`
+
+The blocking ratio is:
+
+```text
+coincidence_blocking_ratio = ctime_good_withstart / ctime_raw_withstart
+```
+
+where `ctime_raw_withstart` uses raw coincidence time in `[-400,400] ns` plus HMS/SHMS good-start-time cuts, and `ctime_good_withstart` additionally requires `5 < CTime.CoinTime_RAW_ROC2 < 70`.
+
+### 6) OutlierByCurrent.C
+- Combined CSV:
+  - `results/outliers/outliers_by_current.csv`
+
+Run from `rate_dependence_v1/`:
+
+```bash
+root -l -b -q macros/OutlierByCurrent.C
+```
+
+It scans all `results/pass4/**/tables/yield_vs_current_signal.csv` and `results/pass5/**/tables/yield_vs_current_signal.csv`.
+It reports:
+- `outlier_by_pull`: valid fitted runs with `abs_pull > 3`
+- `excluded_from_fit`: runs excluded from the fit or with invalid yield/yield_err inputs
+
+where:
+
+```text
+abs_pull = |(yield - fit_const) / yield_err|
+```
+
+### 7) Tau summary macros
+- `TauHistogram.C`
+  - reads all `yield_ratio_vs_trigger_shms34.csv` files
+  - writes `results/tau/tau_hist_all.png`
+- `TauVsRateAndCurrent.C`
+  - reads all yield-ratio outputs
+  - writes `results/tau/tau_vs_shms34.png`
+  - writes `results/tau/tau_vs_current.png`
 
 ---
 
@@ -242,6 +348,49 @@ foreach mf (`find settings -name manifest.json | sort`)
 end
 ```
 
+### D) Run YieldRatioVsTrigger for all settings
+(Requires `YieldVsTrigger.C` and `TriggerVsCurrent.C` outputs.)
+
+```tcsh
+set RESULTS = "$cwd/results"
+
+foreach mf (`find settings -name manifest.json | sort`)
+  set rel = `echo "$mf" | sed 's|^settings/||'`
+  set rel_dir = `echo "$rel" | sed 's|/manifest.json$||'`
+
+  mkdir -p "$RESULTS/$rel_dir/logs"
+
+  echo "RUN YieldRatioVsTrigger: $mf"
+  root -l -b -q 'macros/YieldRatioVsTrigger.C("'"$cwd/$mf"'","'"$RESULTS"'")' \
+    >&! "$RESULTS/$rel_dir/logs/YieldRatioVsTrigger.batch.log"
+end
+```
+
+### E) Run CoincidenceBlockingByRun for all settings
+```tcsh
+set RESULTS = "$cwd/results"
+
+foreach mf (`find settings -name manifest.json | sort`)
+  set rel = `echo "$mf" | sed 's|^settings/||'`
+  set rel_dir = `echo "$rel" | sed 's|/manifest.json$||'`
+
+  mkdir -p "$RESULTS/$rel_dir/logs"
+
+  echo "RUN CoincidenceBlockingByRun: $mf"
+  root -l -b -q 'macros/CoincidenceBlockingByRun.C("'"$cwd/$mf"'","'"$RESULTS"'")' \
+    >&! "$RESULTS/$rel_dir/logs/CoincidenceBlockingByRun.batch.log"
+end
+```
+
+### F) Run summary macros
+From `rate_dependence_v1/`:
+
+```bash
+root -l -b -q macros/OutlierByCurrent.C
+root -l -b -q macros/TauHistogram.C
+root -l -b -q macros/TauVsRateAndCurrent.C
+```
+
 ### Optional: run in a screen session
 ```tcsh
 screen -S rateDep
@@ -264,8 +413,12 @@ This is tcsh-safe and avoids nested quote issues.
 
 ### Missing report file or missing trigger lines
 - The macros will mark runs as `MISSING_REPORT` or `MISSING_*_LINE` in the CSV and log.
-- Verify your symlink `Pass0_REPORTfiles` points to the correct location and contains:
+- Verify your symlink `Pass0p1_REPORTfiles` points to the correct location and contains:
   `COIN/PRODUCTION/replay_coin_production_<RUN>_-1.report`
+
+### Missing replay ROOT file for coincidence blocking
+- `CoincidenceBlockingByRun.C` marks runs as `NOFILE` if the replay ROOT file is missing.
+- Verify `Pass0p1_ROOTfiles/coin_replay_production_<RUN>_-1.root` exists or that the symlink points to the correct cdaq location.
 
 ### `boil_corr = -999`
 - v1 flags `-999` values in logs and runtime warnings (diagnostic intent).
@@ -284,8 +437,11 @@ Then in the GUI: right-click axis → “UnZoom” or use the toolbar “Reset�
 
 - The constant fit in Yield vs Current / Yield vs Trigger is a direct test of stability:
   - If the yield is independent of current, the constant fit should describe data well (reasonable chi2/ndf and Prob).
-- TriggerVsCurrent uses a linear fit because trigger rate is expected to scale with current.
-  - Slope significance `b/σ_b` quantifies whether the observed slope differs from zero (in sigma units).
+- TriggerVsCurrent checks whether charge-normalized HMS EL-clean counts are stable vs current.
+- YieldRatioVsTrigger is the tau-extraction diagnostic built from the yield and HMS EL-clean summaries.
+- OutlierByCurrent is intended as a review aid, not an automatic run-removal list.
+  - `outlier_by_pull` means statistically far from the setting's constant yield fit.
+  - `excluded_from_fit` means the run did not have valid inputs for the fit and should be investigated separately.
 
 ---
 
@@ -293,4 +449,3 @@ Then in the GUI: right-click axis → “UnZoom” or use the toolbar “Reset�
 
 This v1 workflow is maintained by RSIDIS analyzers in the RP_Scripts repository.
 For questions, contact the current analyzer responsible for rate dependence studies.
-

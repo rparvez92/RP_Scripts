@@ -1,0 +1,7 @@
+category,run,ctime_raw_withstart,ctime_good_withstart,coinc_blocking_ratio,rootfile,status
+signal,23964,nan,nan,nan,"./Pass0_ROOTfiles/coin_replay_production_23964_-1.root",NOFILE
+signal,23965,nan,nan,nan,"./Pass0_ROOTfiles/coin_replay_production_23965_-1.root",NOFILE
+signal,23966,nan,nan,nan,"./Pass0_ROOTfiles/coin_replay_production_23966_-1.root",NOFILE
+positron,24572,nan,nan,nan,"./Pass0_ROOTfiles/coin_replay_production_24572_-1.root",NOFILE
+dummy,23967,nan,nan,nan,"./Pass0_ROOTfiles/coin_replay_production_23967_-1.root",NOFILE
+positron_dummy,24576,nan,nan,nan,"./Pass0_ROOTfiles/coin_replay_production_24576_-1.root",NOFILE

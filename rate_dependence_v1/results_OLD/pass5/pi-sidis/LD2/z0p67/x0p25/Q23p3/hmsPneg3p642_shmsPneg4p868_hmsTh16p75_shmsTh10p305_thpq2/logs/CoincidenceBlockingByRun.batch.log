@@ -1,0 +1,9 @@
+Reading startup commands from /home/cdaq/.root/rootlogon.C
+
+Processing macros/CoincidenceBlockingByRun.C("/home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi-sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsPneg4p868_hmsTh16p75_shmsTh10p305_thpq2/manifest.json","/home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results")...
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_25138_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_25139_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_25140_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_25141_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_25154_-1.root not a ROOT file
+Error in <TFile::Init>: ./Pass0_ROOTfiles/coin_replay_production_25171_-1.root not a ROOT file

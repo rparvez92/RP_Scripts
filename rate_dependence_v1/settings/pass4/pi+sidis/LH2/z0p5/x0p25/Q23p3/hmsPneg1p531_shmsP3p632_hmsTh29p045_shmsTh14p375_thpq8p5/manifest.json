@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "bigtable": "/home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/bigtable/rsidis_bigtable_pass0.csv",
+  "bigtable": "/home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/bigtable/rsidis_bigtable_pass0p1.csv",
   "path_keys": {
     "pass": "pass4",
     "run_type": "pi+sidis",

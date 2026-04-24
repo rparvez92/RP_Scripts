@@ -6,10 +6,12 @@ results_base: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pas
 log: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/logs/YieldVsCurrent.log
 
 Loaded rows from run_metadata.csv: 7
+Loaded rows from coincidence_blocking_by_run.csv: 7
 
 Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/tables/yield_vs_current_signal.csv
-Fit constant C = 92.8743 +- 0.261997
-chi2=73.5551 ndf=4 chi2/ndf=18.3888 prob=4.02677e-15
-Global ranges: X=[23.4843,49.1447]  Y=[88.3261,97.0825]
+Fit constant C = 97.1685 +- 0.273731
+chi2=45.9807 ndf=4 chi2/ndf=11.4952 prob=2.48575e-09
+Global ranges: X=[23.5986,49.3854]  Y=[93.0303,100.777]
 Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/PNGs/yield_vs_current.png
 Wrote ROOT: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/canvases/yield_vs_current.root
+Appended fit summary to CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LD2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/tables/yield_vs_current_signal.csv

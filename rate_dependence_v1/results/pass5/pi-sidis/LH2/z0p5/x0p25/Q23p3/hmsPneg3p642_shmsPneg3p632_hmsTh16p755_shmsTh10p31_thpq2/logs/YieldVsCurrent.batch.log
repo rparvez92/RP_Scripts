@@ -1,5 +1,7 @@
 Reading startup commands from /home/cdaq/.root/rootlogon.C
 
 Processing macros/YieldVsCurrent.C("/home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p755_shmsTh10p31_thpq2/manifest.json","/home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results")...
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p755_shmsTh10p31_thpq2/tables/yield_vs_current_signal.csv
 Info in <TCanvas::Print>: png file /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p755_shmsTh10p31_thpq2/PNGs/yield_vs_current.png has been created
 Info in <TCanvas::SaveAs>: ROOT file /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p755_shmsTh10p31_thpq2/canvases/yield_vs_current.root has been created
+Appended fit summary to CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p755_shmsTh10p31_thpq2/tables/yield_vs_current_signal.csv

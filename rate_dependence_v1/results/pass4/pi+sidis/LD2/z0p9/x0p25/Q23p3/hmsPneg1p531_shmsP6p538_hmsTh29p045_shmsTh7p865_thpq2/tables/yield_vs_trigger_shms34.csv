@@ -1,12 +1,12 @@
 category,run,BCM2_I,yield,yield_err,shms34_rate_kHz,rootfile,status
-signal,24200,45.445,6.32291,0.298016,355.375,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24200_-1.root",OK
-signal,24201,46.67,6.15698,0.144481,365.326,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24201_-1.root",OK
-signal,24203,44.024,6.33312,0.120638,343.9,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24203_-1.root",OK
-signal,24204,22.463,6.31644,0.16999,161.789,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24204_-1.root",OK
+signal,24200,45.843,6.77695,0.316607,358.103,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24200_-1.root",OK
+signal,24201,47.245,6.54741,0.15341,369.447,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24201_-1.root",OK
+signal,24203,45.277,6.78443,0.128332,353.31,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24203_-1.root",OK
+signal,24204,23.682,6.69203,0.179619,170.202,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24204_-1.root",OK
 # FIT_MODEL,pol0
-# FIT_C,6.27692845203
-# FIT_Cerr,0.0784507262205
-# FIT_chi2,0.984024722207
+# FIT_C,6.69419869006
+# FIT_Cerr,0.0832808152389
+# FIT_chi2,1.47836218448
 # FIT_ndf,3
-# FIT_chi2ndf,0.328008240736
-# FIT_prob,0.805117423571
+# FIT_chi2ndf,0.492787394826
+# FIT_prob,0.6872732553

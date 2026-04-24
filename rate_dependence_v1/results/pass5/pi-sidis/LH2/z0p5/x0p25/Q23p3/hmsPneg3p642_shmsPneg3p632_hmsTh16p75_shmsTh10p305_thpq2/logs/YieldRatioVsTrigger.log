@@ -7,17 +7,19 @@ log: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sid
 Loaded /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p75_shmsTh10p305_thpq2/tables/yield_vs_trigger_shms34.csv: rows=15, signal=8, runs=8
 Loaded /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p75_shmsTh10p305_thpq2/tables/hms_elclean_chargeNorm_vs_current.csv: rows=15, signal=8, runs=8
 Fit1 (raw): r = a + b*R
-  range_kHz: [283.946, 586.699]
-  a = 0.000192479329688 +/- 2.91228324079e-06
-  b = -1.78242103988e-08 +/- 6.05172931608e-09 (per kHz)
-  chi2/ndf = 0.826333391087 (6), prob=0.549211099851
+  range_kHz: [284.205, 590.132]
+  a = 0.00020147253385 +/- 3.07881749436e-06
+  b = -1.16999452956e-08 +/- 6.38836941154e-09 (per kHz)
+  chi2/ndf = 11.1121619725 (6), prob=1.96335132998e-12
 
+WARNING (STRONG): Fit1 probability is very small (<1e-4). Linear model may be insufficient or data inconsistent.
 Fit2 (norm): y = 1 + m*R
-  range_kHz: [283.946, 586.699]
-  m = -9.38747090711e-05 +/- 1.3956186724e-05 (per kHz)
-  tau_ns = 93.8747090711 +/- 13.956186724
-  chi2/ndf = 0.276715376015 (7), prob=0.96324436025
+  range_kHz: [284.205, 590.132]
+  m = -5.40675542464e-05 +/- 1.42997195225e-05 (per kHz)
+  tau_ns = 54.0675542464 +/- 14.2997195225
+  chi2/ndf = 3.8009061128 (7), prob=0.000392248733684
 
+WARNING: Fit2 probability is small (<0.01). Interpret slope/tau with caution.
 Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p75_shmsTh10p305_thpq2/tables/yield_ratio_vs_trigger_shms34.csv
 Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p75_shmsTh10p305_thpq2/PNGs/yield_ratio_vs_trigger_shms34.png
 Wrote ROOT: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsPneg3p632_hmsTh16p75_shmsTh10p305_thpq2/canvases/yield_ratio_vs_trigger_shms34.root

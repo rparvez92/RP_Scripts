@@ -1,0 +1,16 @@
+YieldVsCurrent (v1, signal-only)
+manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass4/pi-sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/manifest.json
+setting_dir: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass4/pi-sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2
+setting_id: hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2
+results_base: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2
+log: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/logs/YieldVsCurrent.log
+
+Loaded rows from run_metadata.csv: 41
+WARNING [run 23904]: boil_corr invalid (-999).
+
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/tables/yield_vs_current_signal.csv
+Fit constant C = 3.34137 +- 0.0354513
+chi2=58.3576 ndf=26 chi2/ndf=2.24452 prob=0.000277688
+Global ranges: X=[6.30714,21.0139]  Y=[2.4679,4.65448]
+Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/PNGs/yield_vs_current.png
+Wrote ROOT: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsPneg2p615_hmsTh29p045_shmsTh7p865_thpq2/canvases/yield_vs_current.root

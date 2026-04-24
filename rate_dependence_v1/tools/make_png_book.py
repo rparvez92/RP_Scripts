@@ -2,13 +2,23 @@
 """
 make_png_book.py
 
-Create a single PDF that contains selected PNGs under:
-  results/**/PNGs/
+Create a single PDF that contains:
+  1) global tau summary PNGs under:
+       results/tau/
+  2) selected per-setting PNGs under:
+       results/**/PNGs/
 
-Only includes (if present) these filenames per setting:
+Global tau PNGs are placed at the beginning of the PDF in this order
+(if present):
+  - tau_hist_all.png
+  - tau_vs_current.png
+  - tau_vs_shms34.png
+
+Default per-setting PNGs included (if present):
   - yield_vs_current.png
   - yield_vs_trigger_shms34.png
   - hms_elclean_chargeNorm_vs_current.png
+  - yield_ratio_vs_trigger_shms34.png
 
 Ordering of settings:
   pass4, then pass5
@@ -17,15 +27,29 @@ Ordering of settings:
         within target: z from low to high
           then tie-break by setting_id alphabetical
 
+For each setting, a title page is inserted before its selected PNGs.
+The tau summary PNGs are not setting-specific and are added without title pages.
+
 Requires:
   ImageMagick 'convert' available in PATH.
 
 Usage:
   cd rate_dependence_v1
-  python3 tools/make_png_book.py --results results -o results/all_settings_pngs.pdf
+  python3 tools/make_png_book.py --results results
+  python3 tools/make_png_book.py --results results --out my_book.pdf
 
 Optional:
-  --include yield_vs_current.png --include yield_vs_trigger_shms34.png --include hms_elclean_chargeNorm_vs_current.png
+  --include yield_vs_current.png
+  --include yield_vs_trigger_shms34.png
+  --include hms_elclean_chargeNorm_vs_current.png
+  --include yield_ratio_vs_trigger_shms34.png
+
+Notes:
+  - --include controls only the per-setting PNGs under results/**/PNGs/.
+  - The three tau summary PNGs are always considered separately and, if found,
+    are prepended to the PDF in the fixed order listed above.
+  - The output PDF is always written under results/PDFs/.
+  - If --out is omitted, the default filename is all_settings_pngs.pdf.
 """
 
 import argparse
@@ -36,10 +60,18 @@ import sys
 from collections import defaultdict
 
 
+TAU_SUMMARY_PNGS = [
+    "tau_hist_all.png",
+    "tau_vs_current.png",
+    "tau_vs_shms34.png",
+]
+
+
 DEFAULT_INCLUDES = [
     "yield_vs_current.png",
     "yield_vs_trigger_shms34.png",
     "hms_elclean_chargeNorm_vs_current.png",
+    "yield_ratio_vs_trigger_shms34.png",
 ]
 
 
@@ -153,21 +185,37 @@ def discover_settings_with_pngs(results_top: str):
     return settings
 
 
+def discover_tau_summary_pngs(results_top: str):
+    """
+    Return existing tau summary PNGs in the fixed order defined by
+    TAU_SUMMARY_PNGS.
+    """
+    tau_dir = os.path.join(results_top, "tau")
+    found = []
+    for base in TAU_SUMMARY_PNGS:
+        p = os.path.join(tau_dir, base)
+        if os.path.isfile(p):
+            found.append(p)
+    return found
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--results", default="results", help="Top results dir (default: results)")
-    ap.add_argument("-o", "--out", default="results/all_settings_pngs.pdf", help="Output PDF path")
+    ap.add_argument("-o", "--out", default="all_settings_pngs.pdf",
+                    help="Output PDF filename only (written under <results>/PDFs/). Default: all_settings_pngs.pdf")
     ap.add_argument("--density", type=int, default=150, help="Raster density for title pages/PDF (default: 150)")
     ap.add_argument("--title_pointsize", type=int, default=28, help="Font size for setting title pages (default: 28)")
     ap.add_argument("--quality", type=int, default=95, help="PDF quality/compression (default: 95)")
     ap.add_argument("--include", action="append", default=[],
-                    help="PNG basename to include (repeatable). Default includes 3 standard files.")
+                    help="PNG basename to include (repeatable). Default includes 4 per-setting files.")
     args = ap.parse_args()
 
     includes = args.include if args.include else list(DEFAULT_INCLUDES)
 
     convert = find_convert()
 
+    tau_pages = discover_tau_summary_pngs(args.results)
     settings = discover_settings_with_pngs(args.results)
     if not settings:
         print(f"ERROR: No PNGs directories found under: {args.results}")
@@ -198,14 +246,18 @@ def main():
             key=lambda p: (include_rank.get(os.path.basename(p), 999), natural_key(p))
         )
 
-    ordered_pages = []
+    ordered_pages = list(tau_pages)
     for sd in setting_dirs:
         setting_id = os.path.basename(sd)
         ordered_pages.append(f"label:Setting: {setting_id}\\n{sd}")
         ordered_pages.extend(groups[sd])
 
-    out_dir = os.path.dirname(args.out) or "."
+    out_name = os.path.basename(args.out)
+    if not out_name.lower().endswith(".pdf"):
+        out_name += ".pdf"
+    out_dir = os.path.join(args.results, "PDFs")
     os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, out_name)
 
     cmd = [
         convert,
@@ -216,11 +268,12 @@ def main():
         "-pointsize", str(args.title_pointsize),
     ]
     cmd += ordered_pages
-    cmd += ["-quality", str(args.quality), args.out]
+    cmd += ["-quality", str(args.quality), out_path]
 
     print(f"[INFO] Settings with selected PNGs: {len(setting_dirs)}")
+    print(f"[INFO] Tau summary pages found:      {len(tau_pages)}")
     print(f"[INFO] Selected PNG pages found:   {total_found}")
-    print(f"[INFO] Writing:                   {args.out}")
+    print(f"[INFO] Writing:                   {out_path}")
     print(f"[INFO] Running:                   convert (pages={len(ordered_pages)})")
     print(f"[INFO] Including files:           {', '.join(includes)}")
 
@@ -232,7 +285,7 @@ def main():
         print("In that case we can switch to a gs-based merge workflow.")
         sys.exit(e.returncode)
 
-    print(f"[OK] Wrote: {args.out}")
+    print(f"[OK] Wrote: {out_path}")
 
 
 if __name__ == "__main__":

@@ -1,24 +1,24 @@
 category,run,BCM2_I,yield,yield_err,shms34_rate_kHz,rootfile,status
-signal,24097,14.584,9.00384,1.13418,896.977,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24097_-1.root",OK
-signal,24098,13.874,7.05869,0.281316,854.894,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24098_-1.root",OK
-signal,24099,13.858,7.08453,0.276512,853.86,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24099_-1.root",OK
-signal,24100,13.558,7.10459,0.295883,835.829,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24100_-1.root",OK
-signal,24101,13.636,6.98573,0.27235,840.901,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24101_-1.root",OK
-signal,24103,9.878,7.41677,0.308781,616.962,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24103_-1.root",OK
-signal,24104,13.703,7.21237,0.24089,844.544,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24104_-1.root",OK
-signal,24110,13.611,6.82842,0.283005,839.205,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24110_-1.root",OK
-signal,24111,14.077,6.33632,0.272955,867.188,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24111_-1.root",OK
-signal,24112,14.14,6.58599,0.26452,871.227,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24112_-1.root",OK
-signal,24113,9.052,7.39329,0.314377,567.491,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24113_-1.root",OK
-signal,24158,14.126,6.45927,0.256561,870.191,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24158_-1.root",OK
-signal,24159,13.879,6.72639,0.264066,855.081,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24159_-1.root",OK
-signal,24160,14.265,6.39397,0.257117,878.401,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24160_-1.root",OK
-signal,24161,14.103,6.50663,0.269817,868.412,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24161_-1.root",OK
-signal,24185,14.045,6.39484,0.266768,864.894,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24185_-1.root",OK
+signal,24097,14.638,9.45609,1.18623,896.977,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24097_-1.root",OK
+signal,24098,14.02,7.27993,0.292562,860.482,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24098_-1.root",OK
+signal,24099,13.978,7.41409,0.288949,857.906,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24099_-1.root",OK
+signal,24100,13.757,7.33809,0.306939,844.709,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24100_-1.root",OK
+signal,24101,13.773,7.41892,0.28589,846.022,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24101_-1.root",OK
+signal,24103,10.015,7.8011,0.321655,622.078,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24103_-1.root",OK
+signal,24104,13.971,7.46628,0.250238,857.702,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24104_-1.root",OK
+signal,24110,13.899,7.08699,0.29513,853.488,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24110_-1.root",OK
+signal,24111,14.223,6.6992,0.286234,872.829,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24111_-1.root",OK
+signal,24112,14.222,6.97,0.277956,872.937,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24112_-1.root",OK
+signal,24113,9.14,7.58963,0.325794,569.603,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24113_-1.root",OK
+signal,24158,14.207,6.76049,0.267424,871.891,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24158_-1.root",OK
+signal,24159,14.12,7.10463,0.277255,866.569,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24159_-1.root",OK
+signal,24160,14.319,6.75665,0.269241,878.401,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24160_-1.root",OK
+signal,24161,14.234,6.72646,0.281054,873.097,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24161_-1.root",OK
+signal,24185,14.129,6.68607,0.279185,866.713,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_24185_-1.root",OK
 # FIT_MODEL,pol0
-# FIT_C,6.81605184394
-# FIT_Cerr,0.0703802206001
-# FIT_chi2,29.0090766157
+# FIT_C,7.12710469375
+# FIT_Cerr,0.0734851858488
+# FIT_chi2,25.751325379
 # FIT_ndf,15
-# FIT_chi2ndf,1.93393844104
-# FIT_prob,0.0160413948611
+# FIT_chi2ndf,1.71675502527
+# FIT_prob,0.0407191608564

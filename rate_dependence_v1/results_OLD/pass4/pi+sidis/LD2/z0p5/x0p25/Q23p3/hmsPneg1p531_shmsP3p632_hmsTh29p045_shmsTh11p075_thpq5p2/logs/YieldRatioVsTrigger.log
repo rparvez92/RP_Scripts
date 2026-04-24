@@ -1,0 +1,25 @@
+YieldRatioVsTrigger (v1, signal-only)
+manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/manifest.json
+setting_dir: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2
+results_base: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2
+log: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/logs/YieldRatioVsTrigger.log
+
+Loaded /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/tables/yield_vs_trigger_shms34.csv: rows=27, signal=20, runs=20
+Loaded /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/tables/hms_elclean_chargeNorm_vs_current.csv: rows=27, signal=20, runs=20
+Fit1 (raw): r = a + b*R
+  range_kHz: [297.514, 918.648]
+  a = 0.000236257784092 +/- 5.85139839446e-06
+  b = -2.11271978088e-08 +/- 7.17093218787e-09 (per kHz)
+  chi2/ndf = 3.29060933804 (18), prob=2.72230766619e-06
+
+WARNING (STRONG): Fit1 probability is very small (<1e-4). Linear model may be insufficient or data inconsistent.
+Fit2 (norm): y = 1 + m*R
+  range_kHz: [297.514, 918.648]
+  m = -9.17224379315e-05 +/- 8.96591945619e-06 (per kHz)
+  tau_ns = 91.7224379315 +/- 8.96591945619
+  chi2/ndf = 1.91528800651 (19), prob=0.00944836246116
+
+WARNING: Fit2 probability is small (<0.01). Interpret slope/tau with caution.
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/tables/yield_ratio_vs_trigger_shms34.csv
+Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/PNGs/yield_ratio_vs_trigger_shms34.png
+Wrote ROOT: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/canvases/yield_ratio_vs_trigger_shms34.root

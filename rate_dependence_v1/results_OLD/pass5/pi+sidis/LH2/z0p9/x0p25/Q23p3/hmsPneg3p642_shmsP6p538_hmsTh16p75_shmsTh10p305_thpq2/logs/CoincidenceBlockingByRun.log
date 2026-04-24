@@ -1,0 +1,17 @@
+CoincidenceBlockingByRun
+manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi+sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh10p305_thpq2/manifest.json
+setting_dir: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi+sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh10p305_thpq2
+setting_id: hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh10p305_thpq2
+results_base: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh10p305_thpq2
+log: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh10p305_thpq2/logs/CoincidenceBlockingByRun.log
+
+Loaded rows from run_metadata.csv: 7
+WARNING [run 25233]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25233_-1.root
+WARNING [run 25234]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25234_-1.root
+WARNING [run 25235]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25235_-1.root
+WARNING [run 25236]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25236_-1.root
+WARNING [run 25237]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25237_-1.root
+WARNING [run 25240]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25240_-1.root
+WARNING [run 25241]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25241_-1.root
+
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh10p305_thpq2/tables/coincidence_blocking_by_run.csv

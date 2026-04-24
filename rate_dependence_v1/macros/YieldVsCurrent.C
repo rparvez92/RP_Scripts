@@ -1,3 +1,67 @@
+// YieldVsCurrent.C
+//
+// Purpose:
+//   For each signal run in a setting's run_metadata.csv, compute the
+//   charge-normalized coincidence yield using the shared coincidence-time
+//   random-subtraction helper, then plot yield vs BCM2 current.
+//
+// Inputs:
+//   YieldVsCurrent("<abs path>/settings/.../manifest.json", "<abs path>/results")
+//
+// Reads:
+//   <setting_dir>/run_metadata.csv
+//   <results>/<same rel path as manifest>/tables/coincidence_blocking_by_run.csv
+//   ./Skimmed_ROOTfiles/skimmed_coin_replay_production_<RUN>_-1.root
+//
+// Base physics cuts:
+//   HMS acceptance:
+//     -8 < H_gtr_dp < 8
+//
+//   HMS electron ID:
+//     H_cal_etottracknorm > 0.7
+//     H_cer_npeSum > 2.0
+//
+//   SHMS acceptance:
+//     -10 < P_gtr_dp < 22
+//
+//   SHMS pion / hadron selection:
+//     P_cal_etottracknorm < 0.8
+//
+// Coincidence-time random subtraction:
+//   Coincidence branch:
+//     CTime_ePiCoinTime_ROC2
+//
+//   Peak-search window:
+//     5 ns < CTime_ePiCoinTime_ROC2 < 70 ns
+//
+//   Signal coincidence window:
+//     peak center +/- 1 ns
+//
+//   Random windows:
+//     side windows with the same +/- 1 ns half-width, shifted from the
+//     fitted peak by +/-2 and +/-3 RF periods, using RF period = 4 ns.
+//
+// Corrections / normalization:
+//   yield = Nnet * (boil_corr * ps_factor)
+//                 / (comp_livetime * h_esing_Eff * coincidence_blocking_ratio * BCM2_Q)
+//
+// Writes:
+//   <results>/<same rel path as manifest>/tables/yield_vs_current_signal.csv
+//   <results>/<same rel path as manifest>/PNGs/yield_vs_current.png
+//   <results>/<same rel path as manifest>/canvases/yield_vs_current.root
+//   <results>/<same rel path as manifest>/logs/YieldVsCurrent.log
+//
+// Fit:
+//   Fits the valid signal points with a constant (pol0). The fit summary is
+//   appended to yield_vs_current_signal.csv as #FIT lines.
+//
+// Single-setting run example:
+//   root -l -b -q 'macros/YieldVsCurrent.C("settings/pass5/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh7p51_thpqneg0p8/manifest.json","results")'
+//
+// Batch use:
+//   Run this over each settings/**/manifest.json, writing logs under the
+//   corresponding results/<rel>/logs/ directory.
+
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -121,6 +185,12 @@ struct MetaRow {
   std::string run_type_raw;
 };
 
+struct BlockingRow {
+  int run = -1;
+  double ratio = NAN;
+  std::string status;
+};
+
 static std::vector<MetaRow> ReadRunMetadata(const std::string& path, std::ostream& log) {
   std::vector<MetaRow> rows;
   std::ifstream f(path);
@@ -172,6 +242,46 @@ static std::vector<MetaRow> ReadRunMetadata(const std::string& path, std::ostrea
   return rows;
 }
 
+static std::unordered_map<int, BlockingRow>
+ReadBlockingByRun(const std::string& path, std::ostream& log) {
+  std::unordered_map<int, BlockingRow> out;
+  std::ifstream f(path);
+  if (!f.is_open()) {
+    log << "ERROR: cannot open " << path << "\n";
+    return out;
+  }
+
+  std::string header;
+  if (!std::getline(f, header)) return out;
+
+  auto cols = SplitCSVLine(header);
+  std::unordered_map<std::string,int> idx;
+  for (int i=0; i<(int)cols.size(); ++i) idx[cols[i]] = i;
+
+  auto col = [&](const std::vector<std::string>& r, const std::string& name)->std::string{
+    auto it = idx.find(name);
+    if (it == idx.end()) return "";
+    int j = it->second;
+    if (j < 0 || j >= (int)r.size()) return "";
+    return r[j];
+  };
+
+  std::string line;
+  while (std::getline(f, line)) {
+    if (line.empty()) continue;
+    auto r = SplitCSVLine(line);
+
+    BlockingRow b;
+    try { b.run = std::stoi(col(r, "run")); } catch (...) { continue; }
+    b.ratio  = SafeToD(col(r, "coinc_blocking_ratio"));
+    b.status = col(r, "status");
+    out[b.run] = b;
+  }
+
+  log << "Loaded rows from coincidence_blocking_by_run.csv: " << out.size() << "\n";
+  return out;
+}
+
 // ---------- main ----------
 void YieldVsCurrent(const char* manifestPath,
                     const char* resultsDir)
@@ -217,6 +327,14 @@ void YieldVsCurrent(const char* manifestPath,
     return;
   }
 
+  // Read coincidence-blocking ratios for the same setting
+  const std::string blockingPath = outTabs + "/coincidence_blocking_by_run.csv";
+  auto blockingByRun = ReadBlockingByRun(blockingPath, log);
+  if (blockingByRun.empty()) {
+    log << "ERROR: no blocking rows. Run CoincidenceBlockingByRun.C first.\n";
+    return;
+  }
+
   // Physics cuts
   const TString baseCuts =
       "(H_gtr_dp>-8) && (H_gtr_dp<8) && "
@@ -235,7 +353,7 @@ void YieldVsCurrent(const char* manifestPath,
   csv << "category,run,BCM2_I,"
       << "Nnet,Nnet_err,"
       << "norm_factor,yield,yield_err,"
-      << "BCM2_Q_mC,comp_livetime,h_esing_Eff,boil_corr,ps_choice,ps_factor,"
+      << "BCM2_Q_mC,comp_livetime,h_esing_Eff,coincidence_blocking_ratio,boil_corr,ps_choice,ps_factor,"
       << "PeakCenterNs,CoinLoNs,CoinHiNs,RandomWindowListNs,rootfile,status,"
       << "fit_included,fit_excluded_reason\n";
 
@@ -258,6 +376,7 @@ void YieldVsCurrent(const char* manifestPath,
     const std::string rootfile = Form("%s/skimmed_coin_replay_production_%d_-1.root", skimDir.c_str(), run);
 
     std::string status = "OK";
+    double coinc_blocking_ratio = NAN;
 
     // Validate normalization scalars
     bool badNorm = false;
@@ -277,6 +396,23 @@ void YieldVsCurrent(const char* manifestPath,
     if (IsBadSentinel(m.ps_factor) || m.ps_factor <= 0) {
       warn(run, Form("ps_factor invalid (%.6g).", m.ps_factor)); badNorm = true;
     }
+    auto bit = blockingByRun.find(run);
+    if (bit == blockingByRun.end()) {
+      warn(run, "Missing coincidence_blocking_ratio row.");
+      badNorm = true;
+      status = "NOBLOCKINGROW";
+    } else {
+      coinc_blocking_ratio = bit->second.ratio;
+      if (bit->second.status != "OK") {
+        warn(run, "Coincidence blocking status not OK: " + bit->second.status);
+        badNorm = true;
+        status = "BADBLOCKING";
+      } else if (!std::isfinite(coinc_blocking_ratio) || coinc_blocking_ratio <= 0.0) {
+        warn(run, Form("coincidence_blocking_ratio invalid (%.6g).", coinc_blocking_ratio));
+        badNorm = true;
+        status = "BADBLOCKING";
+      }
+    }
 
     // Open ROOT file
     std::unique_ptr<TFile> f(TFile::Open(rootfile.c_str(), "READ"));
@@ -286,7 +422,7 @@ void YieldVsCurrent(const char* manifestPath,
       csv << m.category << "," << run << "," << m.BCM2_I << ","
           << "nan,nan,"
           << "nan,nan,nan,"
-          << m.BCM2_Q << "," << m.comp_livetime << "," << m.h_esing_Eff << "," << m.boil_corr << ","
+          << m.BCM2_Q << "," << m.comp_livetime << "," << m.h_esing_Eff << "," << coinc_blocking_ratio << "," << m.boil_corr << ","
           << "\"" << m.ps_choice << "\"," << m.ps_factor << ","
           << "nan,nan,nan,"
           << "\"\","
@@ -303,7 +439,7 @@ void YieldVsCurrent(const char* manifestPath,
       csv << m.category << "," << run << "," << m.BCM2_I << ","
           << "nan,nan,"
           << "nan,nan,nan,"
-          << m.BCM2_Q << "," << m.comp_livetime << "," << m.h_esing_Eff << "," << m.boil_corr << ","
+          << m.BCM2_Q << "," << m.comp_livetime << "," << m.h_esing_Eff << "," << coinc_blocking_ratio << "," << m.boil_corr << ","
           << "\"" << m.ps_choice << "\"," << m.ps_factor << ","
           << "nan,nan,nan,"
           << "\"\","
@@ -323,11 +459,12 @@ void YieldVsCurrent(const char* manifestPath,
     double yy = NAN, yerr = NAN;
 
     if (!badNorm) {
-      norm_factor = (m.boil_corr * m.ps_factor) / (m.comp_livetime * m.h_esing_Eff * m.BCM2_Q);
+      norm_factor = (m.boil_corr * m.ps_factor)
+                  / (m.comp_livetime * m.h_esing_Eff * coinc_blocking_ratio * m.BCM2_Q);
       yy   = Nnet    * norm_factor;
       yerr = NnetErr * norm_factor;
     } else {
-      status = "BADMETA";
+      if (status == "OK") status = "BADMETA";
     }
 
     // Fit inclusion logic: we skip zero/nan errors for fit, but still report
@@ -351,7 +488,7 @@ void YieldVsCurrent(const char* manifestPath,
     csv << m.category << "," << run << "," << m.BCM2_I << ","
         << Nnet << "," << NnetErr << ","
         << norm_factor << "," << yy << "," << yerr << ","
-        << m.BCM2_Q << "," << m.comp_livetime << "," << m.h_esing_Eff << "," << m.boil_corr << ","
+        << m.BCM2_Q << "," << m.comp_livetime << "," << m.h_esing_Eff << "," << coinc_blocking_ratio << "," << m.boil_corr << ","
         << "\"" << m.ps_choice << "\"," << m.ps_factor << ","
         << R.PeakCenterNs << "," << R.CoinWindowNs.first << "," << R.CoinWindowNs.second << ","
         << "\"" << randList << "\"" << ","
@@ -384,6 +521,7 @@ void YieldVsCurrent(const char* manifestPath,
 
   csv.close();
   log << "\nWrote CSV: " << outCsv << "\n";
+  std::cout << "Wrote CSV: " << outCsv << "\n";
 
   const std::string outPng      = outPNGs + "/yield_vs_current.png";
   const std::string outRootFile = outCanv + "/yield_vs_current.root";
@@ -547,6 +685,8 @@ void YieldVsCurrent(const char* manifestPath,
       csv2 << "#FIT,nan,nan,nan,-1,nan,nan," << fx.size() << "\n";
     }
   }
+  log << "Appended fit summary to CSV: " << outCsv << "\n";
+  std::cout << "Appended fit summary to CSV: " << outCsv << "\n";
 
   if (gFit) delete gFit;
   if (fconst) delete fconst;

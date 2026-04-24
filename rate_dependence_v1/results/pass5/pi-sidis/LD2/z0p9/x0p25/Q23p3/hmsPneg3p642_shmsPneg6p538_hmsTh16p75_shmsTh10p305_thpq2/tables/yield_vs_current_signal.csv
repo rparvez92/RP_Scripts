@@ -1,6 +1,6 @@
-category,run,BCM2_I,Nnet,Nnet_err,norm_factor,yield,yield_err,BCM2_Q_mC,comp_livetime,h_esing_Eff,boil_corr,ps_choice,ps_factor,PeakCenterNs,CoinLoNs,CoinHiNs,RandomWindowListNs,rootfile,status,fit_included,fit_excluded_reason
-signal,25122,33.778,1073.55,13.21,0.0227036,24.3734,0.299914,44.646,1,0.9982,1.0118,"ps6",1,51.125,50.125,52.125,"42.125-44.125;58.125-60.125;38.125-40.125;62.125-64.125","./Skimmed_ROOTfiles/skimmed_coin_replay_production_25122_-1.root",OK,1,""
-signal,25123,38.641,909.262,12.6666,0.0150323,13.6683,0.190408,67.543,1,0.9982,1.0135,"ps6",1,51.125,50.125,52.125,"42.125-44.125;58.125-60.125;38.125-40.125;62.125-64.125","./Skimmed_ROOTfiles/skimmed_coin_replay_production_25123_-1.root",OK,1,""
-signal,25124,20.018,871.237,11.6809,0.0286915,24.9971,0.335143,35.15,1,0.9985,1.00699,"ps6",1,51.125,50.125,52.125,"42.125-44.125;58.125-60.125;38.125-40.125;62.125-64.125","./Skimmed_ROOTfiles/skimmed_coin_replay_production_25124_-1.root",OK,1,""
+category,run,BCM2_I,Nnet,Nnet_err,norm_factor,yield,yield_err,BCM2_Q_mC,comp_livetime,h_esing_Eff,coincidence_blocking_ratio,boil_corr,ps_choice,ps_factor,PeakCenterNs,CoinLoNs,CoinHiNs,RandomWindowListNs,rootfile,status,fit_included,fit_excluded_reason
+signal,25122,34.127,1086.86,13.2973,0.0235857,25.6344,0.313625,44.694,1,0.999,0.960912,1.01192,"ps6",1,51.125,50.125,52.125,"42.125-44.125;58.125-60.125;38.125-40.125;62.125-64.125","./Skimmed_ROOTfiles/skimmed_coin_replay_production_25122_-1.root",OK,1,""
+signal,25123,38.863,918.113,12.7377,0.0156683,14.3852,0.199578,67.619,1,0.9987,0.957923,1.01357,"ps6",1,51.125,50.125,52.125,"42.125-44.125;58.125-60.125;38.125-40.125;62.125-64.125","./Skimmed_ROOTfiles/skimmed_coin_replay_production_25123_-1.root",OK,1,""
+signal,25124,20.136,876.675,11.7251,0.0295094,25.8701,0.346,35.233,1,0.9991,0.969451,1.00703,"ps6",1,51.125,50.125,52.125,"42.125-44.125;58.125-60.125;38.125-40.125;62.125-64.125","./Skimmed_ROOTfiles/skimmed_coin_replay_production_25124_-1.root",OK,1,""
 #FIT,fit_const,fit_const_err,chi2,ndf,chi2_ndf,prob,n_fit_points
-#FIT,18.2872,0.144939,1401.1,2,700.551,5.68343e-305,3
+#FIT,19.2058,0.151401,1374.54,2,687.272,3.32369e-299,3

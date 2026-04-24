@@ -7,16 +7,16 @@ log: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sid
 Loaded /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2/tables/yield_vs_trigger_shms34.csv: rows=13, signal=6, runs=6
 Loaded /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2/tables/hms_elclean_chargeNorm_vs_current.csv: rows=13, signal=6, runs=6
 Fit1 (raw): r = a + b*R
-  range_kHz: [76.593, 151.674]
-  a = 6.45478273044e-05 +/- 2.93617987385e-06
-  b = 4.0294838187e-09 +/- 2.10828254152e-08 (per kHz)
-  chi2/ndf = 1.11741578898 (4), prob=0.346159816273
+  range_kHz: [77.789, 151.85]
+  a = 6.67058837956e-05 +/- 2.96547087388e-06
+  b = -5.43515002975e-09 +/- 2.12134782357e-08 (per kHz)
+  chi2/ndf = 1.32254603391 (4), prob=0.258797223697
 
 Fit2 (norm): y = 1 + m*R
-  range_kHz: [76.593, 151.674]
-  m = 2.41700701018e-05 +/- 0.000171680424735 (per kHz)
-  tau_ns = -24.1700701018 +/- 171.680424735
-  chi2/ndf = 0.444836806077 (5), prob=0.817335149978
+  range_kHz: [77.789, 151.85]
+  m = -0.000123265593095 +/- 0.000164125722522 (per kHz)
+  tau_ns = 123.265593095 +/- 164.125722522
+  chi2/ndf = 0.61365129775 (5), prob=0.689463374433
 
 Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2/tables/yield_ratio_vs_trigger_shms34.csv
 Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2/PNGs/yield_ratio_vs_trigger_shms34.png

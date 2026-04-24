@@ -1,17 +1,17 @@
 TriggerVsCurrent.C
 manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/manifest.json
-resultsTop: results
+resultsTop: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results
 rel: pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2
 WARN: skipping short CSV line: #FIT,fit_const,fit_const_err,chi2,ndf,chi2_ndf,prob,n_fit_points
-WARN: skipping short CSV line: #FIT,8.60046,0.0433811,65.9082,19,3.46885,4.34344e-07,20
-Read 20 rows from: results/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/tables/yield_vs_current_signal.csv
+WARN: skipping short CSV line: #FIT,9.03703,0.0455587,58.5691,19,3.08259,6.50209e-06,20
+Read 20 rows from: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/tables/yield_vs_current_signal.csv
 Loaded BCM2_Q for 1555 runs from bigtable. Bad lines: 0
 Repo root:   /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1
-Bigtable:    /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/bigtable/rsidis_bigtable_pass0.csv
-Report dir:  /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/Pass0_REPORTfiles/COIN/PRODUCTION
+Bigtable:    /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/bigtable/rsidis_bigtable_pass0p1.csv
+Report dir:  /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/Pass0p1_REPORTfiles/COIN/PRODUCTION
 Points: OK=20  skipped=0  missingReport=0  missingLine=0  missingBCM2_Q=0  badBCM2_Q=0  badCounts=0
-Fit: c=39210.1 +/- 6.01877
-chi2/ndf=18.797 (19)  prob=3.40739e-64
-Wrote CSV: results/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/tables/hms_elclean_chargeNorm_vs_current.csv
-Wrote PNG: results/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/PNGs/hms_elclean_chargeNorm_vs_current.png
-Wrote ROOT: results/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/canvases/hms_elclean_chargeNorm_vs_current.root
+Fit: c=39151.1 +/- 6.0117
+chi2/ndf=19.3581 (19)  prob=2.1152e-66
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/tables/hms_elclean_chargeNorm_vs_current.csv
+Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/PNGs/hms_elclean_chargeNorm_vs_current.png
+Wrote ROOT: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh11p075_thpq5p2/canvases/hms_elclean_chargeNorm_vs_current.root

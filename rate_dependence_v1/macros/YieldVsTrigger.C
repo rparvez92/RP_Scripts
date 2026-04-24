@@ -6,7 +6,7 @@
 // Reads:
 //   <results>/<same rel path as manifest>/tables/yield_vs_current_signal.csv
 // Report files:
-//   <repo_root>/Pass0_REPORTfiles/COIN/PRODUCTION/replay_coin_production_<RUN>_-1.report
+//   <repo_root>/Pass0p1_REPORTfiles/COIN/PRODUCTION/replay_coin_production_<RUN>_-1.report
 //
 // Writes:
 //   <results>/<rel>/tables/yield_vs_trigger_shms34.csv
@@ -311,7 +311,7 @@ void YieldVsTrigger(const char* manifest_json, const char* results_top) {
 
   // Report directory
   const std::string repoRoot = GuessRepoRootFromManifest(manifestPath);
-  const std::string reportDir = repoRoot + "/Pass0_REPORTfiles/COIN/PRODUCTION";
+  const std::string reportDir = repoRoot + "/Pass0p1_REPORTfiles/COIN/PRODUCTION";
 
   // Parse SHMS 3/4 trigger rate for each run
   int nOK = 0, nSkip = 0, nBadErr = 0, nNoReport = 0, nNoLine = 0;
@@ -407,8 +407,11 @@ void YieldVsTrigger(const char* manifest_json, const char* results_top) {
     fout.Close();
     csv << "# FIT,NO_POINTS\n";
     csv.close();
+    std::cout << "Wrote CSV: " << outCSV << "\n";
+    std::cout << "Wrote ROOT: " << outRoot << "\n";
     log << "Wrote PNG (empty): " << outPng << "\n";
     log << "Wrote ROOT: " << outRoot << "\n";
+    log << "Wrote CSV: " << outCSV << "\n";
     log.close();
     return;
   }
@@ -509,7 +512,9 @@ void YieldVsTrigger(const char* manifest_json, const char* results_top) {
   log << "Fit: C=" << C << " +/- " << Cerr << "  chi2/ndf=" << chi2ndf << " (" << ndf << ")  prob=" << prob
       << "\n";
   log << "Wrote CSV: " << outCSV << "\n";
+  std::cout << "Wrote CSV: " << outCSV << "\n";
   log << "Wrote PNG: " << outPng << "\n";
   log << "Wrote ROOT: " << outRoot << "\n";
+  std::cout << "Wrote ROOT: " << outRoot << "\n";
   log.close();
 }

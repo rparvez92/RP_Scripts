@@ -1,0 +1,22 @@
+CoincidenceBlockingByRun
+manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi-sidis/LH2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsPneg4p868_hmsTh16p75_shmsTh10p305_thpq2/manifest.json
+setting_dir: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi-sidis/LH2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsPneg4p868_hmsTh16p75_shmsTh10p305_thpq2
+setting_id: hmsPneg3p642_shmsPneg4p868_hmsTh16p75_shmsTh10p305_thpq2
+results_base: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsPneg4p868_hmsTh16p75_shmsTh10p305_thpq2
+log: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsPneg4p868_hmsTh16p75_shmsTh10p305_thpq2/logs/CoincidenceBlockingByRun.log
+
+Loaded rows from run_metadata.csv: 12
+WARNING [run 25146]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25146_-1.root
+WARNING [run 25147]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25147_-1.root
+WARNING [run 25148]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25148_-1.root
+WARNING [run 25149]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25149_-1.root
+WARNING [run 25150]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25150_-1.root
+WARNING [run 25151]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25151_-1.root
+WARNING [run 25167]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25167_-1.root
+WARNING [run 25168]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25168_-1.root
+WARNING [run 25169]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25169_-1.root
+WARNING [run 25170]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25170_-1.root
+WARNING [run 25154]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25154_-1.root
+WARNING [run 25171]: cannot open ROOT file: ./Pass0_ROOTfiles/coin_replay_production_25171_-1.root
+
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsPneg4p868_hmsTh16p75_shmsTh10p305_thpq2/tables/coincidence_blocking_by_run.csv

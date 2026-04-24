@@ -11,10 +11,10 @@
 // Reads:
 //   <results>/<same rel path as manifest>/tables/yield_vs_current_signal.csv
 // Bigtable:
-//   <repo_root>/bigtable/rsidis_bigtable_pass0.csv  (columns: run, BCM2_Q)
+//   <repo_root>/bigtable/rsidis_bigtable_pass0p1.csv  (columns: run, BCM2_Q)
 //
 // Report files:
-//   <repo_root>/Pass0_REPORTfiles/COIN/PRODUCTION/replay_coin_production_<RUN>_-1.report
+//   <repo_root>/Pass0p1_REPORTfiles/COIN/PRODUCTION/replay_coin_production_<RUN>_-1.report
 //
 // Extracts from report line like:
 //   HMS_hEL_CLEAN : 590009    [ 0.327 kHz ]
@@ -339,7 +339,7 @@ void TriggerVsCurrent(const char* manifest_json, const char* results_top) {
 
   // Bigtable run -> BCM2_Q
   const std::string repoRoot = GuessRepoRootFromManifest(manifestPath);
-  const std::string bigtableCSV = repoRoot + "/bigtable/rsidis_bigtable_pass0.csv";
+  const std::string bigtableCSV = repoRoot + "/bigtable/rsidis_bigtable_pass0p1.csv";
   std::map<int,double> run2q;
   if (!ReadBigtableBCM2Q(bigtableCSV, run2q, log)) {
     std::cerr << "ERROR: failed reading bigtable BCM2_Q: " << bigtableCSV << "\n";
@@ -348,7 +348,7 @@ void TriggerVsCurrent(const char* manifest_json, const char* results_top) {
   }
 
   // Report dir
-  const std::string reportDir = repoRoot + "/Pass0_REPORTfiles/COIN/PRODUCTION";
+  const std::string reportDir = repoRoot + "/Pass0p1_REPORTfiles/COIN/PRODUCTION";
 
   int nOK = 0, nSkip = 0, nNoReport = 0, nNoLine = 0, nNoQ = 0, nBadQ = 0, nBadN = 0;
 
@@ -477,8 +477,11 @@ void TriggerVsCurrent(const char* manifest_json, const char* results_top) {
     fout.Close();
     csv << "# FIT,NO_POINTS\n";
     csv.close();
+    std::cout << "Wrote CSV: " << outCSV << "\n";
+    std::cout << "Wrote ROOT: " << outRoot << "\n";
     log << "Wrote PNG (empty): " << outPng << "\n";
     log << "Wrote ROOT: " << outRoot << "\n";
+    log << "Wrote CSV: " << outCSV << "\n";
     log.close();
     return;
   }
@@ -577,7 +580,9 @@ void TriggerVsCurrent(const char* manifest_json, const char* results_top) {
   log << "Fit: c=" << c0 << " +/- " << c0err << "\n";
   log << "chi2/ndf=" << chi2ndf << " (" << ndf << ")  prob=" << prob << "\n";
   log << "Wrote CSV: " << outCSV << "\n";
+  std::cout << "Wrote CSV: " << outCSV << "\n";
   log << "Wrote PNG: " << outPng << "\n";
   log << "Wrote ROOT: " << outRoot << "\n";
+  std::cout << "Wrote ROOT: " << outRoot << "\n";
   log.close();
 }

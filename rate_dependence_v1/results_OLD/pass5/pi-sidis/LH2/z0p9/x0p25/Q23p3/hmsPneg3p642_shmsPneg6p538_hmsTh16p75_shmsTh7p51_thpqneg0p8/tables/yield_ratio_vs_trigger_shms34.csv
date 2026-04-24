@@ -1,0 +1,32 @@
+# YieldRatioVsTrigger
+# manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh7p51_thpqneg0p8/manifest.json
+# rel_under_settings: pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh7p51_thpqneg0p8
+# inputs:
+#   /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh7p51_thpqneg0p8/tables/yield_vs_trigger_shms34.csv
+#   /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh7p51_thpqneg0p8/tables/hms_elclean_chargeNorm_vs_current.csv
+# N_total: 5
+# N_valid_for_fit1: 5
+# N_valid_for_fit2: 5
+# fit1_model: raw_ratio = a + b*x   (x in kHz)
+# fit1_a: 0.000103144877008
+# fit1_a_err: 2.70622632791e-06
+# fit1_b_per_kHz: -1.61465629549e-08
+# fit1_b_err_per_kHz: 3.92102124321e-09
+# fit1_chi2: 2.01269098258
+# fit1_ndf: 3
+# fit1_prob: 0.569776826439
+# fit2_model: y_norm = 1 + m*x   (x in kHz)
+# fit2_m_per_kHz: -0.000157546615609
+# fit2_m_err_per_kHz: 1.85976859348e-05
+# tau_ns: 157.546615609
+# tau_ns_err: 18.5976859348
+# fit2_chi2: 0.643179296717
+# fit2_ndf: 4
+# fit2_prob: 0.958146722945
+
+run,shms34_rate_kHz,yield,yield_err,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,raw_ratio,raw_ratio_err,ynorm,ynorm_err,status_yield_csv,status_elclean_csv,join_flag,use_in_fit,reason
+25016,746.378,12.828,0.222146,139262.8761,52.35266678,9.211356507e-05,1.595531722e-06,0.8930503167,0.028076694,OK,OK,OK,1,""
+25017,776.979,12.5861,0.153034,139150.161,36.30715054,9.044976958e-05,1.100029137e-06,0.8769196513,0.02535944888,OK,OK,OK,1,""
+25018,796.11,12.3424,0.243556,139057.2929,57.88172218,8.875766055e-05,1.75186912e-06,0.8605144833,0.02825270834,OK,OK,OK,1,""
+25019,544.384,13.4003,0.206807,140417.1114,49.72885947,9.54321013e-05,1.473192565e-06,0.9252238606,0.02816528983,OK,OK,OK,1,""
+25020,276.048,13.832,0.276048,141653.8704,68.55668403,9.764646713e-05,1.949323077e-06,0.9466923609,0.03121087614,OK,OK,OK,1,""

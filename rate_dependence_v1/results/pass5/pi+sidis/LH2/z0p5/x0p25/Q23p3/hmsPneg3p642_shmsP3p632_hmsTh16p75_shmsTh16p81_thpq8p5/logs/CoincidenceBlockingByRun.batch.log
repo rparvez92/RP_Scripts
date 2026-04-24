@@ -1,0 +1,25 @@
+Reading startup commands from /home/cdaq/.root/rootlogon.C
+
+Processing macros/CoincidenceBlockingByRun.C("/home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh16p81_thpq8p5/manifest.json","/home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results")...
+Warning in <TClass::Init>: no dictionary for class THcRunParameters is available
+Warning in <TClass::Init>: no dictionary for class THaRunParameters is available
+Warning in <TClass::Init>: no dictionary for class THaEvent is available
+Warning in <TClass::Init>: no dictionary for class THaEventHeader is available
+Warning in <TClass::Init>: no dictionary for class THcRun is available
+Warning in <TClass::Init>: no dictionary for class THaRun is available
+Warning in <TClass::Init>: no dictionary for class THaCodaRun is available
+Warning in <TClass::Init>: no dictionary for class THaRunBase is available
+Warning in <TClass::Init>: no dictionary for class DAQInfoExtra is available
+Warning in <TClass::Init>: no dictionary for class DAQconfig is available
+Error in <TBranch::GetBasket>: File: ./Pass0p1_ROOTfiles/coin_replay_production_25388_-1.root at byte:0, branch:CTime.CoinTime_RAW_ROC2, entry:64506, badread=0, nerrors=1, basketnumber=131
+Error in <TBranch::GetBasket>: File: ./Pass0p1_ROOTfiles/coin_replay_production_25388_-1.root at byte:0, branch:CTime.CoinTime_RAW_ROC2, entry:64507, badread=0, nerrors=2, basketnumber=131
+Error in <TBranch::GetBasket>: File: ./Pass0p1_ROOTfiles/coin_replay_production_25388_-1.root at byte:0, branch:CTime.CoinTime_RAW_ROC2, entry:64508, badread=0, nerrors=3, basketnumber=131
+Error in <TBranch::GetBasket>: File: ./Pass0p1_ROOTfiles/coin_replay_production_25388_-1.root at byte:0, branch:CTime.CoinTime_RAW_ROC2, entry:64509, badread=0, nerrors=4, basketnumber=131
+Error in <TBranch::GetBasket>: File: ./Pass0p1_ROOTfiles/coin_replay_production_25388_-1.root at byte:0, branch:CTime.CoinTime_RAW_ROC2, entry:64510, badread=0, nerrors=5, basketnumber=131
+Error in <TBranch::GetBasket>: File: ./Pass0p1_ROOTfiles/coin_replay_production_25388_-1.root at byte:0, branch:CTime.CoinTime_RAW_ROC2, entry:64511, badread=0, nerrors=6, basketnumber=131
+Error in <TBranch::GetBasket>: File: ./Pass0p1_ROOTfiles/coin_replay_production_25388_-1.root at byte:0, branch:CTime.CoinTime_RAW_ROC2, entry:64512, badread=0, nerrors=7, basketnumber=131
+Error in <TBranch::GetBasket>: File: ./Pass0p1_ROOTfiles/coin_replay_production_25388_-1.root at byte:0, branch:CTime.CoinTime_RAW_ROC2, entry:64513, badread=0, nerrors=8, basketnumber=131
+Error in <TBranch::GetBasket>: File: ./Pass0p1_ROOTfiles/coin_replay_production_25388_-1.root at byte:0, branch:CTime.CoinTime_RAW_ROC2, entry:64514, badread=0, nerrors=9, basketnumber=131
+Error in <TBranch::GetBasket>: File: ./Pass0p1_ROOTfiles/coin_replay_production_25388_-1.root at byte:0, branch:CTime.CoinTime_RAW_ROC2, entry:64515, badread=0, nerrors=10, basketnumber=131
+ file probably overwritten: stopping reporting error messages
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh16p81_thpq8p5/tables/coincidence_blocking_by_run.csv

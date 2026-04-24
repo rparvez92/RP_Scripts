@@ -34,7 +34,7 @@ Run-type:
 
 Usage:
   python3 tools/generate_settings_tree_rate_v1.py \
-    --bigtable bigtable/rsidis_bigtable_pass0.csv \
+    --bigtable bigtable/rsidis_bigtable_pass0p1.csv \
     --outdir settings \
     --targets LH2 LD2 \
     --run-types coin

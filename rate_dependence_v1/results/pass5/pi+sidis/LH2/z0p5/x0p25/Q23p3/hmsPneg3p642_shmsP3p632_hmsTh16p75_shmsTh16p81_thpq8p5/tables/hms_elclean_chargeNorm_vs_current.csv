@@ -1,14 +1,14 @@
 category,run,BCM2_I,BCM2_Q_mC,hms_elclean_counts,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,yield,yield_err,rootfile,status
-signal,25384,59.441,43.1,6076652,140989.6056,57.19458494,23.1728,0.299512,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25384_-1.root",OK
-signal,25385,56.574,123.73,17455514,141077.459,33.76690904,23.1687,0.176935,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25385_-1.root",OK
-signal,25386,54.412,122.22,17245518,141102.2582,33.97784591,23.0116,0.177269,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25386_-1.root",OK
-signal,25387,56.474,104.22,14709643,141140.309,36.80018462,23.6998,0.194493,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25387_-1.root",OK
-signal,25388,29.575,52.713,7465463,141624.7036,51.83351255,23.48,0.26632,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25388_-1.root",OK
-signal,25389,29.542,51.962,7360378,141649.2437,52.21126321,23.561,0.268781,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25389_-1.root",OK
+signal,25384,59.675,43.27,6076652,140435.6829,56.96987777,23.8109,0.307534,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25384_-1.root",OK
+signal,25385,56.995,124.19,17453125,140535.6711,33.63953412,23.8189,0.181469,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25385_-1.root",OK
+signal,25386,54.948,122.65,17241266,140572.8985,33.85454829,23.5972,0.181693,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25386_-1.root",OK
+signal,25387,56.931,104.6,14707338,140605.5258,36.66362077,26.1881,0.214462,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25387_-1.root",OK
+signal,25388,29.721,52.794,7463655,141373.1674,51.74771887,24.0152,0.271876,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25388_-1.root",OK
+signal,25389,29.753,52.035,7357770,141400.4036,52.12877809,23.9961,0.273861,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25389_-1.root",OK
 # FIT_MODEL,pol0
-# FIT_c,141206.336772
-# FIT_cerr,16.8397796857
-# FIT_chi2,178.636112958
+# FIT_c,140728.537743
+# FIT_cerr,16.7844218963
+# FIT_chi2,412.984468622
 # FIT_ndf,5
-# FIT_chi2ndf,35.7272225916
-# FIT_prob,1.0464211396e-36
+# FIT_chi2ndf,82.5968937243
+# FIT_prob,4.71446516211e-87

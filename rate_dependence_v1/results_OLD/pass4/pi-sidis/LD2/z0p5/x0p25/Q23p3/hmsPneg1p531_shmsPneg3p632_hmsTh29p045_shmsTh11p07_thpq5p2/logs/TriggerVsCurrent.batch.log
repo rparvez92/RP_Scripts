@@ -1,0 +1,6 @@
+Reading startup commands from /home/cdaq/.root/rootlogon.C
+
+Processing macros/TriggerVsCurrent.C("/home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/manifest.json","/home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results")...
+Error in <TCanvas::Range>: illegal world coordinates range: x1=23.058000, y1=-13884.676214, x2=23.058000, y2=101820.957178
+Error in <TCanvas::RangeAxis>: illegal axis coordinates range: xmin=23.058000, ymin=0.000000, xmax=23.058000, ymax=76365.717022
+Info in <TCanvas::Print>: png file /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LD2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh11p07_thpq5p2/PNGs/hms_elclean_chargeNorm_vs_current.png has been created
