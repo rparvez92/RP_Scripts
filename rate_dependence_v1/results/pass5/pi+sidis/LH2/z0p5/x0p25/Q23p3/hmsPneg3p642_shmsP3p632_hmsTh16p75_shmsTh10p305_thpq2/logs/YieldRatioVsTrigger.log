@@ -7,17 +7,17 @@ log: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sid
 Loaded /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh10p305_thpq2/tables/yield_vs_trigger_shms34.csv: rows=14, signal=7, runs=7
 Loaded /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh10p305_thpq2/tables/hms_elclean_chargeNorm_vs_current.csv: rows=14, signal=7, runs=7
 Fit1 (raw): r = a + b*R
-  range_kHz: [426.881, 843.92]
-  a = 0.000400686387604 +/- 5.21236171946e-06
-  b = -6.18134424567e-09 +/- 7.32709724892e-09 (per kHz)
-  chi2/ndf = 17.1423408472 (5), prob=5.3386209516e-17
+  range_kHz: [440.815, 872.068]
+  a = 0.000400680767037 +/- 5.20790391219e-06
+  b = -5.97483098179e-09 +/- 7.08519808048e-09 (per kHz)
+  chi2/ndf = 17.1424570519 (5), prob=5.3371232622e-17
 
 WARNING (STRONG): Fit1 probability is very small (<1e-4). Linear model may be insufficient or data inconsistent.
 Fit2 (norm): y = 1 + m*R
-  range_kHz: [426.881, 843.92]
-  m = -1.16829237253e-05 +/- 8.55162592488e-06 (per kHz)
-  tau_ns = 11.6829237253 +/- 8.55162592488
-  chi2/ndf = 4.78563966981 (6), prob=6.8910454533e-05
+  range_kHz: [440.815, 872.068]
+  m = -1.12893870347e-05 +/- 8.27173976276e-06 (per kHz)
+  tau_ns = 11.2893870347 +/- 8.27173976276
+  chi2/ndf = 4.79099009322 (6), prob=6.79544178833e-05
 
 WARNING (STRONG): Fit2 probability is very small (<1e-4). Linear deadtime approx may be insufficient or data inconsistent.
 Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh10p305_thpq2/tables/yield_ratio_vs_trigger_shms34.csv

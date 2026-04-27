@@ -8,23 +8,23 @@
 # N_valid_for_fit1: 3
 # N_valid_for_fit2: 3
 # fit1_model: raw_ratio = a + b*x   (x in kHz)
-# fit1_a: 0.000161568660687
-# fit1_a_err: 7.83655284692e-05
-# fit1_b_per_kHz: -2.08951320226e-08
-# fit1_b_err_per_kHz: 2.341353503e-07
-# fit1_chi2: 0.00201204194109
+# fit1_a: 0.000161570671674
+# fit1_a_err: 7.8361093922e-05
+# fit1_b_per_kHz: -1.84926209811e-08
+# fit1_b_err_per_kHz: 2.07143245281e-07
+# fit1_chi2: 0.00200655444362
 # fit1_ndf: 1
-# fit1_prob: 0.964222255423
+# fit1_prob: 0.96427104488
 # fit2_model: y_norm = 1 + m*x   (x in kHz)
-# fit2_m_per_kHz: -0.000129157974904
-# fit2_m_err_per_kHz: 0.000804775590499
-# tau_ns: 129.157974904
-# tau_ns_err: 804.775590499
-# fit2_chi2: 8.80752131904e-06
+# fit2_m_per_kHz: -0.000114306389034
+# fit2_m_err_per_kHz: 0.000711981569577
+# tau_ns: 114.306389034
+# tau_ns_err: 711.981569577
+# fit2_chi2: 8.78474200961e-06
 # fit2_ndf: 2
-# fit2_prob: 0.999995596249
+# fit2_prob: 0.999995607639
 
-run,shms34_rate_kHz,yield,yield_err,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,raw_ratio,raw_ratio_err,ynorm,ynorm_err,status_yield_csv,status_elclean_csv,join_flag,use_in_fit,reason
-23861,339.057,3.06419,0.0958417,19856.07591,15.01252794,0.0001543200184,4.828229755e-06,0.9551358398,0.464231658,OK,OK,OK,1,""
-23867,315.226,3.07081,0.108882,19807.80173,17.04346115,0.000155030328,5.498543287e-06,0.9595321728,0.4666438196,OK,OK,OK,1,""
-23868,346.069,3.06837,0.102083,19862.42086,15.98759817,0.0001544811693,5.141008397e-06,0.9561332542,0.4648429325,OK,OK,OK,1,""
+run,hms34_rate_kHz,shms34_rate_kHz,total34_rate_kHz,yield,yield_err,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,raw_ratio,raw_ratio_err,ynorm,ynorm_err,status_yield_csv,status_elclean_csv,join_flag,use_in_fit,reason
+23861,44.172,339.057,383.229,3.06419,0.0958417,19856.07591,15.01252794,0.0001543200184,4.828229755e-06,0.9551239517,0.4641939655,OK,OK,OK,1,""
+23867,41.051,315.226,356.277,3.07081,0.108882,19807.80173,17.04346115,0.000155030328,5.498543287e-06,0.95952023,0.4666059691,OK,OK,OK,1,""
+23868,45.063,346.069,391.132,3.06837,0.102083,19862.42086,15.98759817,0.0001544811693,5.141008397e-06,0.9561213537,0.4648052077,OK,OK,OK,1,""

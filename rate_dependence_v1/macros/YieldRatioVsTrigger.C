@@ -172,12 +172,19 @@ static void SortByX(std::vector<double>& x, std::vector<double>& y,
 }
 
 // ---------- structs ----------
-struct YieldRow { bool present=false; std::string status; double yield=NAN, yield_err=NAN, rate_kHz=NAN; };
+struct YieldRow {
+  bool present=false;
+  std::string status;
+  double yield=NAN, yield_err=NAN;
+  double hms34_rate_kHz=NAN, shms34_rate_kHz=NAN, total34_rate_kHz=NAN;
+};
 struct ElRow    { bool present=false; std::string status; double el=NAN, el_err=NAN; };
 
 struct OutRow {
   int run=-1;
-  double rate_kHz=NAN;
+  double hms34_rate_kHz=NAN;
+  double shms34_rate_kHz=NAN;
+  double total34_rate_kHz=NAN;
   double yield=NAN, yield_err=NAN;
   double el=NAN, el_err=NAN;
 
@@ -203,7 +210,11 @@ static bool ReadYieldCSV(const std::string& path, std::map<int,YieldRow>& out, s
   std::unordered_map<std::string,int> idx;
   for (int i=0;i<(int)cols.size();++i) idx[cols[i]] = i;
 
-  const char* req[] = {"category","run","yield","yield_err","shms34_rate_kHz","status"};
+  const char* req[] = {
+    "category", "run", "yield", "yield_err",
+    "hms34_rate_kHz", "shms34_rate_kHz", "total34_rate_kHz",
+    "status"
+  };
   for (auto* name : req) {
     if (idx.find(name) == idx.end()) {
       log << "ERROR: missing column '" << name << "' in " << path << "\n";
@@ -237,7 +248,9 @@ static bool ReadYieldCSV(const std::string& path, std::map<int,YieldRow>& out, s
     y.status = Trim(get(r,"status"));
     y.yield = SafeToD(get(r,"yield"));
     y.yield_err = SafeToD(get(r,"yield_err"));
-    y.rate_kHz = SafeToD(get(r,"shms34_rate_kHz"));
+    y.hms34_rate_kHz = SafeToD(get(r,"hms34_rate_kHz"));
+    y.shms34_rate_kHz = SafeToD(get(r,"shms34_rate_kHz"));
+    y.total34_rate_kHz = SafeToD(get(r,"total34_rate_kHz"));
     out[run]=y;
   }
 
@@ -377,7 +390,9 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
       o.join_flag="MISSING_ELCLEAN";
       o.reason="missing in hms_elclean_chargeNorm_vs_current.csv";
       o.status_yield = itY->second.status;
-      o.rate_kHz = itY->second.rate_kHz;
+      o.hms34_rate_kHz = itY->second.hms34_rate_kHz;
+      o.shms34_rate_kHz = itY->second.shms34_rate_kHz;
+      o.total34_rate_kHz = itY->second.total34_rate_kHz;
       o.yield = itY->second.yield;
       o.yield_err = itY->second.yield_err;
       rows.push_back(o);
@@ -387,7 +402,9 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
     // Fill basics
     o.status_yield = itY->second.status;
     o.status_el    = itE->second.status;
-    o.rate_kHz     = itY->second.rate_kHz;
+    o.hms34_rate_kHz   = itY->second.hms34_rate_kHz;
+    o.shms34_rate_kHz  = itY->second.shms34_rate_kHz;
+    o.total34_rate_kHz = itY->second.total34_rate_kHz;
     o.yield        = itY->second.yield;
     o.yield_err    = itY->second.yield_err;
     o.el           = itE->second.el;
@@ -403,7 +420,7 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
 
     // Validate
     auto finitePos = [&](double v){ return std::isfinite(v) && v>0; };
-    if (!std::isfinite(o.rate_kHz)) { o.join_flag="INVALID_VALUES"; o.reason="non-finite rate"; rows.push_back(o); continue; }
+    if (!std::isfinite(o.total34_rate_kHz)) { o.join_flag="INVALID_VALUES"; o.reason="non-finite total 3/4 trigger rate"; rows.push_back(o); continue; }
     if (!finitePos(o.yield) || !finitePos(o.el) || !finitePos(o.yield_err) || !finitePos(o.el_err)) {
       o.join_flag="INVALID_VALUES";
       o.reason="non-finite or non-positive yield/el/errs";
@@ -427,7 +444,7 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
     o.join_flag="OK";
     rows.push_back(o);
 
-    x_raw.push_back(o.rate_kHz);
+    x_raw.push_back(o.total34_rate_kHz);
     r_raw.push_back(o.raw_ratio);
     ex_raw.push_back(0.0);
     er_raw.push_back(o.raw_ratio_err);
@@ -521,7 +538,7 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
     }
 
     o.use_in_fit=1;
-    x.push_back(o.rate_kHz);
+    x.push_back(o.total34_rate_kHz);
     y.push_back(o.ynorm);
     ex.push_back(0.0);
     ey.push_back(o.ynorm_err);
@@ -561,14 +578,14 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
   double ymax = maxY + ypad;
   if (ymax < 1.02) ymax = 1.02;
 
-  TCanvas c("c_yield_ratio_vs_trigger", "Yield Ratio vs SHMS34 (signal)", 1200, 850);
+  TCanvas c("c_yield_ratio_vs_trigger", "Yield Ratio vs HMS+SHMS 3/4 (signal)", 1200, 850);
   c.SetTopMargin(0.22);
   c.SetRightMargin(0.06);
   c.SetLeftMargin(0.12);
   c.SetBottomMargin(0.12);
 
   TH1F* frame = gPad->DrawFrame(xmin, ymin, xmax, ymax);
-  frame->GetXaxis()->SetTitle("SHMS 3/4 Trigger Rate (kHz)");
+  frame->GetXaxis()->SetTitle("HMS + SHMS 3/4 Trigger Rate (kHz)");
   frame->GetYaxis()->SetTitle("Yield Ratio");
   frame->GetXaxis()->SetTitleSize(0.045);
   frame->GetYaxis()->SetTitleSize(0.045);
@@ -732,7 +749,7 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
     csv << "\n";
 
     // Columns (include raw columns + ynorm columns)
-    csv << "run,shms34_rate_kHz,"
+    csv << "run,hms34_rate_kHz,shms34_rate_kHz,total34_rate_kHz,"
         << "yield,yield_err,"
         << "hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,"
         << "raw_ratio,raw_ratio_err,"
@@ -742,7 +759,9 @@ void YieldRatioVsTrigger(const char* manifestPath, const char* resultsDir)
     csv << std::setprecision(10);
     for (const auto& r : rows) {
       csv << r.run << ","
-          << r.rate_kHz << ","
+          << r.hms34_rate_kHz << ","
+          << r.shms34_rate_kHz << ","
+          << r.total34_rate_kHz << ","
           << r.yield << ","
           << r.yield_err << ","
           << r.el << ","

@@ -7,17 +7,17 @@ log: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sid
 Loaded /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/tables/yield_vs_trigger_shms34.csv: rows=32, signal=25, runs=25
 Loaded /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/tables/hms_elclean_chargeNorm_vs_current.csv: rows=32, signal=25, runs=25
 Fit1 (raw): r = a + b*R
-  range_kHz: [312.738, 851.676]
-  a = 0.000397530602755 +/- 1.13773814341e-05
-  b = -5.9584035015e-08 +/- 1.42388784789e-08 (per kHz)
-  chi2/ndf = 2.06125132996 (23), prob=0.00198990794026
+  range_kHz: [323.64, 881.922]
+  a = 0.000397496357389 +/- 1.13724965675e-05
+  b = -5.74980607189e-08 +/- 1.37443462713e-08 (per kHz)
+  chi2/ndf = 2.06168952975 (23), prob=0.0019840566581
 
 WARNING: Fit1 probability is small (<0.01). Interpret a (intercept) with caution.
 Fit2 (norm): y = 1 + m*R
-  range_kHz: [312.738, 851.676]
-  m = -0.000150407372177 +/- 9.09832314177e-06 (per kHz)
-  tau_ns = 150.407372177 +/- 9.09832314177
-  chi2/ndf = 0.925962340859 (24), prob=0.565952865745
+  range_kHz: [323.64, 881.922]
+  m = -0.000145154376684 +/- 8.78531791772e-06 (per kHz)
+  tau_ns = 145.154376684 +/- 8.78531791772
+  chi2/ndf = 0.9264837605 (24), prob=0.565206356357
 
 Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/tables/yield_ratio_vs_trigger_shms34.csv
 Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi+sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsP3p632_hmsTh29p045_shmsTh7p865_thpq2/PNGs/yield_ratio_vs_trigger_shms34.png

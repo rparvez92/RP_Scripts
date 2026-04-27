@@ -8,23 +8,23 @@
 # N_valid_for_fit1: 3
 # N_valid_for_fit2: 3
 # fit1_model: raw_ratio = a + b*x   (x in kHz)
-# fit1_a: 0.000154041271402
-# fit1_a_err: 4.32296820804e-06
-# fit1_b_per_kHz: -1.11582917875e-08
-# fit1_b_err_per_kHz: 5.33734126032e-09
-# fit1_chi2: 0.618964683041
+# fit1_a: 0.000154038758225
+# fit1_a_err: 4.32155770257e-06
+# fit1_b_per_kHz: -1.06528380811e-08
+# fit1_b_err_per_kHz: 5.09527366525e-09
+# fit1_chi2: 0.61846007658
 # fit1_ndf: 1
-# fit1_prob: 0.431432276542
+# fit1_prob: 0.431620107338
 # fit2_model: y_norm = 1 + m*x   (x in kHz)
-# fit2_m_per_kHz: -7.2502615085e-05
-# fit2_m_err_per_kHz: 2.13260558629e-05
-# tau_ns: 72.502615085
-# tau_ns_err: 21.3260558629
-# fit2_chi2: 0.0754262046303
+# fit2_m_per_kHz: -6.92196000958e-05
+# fit2_m_err_per_kHz: 2.03605267595e-05
+# tau_ns: 69.2196000958
+# tau_ns_err: 20.3605267595
+# fit2_chi2: 0.0754051057555
 # fit2_ndf: 2
-# fit2_prob: 0.96298918063
+# fit2_prob: 0.962999339677
 
-run,shms34_rate_kHz,yield,yield_err,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,raw_ratio,raw_ratio_err,ynorm,ynorm_err,status_yield_csv,status_elclean_csv,join_flag,use_in_fit,reason
-25010,874.033,37.9823,0.400518,264816.8605,75.45620826,0.0001434285564,1.512985968e-06,0.9311047296,0.02791523667,OK,OK,OK,1,""
-25011,889.632,38.3495,0.396492,264609.2139,74.45565102,0.0001449288157,1.498960696e-06,0.9408440634,0.02813963056,OK,OK,OK,1,""
-25012,447.94,39.6123,0.546778,265677.3541,106.9292658,0.0001490992717,2.05892741e-06,0.9679176907,0.03027374665,OK,OK,OK,1,""
+run,hms34_rate_kHz,shms34_rate_kHz,total34_rate_kHz,yield,yield_err,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,raw_ratio,raw_ratio_err,ynorm,ynorm_err,status_yield_csv,status_elclean_csv,join_flag,use_in_fit,reason
+25010,41.273,874.033,915.306,37.9823,0.400518,264816.8605,75.45620826,0.0001434285564,1.512985968e-06,0.9311199208,0.02790811041,OK,OK,OK,1,""
+25011,41.95,889.632,931.582,38.3495,0.396492,264609.2139,74.45565102,0.0001449288157,1.498960696e-06,0.9408594135,0.02813241025,OK,OK,OK,1,""
+25012,20.995,447.94,468.935,39.6123,0.546778,265677.3541,106.9292658,0.0001490992717,2.05892741e-06,0.9679334825,0.03026668588,OK,OK,OK,1,""

@@ -21,6 +21,8 @@
 #include <TStyle.h>
 #include <TF1.h>
 #include <TFile.h>
+#include <TAxis.h>
+#include <TSystem.h>
 
 #include <algorithm>
 #include <cctype>
@@ -129,17 +131,20 @@ static std::string JoinSettingHeaderLine2(const std::vector<std::string>& parts)
   return "";
 }
 
-static bool ParseReport_SHMS34_kHz(const std::string& reportPath, double& out) {
+static bool ParseReport_TriggerRate_kHz(const std::string& reportPath,
+                                        const std::string& label,
+                                        double& out) {
   std::ifstream in(reportPath);
   if (!in) return false;
   std::string line;
   while (std::getline(in, line)) {
-    if (line.find("SHMS 3/4 Trigger Rate") != std::string::npos && line.find("kHz") != std::string::npos) {
+    const std::string trimmed = Trim(line);
+    if (trimmed.rfind(label, 0) == 0 && trimmed.find("kHz") != std::string::npos) {
       // example: "SHMS 3/4 Trigger Rate         : 864.802 kHz"
       // find ':', then parse double
-      auto cpos = line.find(':');
+      auto cpos = trimmed.find(':');
       if (cpos == std::string::npos) continue;
-      std::string rhs = line.substr(cpos + 1);
+      std::string rhs = trimmed.substr(cpos + 1);
       rhs = Trim(rhs);
       // rhs begins with number
       std::stringstream ss(rhs);
@@ -151,6 +156,14 @@ static bool ParseReport_SHMS34_kHz(const std::string& reportPath, double& out) {
     }
   }
   return false;
+}
+
+static bool ParseReport_SHMS34_kHz(const std::string& reportPath, double& out) {
+  return ParseReport_TriggerRate_kHz(reportPath, "SHMS 3/4 Trigger Rate", out);
+}
+
+static bool ParseReport_HMS34_kHz(const std::string& reportPath, double& out) {
+  return ParseReport_TriggerRate_kHz(reportPath, "HMS 3/4 Trigger Rate", out);
 }
 
 static bool ParseReport_SHMS_ELCLEAN_kHz(const std::string& reportPath, double& out) {
@@ -182,7 +195,9 @@ struct Row {
   double current = NAN;      // BCM2_I
   double yield = NAN;        // myCTime normalized yield
   double yerr = NAN;         // yield_err
+  double hms34 = NAN;        // kHz
   double shms34 = NAN;       // kHz
+  double total34 = NAN;      // kHz
   double shms_elclean = NAN; // kHz
   std::string status;        // OK / skipped reason
   std::string rootfile;
@@ -313,7 +328,7 @@ void YieldVsTrigger(const char* manifest_json, const char* results_top) {
   const std::string repoRoot = GuessRepoRootFromManifest(manifestPath);
   const std::string reportDir = repoRoot + "/Pass0p1_REPORTfiles/COIN/PRODUCTION";
 
-  // Parse SHMS 3/4 trigger rate for each run
+  // Parse HMS and SHMS 3/4 trigger rates for each run
   int nOK = 0, nSkip = 0, nBadErr = 0, nNoReport = 0, nNoLine = 0;
   for (auto& r : rows) {
     // Validate yield entry
@@ -329,13 +344,25 @@ void YieldVsTrigger(const char* manifest_json, const char* results_top) {
     }
 
     const std::string rep = reportDir + "/replay_coin_production_" + std::to_string(r.run) + "_-1.report";
+    double h34 = NAN;
     double sh34 = NAN;
-    if (!ParseReport_SHMS34_kHz(rep, sh34)) {
-      // Distinguish missing file vs missing line
+    const bool gotHMS34 = ParseReport_HMS34_kHz(rep, h34);
+    const bool gotSHMS34 = ParseReport_SHMS34_kHz(rep, sh34);
+
+    if (gotHMS34) r.hms34 = h34;
+    if (gotSHMS34) r.shms34 = sh34;
+
+    if (!gotHMS34 || !gotSHMS34) {
       std::ifstream test(rep);
       if (!test) {
         r.status = "MISSING_REPORT";
         nNoReport++;
+      } else if (!gotHMS34 && !gotSHMS34) {
+        r.status = "MISSING_HMS34_SHMS34_LINES";
+        nNoLine++;
+      } else if (!gotHMS34) {
+        r.status = "MISSING_HMS34_LINE";
+        nNoLine++;
       } else {
         r.status = "MISSING_SHMS34_LINE";
         nNoLine++;
@@ -343,7 +370,7 @@ void YieldVsTrigger(const char* manifest_json, const char* results_top) {
       nSkip++;
       continue;
     }
-    r.shms34 = sh34;
+    r.total34 = h34 + sh34;
     r.status = "OK";
     nOK++;
   }
@@ -355,14 +382,16 @@ void YieldVsTrigger(const char* manifest_json, const char* results_top) {
   // Write table (include skipped rows too, but mark status)
   const std::string outCSV = outTables + "/yield_vs_trigger_shms34.csv";
   std::ofstream csv(outCSV.c_str());
-  csv << "category,run,BCM2_I,yield,yield_err,shms34_rate_kHz,rootfile,status\n";
+  csv << "category,run,BCM2_I,yield,yield_err,hms34_rate_kHz,shms34_rate_kHz,total34_rate_kHz,rootfile,status\n";
   for (const auto& r : rows) {
     csv << "signal,"
         << r.run << ","
         << std::setprecision(10) << r.current << ","
         << std::setprecision(10) << r.yield << ","
         << std::setprecision(10) << r.yerr << ","
+        << std::setprecision(10) << (IsFinite(r.hms34) ? r.hms34 : NAN) << ","
         << std::setprecision(10) << (IsFinite(r.shms34) ? r.shms34 : NAN) << ","
+        << std::setprecision(10) << (IsFinite(r.total34) ? r.total34 : NAN) << ","
         << "\"" << r.rootfile << "\"" << ","
         << r.status << "\n";
   }
