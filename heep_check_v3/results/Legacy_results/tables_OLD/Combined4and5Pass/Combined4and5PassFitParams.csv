@@ -1,0 +1,2 @@
+fit_type,dthe_A,dthe_B,dthe_C,dthe_E,dthe_D,dpe_A,dpe_B,dpe_C,dpe_E,dpe_D,dpp_A,dpp_B,dpp_C,dpp_E,dpp_D,dthp,chi2,n_obs,n_params,ndf,chi2_ndf,success,message,nit,nfev
+combined_4and5_float_all_except_dthp,-0.1137,-0.9422,-0.6922,-0.4491,-0.9893,-0.3309,0.8307,0.9707,0.7189,1.5525,-1.9411,-0.3914,1.5305,2.0619,1.0149,1.3894,570.6647,20,16,4,142.6662,True,Optimization terminated successfully.,25204,32978

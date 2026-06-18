@@ -1,0 +1,17 @@
+dataset,method,init,chi2,n_obs,n_params,ndf,chi2_ndf,max_abs_pull,exact_inversion_flag,success,message,minuit_status,cov_status,edm
+julio_input,tminuit_simplex,zero_init,103.025039,12,8,4,25.756260,6.827833,0,True,"ok",0,2,0.000079
+julio_input,tminuit_migrad,zero_init,102.646714,12,8,4,25.661678,6.838055,1,True,"ok",0,2,0.000000
+julio_input,tminuit_simplex,julio_like_init,102.967836,12,8,4,25.741959,6.828684,0,True,"ok",0,2,0.000068
+julio_input,tminuit_migrad,julio_like_init,102.646714,12,8,4,25.661678,6.838055,1,True,"ok",0,2,0.000000
+radwan_input,tminuit_simplex,zero_init,28.971579,12,8,4,7.242895,2.445554,0,True,"ok",0,2,0.004837
+radwan_input,tminuit_migrad,zero_init,12.886112,12,8,4,3.221528,1.989236,1,True,"ok",0,2,0.000000
+radwan_input,tminuit_simplex,julio_like_init,12.886112,12,8,4,3.221528,1.989211,1,True,"ok",0,2,0.000000
+radwan_input,tminuit_migrad,julio_like_init,12.886112,12,8,4,3.221528,1.989236,1,True,"ok",0,3,0.000000
+radwan_rangescan_k1p5,tminuit_simplex,zero_init,34.875972,12,8,4,8.718993,2.693451,0,True,"ok",0,2,0.008308
+radwan_rangescan_k1p5,tminuit_migrad,zero_init,9.432114,12,8,4,2.358029,1.633693,1,True,"ok",0,2,0.000000
+radwan_rangescan_k1p5,tminuit_simplex,julio_like_init,34.860792,12,8,4,8.715198,2.693134,0,True,"ok",0,2,0.007813
+radwan_rangescan_k1p5,tminuit_migrad,julio_like_init,9.432114,12,8,4,2.358029,1.633693,1,True,"ok",0,3,0.000000
+radwan_rangescan_k2p0,tminuit_simplex,zero_init,12.813819,12,8,4,3.203455,1.986759,1,True,"ok",0,2,0.000001
+radwan_rangescan_k2p0,tminuit_migrad,zero_init,12.813819,12,8,4,3.203455,1.986760,1,True,"ok",0,2,0.000000
+radwan_rangescan_k2p0,tminuit_simplex,julio_like_init,12.813821,12,8,4,3.203455,1.985870,1,True,"ok",0,2,0.000003
+radwan_rangescan_k2p0,tminuit_migrad,julio_like_init,12.813819,12,8,4,3.203455,1.986760,1,True,"ok",0,2,0.000000

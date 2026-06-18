@@ -1,0 +1,19 @@
+quantity,value
+dataset,radwan_input
+method,scipy_nelder_mead_bootstrap
+init,zero_init
+n_toys_requested,2000
+seed,314159
+central_success,True
+central_message,Optimization terminated successfully.
+central_chi2,29.164248
+central_n_obs,12
+central_n_params,8
+central_ndf,4
+central_chi2_ndf,7.291062
+central_max_abs_pull,2.459590
+central_exact_inversion_flag,0
+toy_success_count,2000
+toy_exact_inversion_count,18
+toy_physical_branch_count,1982
+toy_physical_branch_fraction,0.991000
