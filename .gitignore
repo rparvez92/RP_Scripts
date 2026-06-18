@@ -6,6 +6,11 @@
 __pycache__/
 *.py[cod]
 
+# Transient analysis products and scratch copies
+*.log
+*.old
+*.root
+
 # ROOT/ACLiC generated build artifacts
 *_C.d
 *_C.so

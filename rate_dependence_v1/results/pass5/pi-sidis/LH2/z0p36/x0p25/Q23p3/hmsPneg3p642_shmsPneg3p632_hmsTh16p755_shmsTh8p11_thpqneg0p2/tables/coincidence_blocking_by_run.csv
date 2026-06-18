@@ -10,6 +10,6 @@ signal,25513,171076,164495,0.961532,"./Pass0p1_ROOTfiles/coin_replay_production_
 signal,25532,590312,561821,0.951736,"./Pass0p1_ROOTfiles/coin_replay_production_25532_-1.root",OK
 signal,25533,345011,328866,0.953204,"./Pass0p1_ROOTfiles/coin_replay_production_25533_-1.root",OK
 signal,25534,450327,429435,0.953607,"./Pass0p1_ROOTfiles/coin_replay_production_25534_-1.root",OK
-signal,25536,148652,141666,0.953004,"./Pass0p1_ROOTfiles/coin_replay_production_25536_-1.root",OK
+signal,25536,148579,141583,0.952914,"./Pass0p1_ROOTfiles/coin_replay_production_25536_-1.root",OK
 signal,25538,546638,521217,0.953496,"./Pass0p1_ROOTfiles/coin_replay_production_25538_-1.root",OK
 dummy,25514,180110,172093,0.955488,"./Pass0p1_ROOTfiles/coin_replay_production_25514_-1.root",OK
