@@ -1,15 +1,15 @@
 category,run,BCM2_I,yield,yield_err,hms34_rate_kHz,shms34_rate_kHz,total34_rate_kHz,rootfile,status
-signal,25434,56.925,18.8746,0.191746,38.456,215.99,254.446,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25434_-1.root",OK
-signal,25435,54.161,19.34,0.191811,36.584,205.557,242.141,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25435_-1.root",OK
-signal,25436,59.18,19.6122,0.187546,40.075,225.215,265.29,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25436_-1.root",OK
-signal,25437,58.042,19.3056,0.192949,39.29,220.618,259.908,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25437_-1.root",OK
-signal,25438,29.468,19.1082,0.251104,20.041,112.118,132.159,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25438_-1.root",OK
-signal,25439,28.318,19.7268,0.272087,19.268,107.772,127.04,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25439_-1.root",OK
-signal,25442,55.771,19.3926,0.182753,37.786,212.165,249.951,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25442_-1.root",OK
+signal,25434,56.925,19.684,0.199968,38.456,215.99,254.446,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25434_-1.root",OK
+signal,25435,54.161,20.1936,0.200277,36.584,205.557,242.141,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25435_-1.root",OK
+signal,25436,59.18,20.4337,0.195401,40.075,225.215,265.29,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25436_-1.root",OK
+signal,25437,58.042,21.9154,0.219034,39.29,220.618,259.908,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25437_-1.root",OK
+signal,25438,29.468,19.7384,0.259385,20.041,112.118,132.159,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25438_-1.root",OK
+signal,25439,28.318,20.3883,0.281211,19.268,107.772,127.04,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25439_-1.root",OK
+signal,25442,55.771,20.2401,0.19074,37.786,212.165,249.951,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25442_-1.root",OK
 # FIT_MODEL,pol0
-# FIT_C,19.3239032519
-# FIT_Cerr,0.0769279359462
-# FIT_chi2,10.9416047854
+# FIT_C,20.3673707977
+# FIT_Cerr,0.0811191753354
+# FIT_chi2,68.8273218679
 # FIT_ndf,6
-# FIT_chi2ndf,1.82360079757
-# FIT_prob,0.0901980607766
+# FIT_chi2ndf,11.4712203113
+# FIT_prob,7.11204936616e-13

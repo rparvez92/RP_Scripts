@@ -24,6 +24,21 @@ Example:
     --z-dirs        z0p36 z0p5 z0p67 z0p9\
     --require-substr hmsPneg1p531 hmsTh29p045 shmsTh7p865
 
+Special case: pass5 pi-sidis LD2 has no z0p36 thpq2 setting in the bigtable,
+so create the available 3-point group explicitly:
+  python3 tools/make_groups_z_overlay.py \
+    --settings-root settings \
+    --groups-root   groups \
+    --pass          pass5 \
+    --run-type      "pi-sidis" \
+    --target        LD2 \
+    --x             x0p25 \
+    --q2            q23p3 \
+    --tpq           2.0 \
+    --z-dirs        z0p5 z0p67 z0p9 \
+    --require-substr hmsPneg3p642 hmsTh16p75 shmsTh10p305 \
+    --overwrite
+
 Notes:
 - If multiple setting directories match a given z-dir, you MUST disambiguate using --require-substr.
 - For labeling, z0p5 is rendered as z0p50 in the output group file.

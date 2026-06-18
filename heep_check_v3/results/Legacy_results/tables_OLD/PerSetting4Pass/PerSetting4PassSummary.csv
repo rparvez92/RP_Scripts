@@ -1,0 +1,3 @@
+setting,chi2,n_obs,n_params,ndf,chi2_ndf,success,nit,nfev
+A,82865.4173,16,10,6,13810.9029,True,5800,8200
+B,8398.9919,16,10,6,1399.8320,True,4184,6053

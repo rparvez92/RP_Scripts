@@ -1,0 +1,21 @@
+# macOS metadata
+.DS_Store
+._*
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Transient analysis products and scratch copies
+*.log
+*.old
+*.root
+
+# ROOT/ACLiC generated build artifacts
+*_C.d
+*_C.so
+*_C_ACLiC_dict_rdict.pcm
+
+# Large replay/simulation data directories belong outside Git.
+# Existing tracked symlinks with these names remain tracked.
+**/*ROOTfiles/

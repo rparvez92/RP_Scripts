@@ -1,0 +1,13 @@
+dataset,method,init,setting,shms_p_GeV,delta_center,dp_lo,dp_hi,variable,mu,mu_err,sigma,sigma_err,predicted,residual,pull
+radwan_input,scipy_nelder_mead_bootstrap_central,zero_init,C,-6.720000,1.000000,-0.500000,2.500000,W,2.557277,1.094107,28.873636,1.036490,2.355220,0.202057,0.184677
+radwan_input,scipy_nelder_mead_bootstrap_central,zero_init,C,-6.720000,1.000000,-0.500000,2.500000,Em,-14.294357,0.271950,6.796372,0.276912,-13.682025,-0.612332,-2.251635
+radwan_input,scipy_nelder_mead_bootstrap_central,zero_init,C,-6.720000,1.000000,-0.500000,2.500000,Pmz,13.361736,0.401260,9.281076,0.332821,14.348671,-0.986935,-2.459590
+radwan_input,scipy_nelder_mead_bootstrap_central,zero_init,C,-6.720000,1.000000,-0.500000,2.500000,Pmy,8.590304,0.329922,10.234650,0.292744,9.158891,-0.568587,-1.723399
+radwan_input,scipy_nelder_mead_bootstrap_central,zero_init,E,-6.604800,3.000000,1.500000,4.500000,W,5.161966,1.031033,28.824679,0.955779,4.372620,0.789346,0.765588
+radwan_input,scipy_nelder_mead_bootstrap_central,zero_init,E,-6.604800,3.000000,1.500000,4.500000,Em,-15.034481,0.287492,6.984338,0.274461,-14.553883,-0.480598,-1.671693
+radwan_input,scipy_nelder_mead_bootstrap_central,zero_init,E,-6.604800,3.000000,1.500000,4.500000,Pmz,14.975752,0.352338,8.840918,0.280320,15.621028,-0.645276,-1.831412
+radwan_input,scipy_nelder_mead_bootstrap_central,zero_init,E,-6.604800,3.000000,1.500000,4.500000,Pmy,8.984313,0.314767,9.954763,0.266540,9.115540,-0.131227,-0.416900
+radwan_input,scipy_nelder_mead_bootstrap_central,zero_init,D,-6.384000,6.000000,4.500000,7.500000,W,11.905280,1.091195,27.761362,1.126965,9.985114,1.920166,1.759691
+radwan_input,scipy_nelder_mead_bootstrap_central,zero_init,D,-6.384000,6.000000,4.500000,7.500000,Em,-14.151015,0.386584,8.456462,0.400337,-14.255829,0.104814,0.271128
+radwan_input,scipy_nelder_mead_bootstrap_central,zero_init,D,-6.384000,6.000000,4.500000,7.500000,Pmz,16.158137,0.359273,8.317206,0.271510,16.396341,-0.238204,-0.663017
+radwan_input,scipy_nelder_mead_bootstrap_central,zero_init,D,-6.384000,6.000000,4.500000,7.500000,Pmy,8.607762,0.325779,9.555320,0.263229,7.914961,0.692801,2.126599

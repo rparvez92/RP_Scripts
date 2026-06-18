@@ -31,6 +31,8 @@
 // Writes:
 //   <results>/<same rel path as manifest>/tables/coincidence_blocking_by_run.csv
 //   <results>/<same rel path as manifest>/logs/CoincidenceBlockingByRun.log
+//   <results>/<same rel path as manifest>/PNGs/coincidence_blocking_ratio_vs_run.png
+//   <results>/<same rel path as manifest>/canvases/coincidence_blocking_ratio_vs_run.root
 //
 // Single-setting run example:
 //   root -l -b -q 'macros/CoincidenceBlockingByRun.C("settings/pass4/pi+sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/manifest.json","results")'
@@ -54,8 +56,12 @@
 #include <unordered_map>
 #include <vector>
 
+#include "TCanvas.h"
 #include "TFile.h"
+#include "TGraph.h"
 #include "TH1D.h"
+#include "TLatex.h"
+#include "TStyle.h"
 #include "TString.h"
 #include "TSystem.h"
 #include "TTree.h"
@@ -99,6 +105,35 @@ static std::string RelUnderSettings_Blocking(const std::string& settingDirAbs) {
   std::string rel = settingDirAbs.substr(pos + needle.size());
   while (!rel.empty() && rel.front() == '/') rel.erase(0, 1);
   return rel.empty() ? BaseName_Blocking(settingDirAbs) : rel;
+}
+
+static std::vector<std::string> SplitPath_Blocking(const std::string& s) {
+  std::vector<std::string> out;
+  std::string cur;
+  for (char c : s) {
+    if (c == '/') {
+      if (!cur.empty()) out.push_back(cur);
+      cur.clear();
+    } else {
+      cur.push_back(c);
+    }
+  }
+  if (!cur.empty()) out.push_back(cur);
+  return out;
+}
+
+static void BuildSettingLabel_Blocking(const std::string& relUnderSettings,
+                                       std::string& line1,
+                                       std::string& line2) {
+  auto tok = SplitPath_Blocking(relUnderSettings);
+  if (tok.size() >= 7) {
+    line1 = tok[0] + " / " + tok[1] + " / " + tok[2] + " / " +
+            tok[3] + " / " + tok[4] + " / " + tok[5];
+    line2 = tok[6];
+  } else {
+    line1 = relUnderSettings;
+    line2 = "";
+  }
 }
 
 struct MetaRowBlocking {
@@ -159,9 +194,13 @@ void CoincidenceBlockingByRun(const char* manifestPath,
   const std::string rel        = RelUnderSettings_Blocking(settingDir);
   const std::string outBase    = outRoot + "/" + rel;
 
+  const std::string outPNGs = outBase + "/PNGs";
   const std::string outTabs = outBase + "/tables";
+  const std::string outCanv = outBase + "/canvases";
   const std::string outLogs = outBase + "/logs";
+  EnsureDir_Blocking(outPNGs);
   EnsureDir_Blocking(outTabs);
+  EnsureDir_Blocking(outCanv);
   EnsureDir_Blocking(outLogs);
 
   const std::string outCsv  = outTabs + "/coincidence_blocking_by_run.csv";
@@ -195,6 +234,9 @@ void CoincidenceBlockingByRun(const char* manifestPath,
       "((CTime.CoinTime_RAW_ROC2>5) && (CTime.CoinTime_RAW_ROC2<70) && "
       "(P.hod.goodstarttime==1) && "
       "(H.hod.goodstarttime==1))";
+
+  std::vector<double> runPlot;
+  std::vector<double> ratioPlot;
 
   for (const auto& m : meta) {
     const int run = m.run;
@@ -243,10 +285,53 @@ void CoincidenceBlockingByRun(const char* manifestPath,
         << ratio << ","
         << "\"" << rootfile << "\","
         << status << "\n";
+
+    if (status == "OK" && std::isfinite(ratio)) {
+      runPlot.push_back((double)run);
+      ratioPlot.push_back(ratio);
+    }
   }
 
   csv.close();
   log << "\nWrote CSV: " << outCsv << "\n";
   std::cout << "Wrote CSV: " << outCsv << "\n";
+
+  const std::string outPng = outPNGs + "/coincidence_blocking_ratio_vs_run.png";
+  const std::string outRootCanvas = outCanv + "/coincidence_blocking_ratio_vs_run.root";
+
+  gStyle->SetOptStat(0);
+  TCanvas c("c_coincidence_blocking_ratio_vs_run", "Coincidence Blocking Ratio vs Run", 1200, 850);
+  c.SetGrid();
+
+  if (runPlot.empty()) {
+    TLatex lat;
+    lat.SetNDC();
+    lat.SetTextSize(0.045);
+    lat.DrawLatex(0.15, 0.55, "No valid coincidence_blocking_ratio points");
+  } else {
+    TGraph g((int)runPlot.size(), runPlot.data(), ratioPlot.data());
+    g.SetTitle("");
+    g.SetMarkerStyle(20);
+    g.SetMarkerSize(1.0);
+    g.SetMarkerColor(kBlue + 1);
+    g.SetLineColor(kBlue + 1);
+    g.GetXaxis()->SetTitle("Run number");
+    g.GetYaxis()->SetTitle("coincidence_blocking_ratio");
+    g.GetYaxis()->SetTitleOffset(1.2);
+    g.Draw("AP");
+
+    std::string line1, line2;
+    BuildSettingLabel_Blocking(rel, line1, line2);
+    TLatex lat;
+    lat.SetNDC();
+    lat.SetTextSize(0.035);
+    lat.DrawLatex(0.13, 0.93, line1.c_str());
+    if (!line2.empty()) lat.DrawLatex(0.13, 0.885, line2.c_str());
+  }
+
+  c.SaveAs(outPng.c_str());
+  c.SaveAs(outRootCanvas.c_str());
+  log << "Wrote PNG: " << outPng << "\n";
+  log << "Wrote ROOT canvas: " << outRootCanvas << "\n";
   log.close();
 }

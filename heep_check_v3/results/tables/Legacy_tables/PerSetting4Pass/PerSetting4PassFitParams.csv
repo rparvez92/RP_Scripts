@@ -1,0 +1,3 @@
+setting,dthe_b1_A,dthe_b2_A,dthe_b3_A,dthe_b4_A,dpe_b1_A,dpe_b2_A,dpe_b3_A,dpe_b4_A,dthp_A,dpp_A,dthe_b1_B,dthe_b2_B,dthe_b3_B,dthe_b4_B,dpe_b1_B,dpe_b2_B,dpe_b3_B,dpe_b4_B,dthp_B,dpp_B,chi2,n_obs,n_params,ndf,chi2_ndf,success,message,nit,nfev
+A,-1.6547,-1.5565,-1.5468,-1.5544,1.9501,2.0084,1.8027,1.3730,-1.0520,-9.9588,,,,,,,,,,,82865.4173,16,10,6,13810.9029,True,Optimization terminated successfully.,5800,8200
+B,,,,,,,,,,,-1.1375,-0.0847,-0.6164,-0.0083,1.4225,0.5360,1.3212,0.6159,-1.3244,-0.6129,8398.9919,16,10,6,1399.8320,True,Optimization terminated successfully.,4184,6053

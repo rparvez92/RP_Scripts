@@ -6,7 +6,7 @@
 //     - W
 //     - Em
 //     - Pmz
-//     - Pmy
+//     - Pmx
 //   and measure the setting-wise offset
 //       offset = mu_data - mu_sim
 //
@@ -19,27 +19,35 @@
 //     Setting B: runs 23849-23851
 //       HMS P = 3.75 GeV, HMS angle = 29.99 deg
 //       SHMS P = -5.67 GeV, SHMS angle = 19.34 deg
+//     Cuts:
+//       H.gtr.dp / hsdelta in [-1, 1]
+//       one SHMS dp bin:
+//         b1 [-2,1]
 //   5-pass:
 //     E_beam = 10.6716 GeV
+//     Current study uses only settings C, D, and E:
 //     Setting C: run 25476, SHMS P = -6.7200 GeV
 //     Setting D: run 25477, SHMS P = -6.3840 GeV
 //     Setting E: run 25478, SHMS P = -6.6048 GeV
-//     Setting F: run 25479, SHMS P = -5.7120 GeV
-//     Setting G: run 25480, SHMS P = -5.3760 GeV
-//     Setting H: runs 25481, 25482, SHMS P = -5.0400 GeV
-//     Setting I: run 25483, SHMS P = -4.7040 GeV
-//   For 5-pass settings C-I, HMS P = 4.72 GeV, HMS angle = 26.395 deg,
-//   and SHMS angle = 18.56 deg.
+//     For C/D/E, HMS P = 4.72 GeV, HMS angle = 26.395 deg,
+//     and SHMS angle = 18.56 deg.
+//     Cuts:
+//       H.gtr.dp / hsdelta in [-1, 1]
+//       C b1: [-0.5, 2.5]
+//       D b1: [ 4.5, 7.5]
+//       E b1: [ 1.5, 4.5]
 //
-// Per setting, the macro builds 6 dp-bin canvases:
-//   - 1 full bin over SHMS dp in [-10, 22]
-//   - 5 narrow bins spanning [dpFocusLo, dpFocusHi]
+// Per setting, the macro builds dp-bin canvases:
+//   - For 4-pass: one narrow bin [-2,1]
+//   - For 5-pass: exactly one narrow bin per setting using the hardcoded
+//     setting-specific SHMS dp range. This avoids low-statistics slicing
+//     when using the 5-pass dataset.
 //
 // Each canvas is a 2x2 layout with Data vs Sim overlays for:
 //   upper left:  W
 //   upper right: Em
 //   lower left:  Pmz
-//   lower right: Pmy
+//   lower right: Pmx
 //
 // Analysis notes:
 //   - Data and Sim ROOT directories are passed to MeasuredOffsetsBySetting().
@@ -47,7 +55,22 @@
 //       Pass0p1_DataROOTfiles/
 //       Pass0p1_SimROOTfiles/
 //   - Sim is filled from the h10 tree using event-by-event Weight
-//   - Sim is normalized to Data inside an adaptive peak window
+//   - Observable histogram ranges are intentionally narrow:
+//       W   [0.85, 1.05]
+//       Em  [-0.025, 0.025]
+//       Pmz [-0.025, 0.025]
+//       Pmx [-0.030, 0.030]
+//   - The number of histogram bins is selected from the Data entries inside
+//     the observable range:
+//       nBins = int(2*sqrt(nEntriesDataInRange)), constrained to [10,200]
+//     The same nBins is then used for Data and Sim for that observable/bin.
+//   - Data and Sim each use a two-stage Gaussian fit:
+//       first fit: full observable histogram range
+//       final fit: mu1 +/- 1.5*sigma1 from the first fit
+//     There is no physics/window clamping in this diagnostic version.
+//   - Sim is normalized to Data inside the Data final fit window
+//   - If the first approximate Gaussian fit fails, the row is marked invalid;
+//     no weighted-moment fallback is used
 //   - Data and Sim are fit with Gaussians when possible
 //   - The measured offset is:
 //       offset = mu_data - mu_sim
@@ -59,16 +82,20 @@
 //     diagnostics, in MeV
 //
 // Output PNGs:
-//   results/PNGs/MeasuredOffsetsBySetting/offsets_Setting<label>_<binlabel>bin.png
+//   results/PNGs/MeasuredOffsetsBySetting_<pass-or-study>/offsets_Setting<label>_<binlabel>bin.png
 //
 // Output CSV:
-//   results/tables/MeasuredOffsetsBySetting.csv
+//   results/tables/MeasuredOffsetsBySetting_<pass-or-study>.csv
 //
 // Run from:
 //   RSIDIS/heep_check_v3/
 //
-// Example:
-//   root -l -b -q 'macros/MeasuredOffsetsBySetting.C( -2, 3, 5, "results/PNGs/MeasuredOffsetsBySetting_5pass", "results/tables/MeasuredOffsetsBySetting_5pass.csv", "Pass0p1_DataROOTfiles", "Pass0p1_SimROOTfiles", "5pass" )'
+// Examples:
+//   4-pass:
+//   root -l -b -q 'macros/MeasuredOffsetsBySetting.C(1, "", "", "Pass0p1_DataROOTfiles", "Pass0p1_SimROOTfiles", "4pass" )'
+//
+//   5-pass:
+//   root -l -b -q 'macros/MeasuredOffsetsBySetting.C(1, "", "", "Pass0p1_DataROOTfiles", "Pass0p1_SimROOTfiles", "5pass" )'
 
 #include <iostream>
 #include <fstream>
@@ -117,9 +144,12 @@ static TString GetSimFileName(int run) {
 static const TString kDataTreeName = "T";
 static const TString kSimTreeName  = "h10";
 
-// Baseline cuts
-static const char* kDataCutBase = "(H.gtr.dp>-8) && (H.gtr.dp<8)";
-static const char* kSimCutBase  = "(hsdelta>-8) && (hsdelta<8)";
+// Baseline HMS cuts. These are set by MeasuredOffsetsBySetting() from the
+// requested setting set; 5-pass uses the tighter HMS dp cut from the partner
+// comparison study.
+static TString gDataCutBase = "(H.gtr.dp>-1) && (H.gtr.dp<1)";
+static TString gSimCutBase  = "(hsdelta>-1) && (hsdelta<1)";
+static bool gSkipShmsDpCut = false;
 
 // Sim weight branch
 static const char* kSimWeightBranch = "Weight";
@@ -140,22 +170,22 @@ static std::vector<VarInfo> GetVariables() {
                "P.kin.primary.W",
                "W_recon",
                "W (GeV)",
-               100, 0.6, 1.3});
+               100, 0.85, 1.05});
   v.push_back({"Em",
                "H.kin.secondary.emiss",
                "Em_recon",
                "Em (GeV)",
-               100, -0.05, 0.15});
+               100, -0.025, 0.025});
   v.push_back({"Pmz",
                "H.kin.secondary.pmiss_z",
                "Pmz_recon",
                "Pmz (GeV/c)",
-               100, -0.3, 0.3});
-  v.push_back({"Pmy",
-               "H.kin.secondary.pmiss_y",
-               "Pmy_recon",
-               "Pmy (GeV/c)",
-               100, -0.3, 0.3});
+               100, -0.025, 0.025});
+  v.push_back({"Pmx",
+               "H.kin.secondary.pmiss_x",
+               "Pmx_recon",
+               "Pmx (GeV/c)",
+               100, -0.030, 0.030});
   return v;
 }
 
@@ -166,21 +196,6 @@ struct DpBin {
   double hi;
 };
 
-static std::vector<DpBin> BuildDpBins(double dpFocusLo, double dpFocusHi, int nFocusBins) {
-  std::vector<DpBin> bins;
-  bins.push_back({0, "full", -10.0, 22.0});
-
-  if (nFocusBins < 1) nFocusBins = 1;
-  const double step = (dpFocusHi - dpFocusLo) / nFocusBins;
-  for (int i = 0; i < nFocusBins; ++i) {
-    bins.push_back({i + 1,
-                    Form("b%d", i + 1),
-                    dpFocusLo + i * step,
-                    dpFocusLo + (i + 1) * step});
-  }
-  return bins;
-}
-
 struct SettingInfo {
   TString label;
   std::vector<int> runs;
@@ -189,7 +204,25 @@ struct SettingInfo {
   double hmsAngleDeg = NAN;
   double shmsP = NAN;
   double shmsAngleDeg = NAN;
+  double shmsDpLo = -2.0;  // Default SHMS dp low cut
+  double shmsDpHi = 3.0;   // Default SHMS dp high cut
 };
+
+static std::vector<DpBin> BuildDpBins(const SettingInfo& setting) {
+  std::vector<DpBin> bins;
+
+  if (setting.label == "A" || setting.label == "B") {
+    if (gSkipShmsDpCut) {
+      bins.push_back({1, "b1", -999.0, 999.0});
+      return bins;
+    }
+    bins.push_back({1, "b1", -2.0, 1.0});
+    return bins;
+  }
+
+  bins.push_back({1, "b1", setting.shmsDpLo, setting.shmsDpHi});
+  return bins;
+}
 
 static std::vector<SettingInfo> Get4PassSettings() {
   const double eBeam = 8.5831;
@@ -207,13 +240,10 @@ static std::vector<SettingInfo> Get5PassSettings() {
   const double hmsAngleDeg = 26.395;
   const double shmsAngleDeg = 18.56;
   return {
-    {"C", {25476},        eBeam, hmsP, hmsAngleDeg, -6.7200, shmsAngleDeg},
-    {"D", {25477},        eBeam, hmsP, hmsAngleDeg, -6.3840, shmsAngleDeg},
-    {"E", {25478},        eBeam, hmsP, hmsAngleDeg, -6.6048, shmsAngleDeg},
-    {"F", {25479},        eBeam, hmsP, hmsAngleDeg, -5.7120, shmsAngleDeg},
-    {"G", {25480},        eBeam, hmsP, hmsAngleDeg, -5.3760, shmsAngleDeg},
-    {"H", {25481, 25482}, eBeam, hmsP, hmsAngleDeg, -5.0400, shmsAngleDeg},
-    {"I", {25483},        eBeam, hmsP, hmsAngleDeg, -4.7040, shmsAngleDeg}
+    // 5-pass comparison study: C/D/E only, with partner delta windows.
+    {"C", {25476},        eBeam, hmsP, hmsAngleDeg, -6.7200, shmsAngleDeg, -0.5, 2.5},
+    {"D", {25477},        eBeam, hmsP, hmsAngleDeg, -6.3840, shmsAngleDeg,  4.5, 7.5},
+    {"E", {25478},        eBeam, hmsP, hmsAngleDeg, -6.6048, shmsAngleDeg,  1.5, 4.5}
   };
 }
 
@@ -221,11 +251,13 @@ static std::vector<SettingInfo> GetSettings(const char* passName) {
   TString pass(passName ? passName : "");
   pass.ToLower();
 
-  if (pass == "4pass" || pass == "4" || pass == "pass4") return Get4PassSettings();
+  if (pass == "4pass" || pass == "4" || pass == "pass4" ||
+      pass == "4passnoshmsdpcut" || pass == "4pass_noshmsdpcut" ||
+      pass == "4pass_noshms") return Get4PassSettings();
   if (pass == "5pass" || pass == "5" || pass == "pass5") return Get5PassSettings();
 
   std::cerr << "[ERROR] Unknown setting set \"" << passName
-            << "\". Use \"4pass\" or \"5pass\".\n";
+            << "\". Use \"4pass\", \"4passNoShmsDpCut\", or \"5pass\".\n";
   return {};
 }
 
@@ -249,64 +281,73 @@ static void StyleHists(TH1D* hData, TH1D* hSim) {
   hData->GetYaxis()->SetLabelSize(0.048);
 }
 
-struct PeakWindow {
+struct FitWindow {
   double xLo = 0;
   double xHi = 0;
   double muSeed = 0;
   double sigSeed = 0;
+  double muSeedErr = 0;
+  double sigSeedErr = 0;
+  double chi2Seed = 0;
+  int ndfSeed = 0;
+  int statusSeed = -999;
   bool ok = false;
 };
 
-static PeakWindow EstimatePeakWindow(const TH1D* h,
-                                     int seedHalfWindowBins = 10,
-                                     double kSigma = 2.0,
-                                     int minHalfWidthBins = 4,
-                                     int maxHalfWidthBins = 25) {
-  PeakWindow pw;
+static const int kMinEntriesForFit = 20;
+
+static bool IsFinitePositive(double x) {
+  return std::isfinite(x) && x > 0.0;
+}
+
+static FitWindow EstimateFitWindowFromFullRange(TH1D* h,
+                                                const TString& fname,
+                                                double finalKSigma = 1.5,
+                                                Color_t lineColor = kGray + 2) {
+  FitWindow pw;
   if (!h) return pw;
 
-  const int nb = h->GetNbinsX();
-  if (nb < 5) return pw;
+  if (h->GetEntries() < kMinEntriesForFit) return pw;
+
+  const double xMin = h->GetXaxis()->GetXmin();
+  const double xMax = h->GetXaxis()->GetXmax();
+  if (!(xMax > xMin)) return pw;
 
   const int bMax = h->GetMaximumBin();
-  if (bMax < 1 || bMax > nb) return pw;
-
-  const int bLo = std::max(1, bMax - seedHalfWindowBins);
-  const int bHi = std::min(nb, bMax + seedHalfWindowBins);
-
-  double sumW = 0.0, sumWX = 0.0, sumWXX = 0.0;
-  for (int b = bLo; b <= bHi; ++b) {
-    const double w = h->GetBinContent(b);
-    const double x = h->GetXaxis()->GetBinCenter(b);
-    if (w <= 0) continue;
-    sumW += w;
-    sumWX += w * x;
-    sumWXX += w * x * x;
-  }
-  if (sumW <= 0) return pw;
-
-  const double mu = sumWX / sumW;
-  const double var = sumWXX / sumW - mu * mu;
-  double sig = (var > 0 ? std::sqrt(var) : 0.0);
-
   const double binW = h->GetXaxis()->GetBinWidth(1);
-  if (!(sig > 0)) sig = seedHalfWindowBins * binW * 0.35;
+  TF1 fSeed(fname, "gaus", xMin, xMax);
+  fSeed.SetLineColor(lineColor);
+  fSeed.SetLineStyle(2);
+  fSeed.SetLineWidth(1);
+  fSeed.SetParameters(h->GetBinContent(bMax), h->GetXaxis()->GetBinCenter(bMax),
+                      std::max(2.0 * binW, 0.2 * (xMax - xMin)));
 
-  double halfW = kSigma * sig;
-  halfW = std::max(halfW, minHalfWidthBins * binW);
-  halfW = std::min(halfW, maxHalfWidthBins * binW);
+  TFitResultPtr r = h->Fit(&fSeed, "QRSN");
+  pw.statusSeed = r.Get() ? r->Status() : -999;
+  if (r.Get()) {
+    pw.chi2Seed = r->Chi2();
+    pw.ndfSeed = r->Ndf();
+  }
+  if (pw.statusSeed != 0) return pw;
 
-  double xLo = mu - halfW;
-  double xHi = mu + halfW;
+  const double mu = fSeed.GetParameter(1);
+  const double sig = std::fabs(fSeed.GetParameter(2));
+  const double muErr = fSeed.GetParError(1);
+  const double sigErr = fSeed.GetParError(2);
+  if (!std::isfinite(mu) || !IsFinitePositive(sig)) return pw;
 
-  xLo = std::max(xLo, h->GetXaxis()->GetXmin());
-  xHi = std::min(xHi, h->GetXaxis()->GetXmax());
+  const double xLo = mu - finalKSigma * sig;
+  const double xHi = mu + finalKSigma * sig;
+  if (!std::isfinite(xLo) || !std::isfinite(xHi) || !(xHi > xLo)) return pw;
+  if (xHi <= xMin || xLo >= xMax) return pw;
 
   pw.xLo = xLo;
   pw.xHi = xHi;
   pw.muSeed = mu;
   pw.sigSeed = sig;
-  pw.ok = (xHi > xLo);
+  pw.muSeedErr = muErr;
+  pw.sigSeedErr = sigErr;
+  pw.ok = true;
   return pw;
 }
 
@@ -336,7 +377,7 @@ static FitOut FitGaus(TH1D* h, const TString& fname,
                       double xLo, double xHi,
                       Color_t lineColor) {
   FitOut out;
-  if (!h || !(xHi > xLo) || h->GetEntries() < 30) return out;
+  if (!h || !(xHi > xLo) || h->GetEntries() < kMinEntriesForFit) return out;
 
   TF1* f = new TF1(fname, "gaus", xLo, xHi);
   f->SetLineColor(lineColor);
@@ -360,8 +401,6 @@ static FitOut FitGaus(TH1D* h, const TString& fname,
 }
 
 static void EnsureCsvHeader(const TString& csvPath) {
-  if (!gSystem->AccessPathName(csvPath)) return;
-
   TString parent = gSystem->DirName(csvPath);
   if (!parent.IsNull() && gSystem->AccessPathName(parent)) {
     gSystem->mkdir(parent, kTRUE);
@@ -375,11 +414,15 @@ static void EnsureCsvHeader(const TString& csvPath) {
 
   csv
     << "setting,e_beam_GeV,hms_p_GeV,hms_angle_deg,shms_p_GeV,shms_angle_deg,"
-    << "dp_idx,dp_label,dp_lo,dp_hi,"
+    << "dp_idx,dp_label,dp_lo,dp_hi,bin_center,"
     << "var,"
+    << "nBins,"
     << "norm_win_lo,norm_win_hi,"
+    << "fitD_lo,fitD_hi,fitS_lo,fitS_hi,"
     << "intD_win,intS_win,sim_scale,"
     << "entriesD,entriesS,"
+    << "statusD1,muD1_MeV,muD1_err_MeV,sigD1_MeV,sigD1_err_MeV,chi2D1,ndfD1,"
+    << "statusS1,muS1_MeV,muS1_err_MeV,sigS1_MeV,sigS1_err_MeV,chi2S1,ndfS1,"
     << "muD_MeV,muD_err_MeV,sigD_MeV,sigD_err_MeV,statusD,chi2D,ndfD,"
     << "muS_MeV,muS_err_MeV,sigS_MeV,sigS_err_MeV,statusS,chi2S,ndfS,"
     << "offset_MeV,offset_err_MeV,fit_valid"
@@ -388,7 +431,8 @@ static void EnsureCsvHeader(const TString& csvPath) {
 
 static void AppendCsvRow(const TString& csvPath,
                          const SettingInfo& setting, const DpBin& dp, const VarInfo& V,
-                         const PeakWindow& pw,
+                         int nBins,
+                         const FitWindow& pwD, const FitWindow& pwS,
                          double intDwin, double intSwin, double simScale,
                          double entriesD, double entriesS,
                          const FitOut& fD, const FitOut& fS,
@@ -418,14 +462,34 @@ static void AppendCsvRow(const TString& csvPath,
     << dp.label.Data() << ","
     << dp.lo << ","
     << dp.hi << ","
+    << 0.5 * (dp.lo + dp.hi) << ","
     << V.name.Data() << ","
-    << pw.xLo << ","
-    << pw.xHi << ","
+    << nBins << ","
+    << pwD.xLo << ","
+    << pwD.xHi << ","
+    << pwD.xLo << ","
+    << pwD.xHi << ","
+    << pwS.xLo << ","
+    << pwS.xHi << ","
     << intDwin << ","
     << intSwin << ","
     << simScale << ","
     << entriesD << ","
     << entriesS << ","
+    << pwD.statusSeed << ","
+    << pwD.muSeed * 1000.0 << ","
+    << pwD.muSeedErr * 1000.0 << ","
+    << pwD.sigSeed * 1000.0 << ","
+    << pwD.sigSeedErr * 1000.0 << ","
+    << pwD.chi2Seed << ","
+    << pwD.ndfSeed << ","
+    << pwS.statusSeed << ","
+    << pwS.muSeed * 1000.0 << ","
+    << pwS.muSeedErr * 1000.0 << ","
+    << pwS.sigSeed * 1000.0 << ","
+    << pwS.sigSeedErr * 1000.0 << ","
+    << pwS.chi2Seed << ","
+    << pwS.ndfSeed << ","
     << muDMeV << ","
     << muDErrMeV << ","
     << sigDMeV << ","
@@ -469,7 +533,6 @@ static bool BuildChainsForSetting(const SettingInfo& setting, TChain& dataChain,
 }
 
 static void ProcessOneSetting(const SettingInfo& setting,
-                              double dpFocusLo, double dpFocusHi, int nFocusBins,
                               const TString& outDir,
                               const TString& csvPath) {
   TChain tData(kDataTreeName);
@@ -480,7 +543,7 @@ static void ProcessOneSetting(const SettingInfo& setting,
   }
 
   std::vector<VarInfo> vars = GetVariables();
-  std::vector<DpBin> dpBins = BuildDpBins(dpFocusLo, dpFocusHi, nFocusBins);
+  std::vector<DpBin> dpBins = BuildDpBins(setting);
 
   for (const auto& dp : dpBins) {
     TCanvas* c = new TCanvas(Form("c_heep_setting%s_%s", setting.label.Data(), dp.label.Data()),
@@ -488,24 +551,33 @@ static void ProcessOneSetting(const SettingInfo& setting,
                              1600, 1000);
     c->Divide(2, 2);
 
-    const TString dataDpCut = Form("(P.gtr.dp>%g) && (P.gtr.dp<%g)", dp.lo, dp.hi);
-    const TString simDpCut  = Form("(ssdelta>%g) && (ssdelta<%g)", dp.lo, dp.hi);
-    const TString dataCut = Form("(%s) && (%s)", kDataCutBase, dataDpCut.Data());
-    const TString simCut  = Form("(%s) && (%s)", kSimCutBase,  simDpCut.Data());
+    const TString dataDpCut = gSkipShmsDpCut ? "1" : Form("(P.gtr.dp>%g) && (P.gtr.dp<%g)", dp.lo, dp.hi);
+    const TString simDpCut  = gSkipShmsDpCut ? "1" : Form("(ssdelta>%g) && (ssdelta<%g)", dp.lo, dp.hi);
+    const TString dataCut = Form("(%s) && (%s)", gDataCutBase.Data(), dataDpCut.Data());
+    const TString simCut  = Form("(%s) && (%s)", gSimCutBase.Data(),  simDpCut.Data());
 
     for (int i = 0; i < (int)vars.size(); ++i) {
       const VarInfo& V = vars[i];
       c->cd(i + 1);
       gPad->SetLeftMargin(0.12);
-      gPad->SetRightMargin(0.05);
+      // Keep enough space for ROOT's x-axis exponent, e.g. #times10^{-3}.
+      gPad->SetRightMargin(0.12);
       gPad->SetBottomMargin(0.12);
       gPad->SetTopMargin(0.08);
 
       const TString hDname = Form("hD_%s_setting%s_%s", V.name.Data(), setting.label.Data(), dp.label.Data());
       const TString hSname = Form("hS_%s_setting%s_%s", V.name.Data(), setting.label.Data(), dp.label.Data());
 
-      TH1D* hD = new TH1D(hDname, "", V.nbins, V.xmin, V.xmax);
-      TH1D* hS = new TH1D(hSname, "", V.nbins, V.xmin, V.xmax);
+      const TString dataObsCut = Form("(%s>%.12g) && (%s<%.12g)",
+                                      V.data_expr.Data(), V.xmin,
+                                      V.data_expr.Data(), V.xmax);
+      const TString dataCountCut = Form("(%s) && (%s)", dataCut.Data(), dataObsCut.Data());
+      const Long64_t nEventsDInRange = tData.GetEntries(dataCountCut);
+      int nBins = (int)(2.0 * std::sqrt((double)std::max((Long64_t)0, nEventsDInRange)));
+      nBins = std::max(10, std::min(nBins, 200));
+
+      TH1D* hD = new TH1D(hDname, "", nBins, V.xmin, V.xmax);
+      TH1D* hS = new TH1D(hSname, "", nBins, V.xmin, V.xmax);
       hD->Sumw2();
       hS->Sumw2();
 
@@ -513,24 +585,32 @@ static void ProcessOneSetting(const SettingInfo& setting,
       const TString simSel = Form("%s*(%s)", kSimWeightBranch, simCut.Data());
       tSim.Draw(Form("%s>>%s", V.sim_expr.Data(), hSname.Data()), simSel.Data(), "goff");
 
-      const PeakWindow pw = EstimatePeakWindow(hD, 10, 2.0, 4, 25);
+      const FitWindow pwD = EstimateFitWindowFromFullRange(
+          hD,
+          Form("fD1_%s_setting%s_%s", V.name.Data(), setting.label.Data(), dp.label.Data()),
+          1.5, kGray + 2);
+
+      const FitWindow pwS1 = EstimateFitWindowFromFullRange(
+          hS,
+          Form("fS1_%s_setting%s_%s", V.name.Data(), setting.label.Data(), dp.label.Data()),
+          1.5, kMagenta + 2);
 
       double intDwin = 0.0, intSwin = 0.0, simScale = 1.0;
-      if (pw.ok) {
-        intDwin = IntegralInXRange(hD, pw.xLo, pw.xHi);
-        intSwin = IntegralInXRange(hS, pw.xLo, pw.xHi);
+      if (pwD.ok) {
+        intDwin = IntegralInXRange(hD, pwD.xLo, pwD.xHi);
+        intSwin = IntegralInXRange(hS, pwD.xLo, pwD.xHi);
         if (intSwin > 0 && intDwin > 0) {
           simScale = intDwin / intSwin;
           hS->Scale(simScale);
         }
       }
 
-      const double fitLoD = pw.ok ? pw.xLo : V.xmin;
-      const double fitHiD = pw.ok ? pw.xHi : V.xmax;
+      const double fitLoD = pwD.ok ? pwD.xLo : 0.0;
+      const double fitHiD = pwD.ok ? pwD.xHi : 0.0;
 
-      const PeakWindow pwS = EstimatePeakWindow(hS, 10, 2.0, 4, 25);
-      const double fitLoS = pwS.ok ? pwS.xLo : fitLoD;
-      const double fitHiS = pwS.ok ? pwS.xHi : fitHiD;
+      const FitWindow pwS = pwS1;
+      const double fitLoS = pwS.ok ? pwS.xLo : 0.0;
+      const double fitHiS = pwS.ok ? pwS.xHi : 0.0;
 
       const FitOut fD = FitGaus(hD,
                                 Form("fD_%s_setting%s_%s", V.name.Data(), setting.label.Data(), dp.label.Data()),
@@ -549,7 +629,16 @@ static void ProcessOneSetting(const SettingInfo& setting,
       double sigSErrMeV = -999.0;
       double offsetMeV = -999.0;
       double offsetErrMeV = -999.0;
-      if (fD.ok && fS.ok) {
+      const bool fitValid = (nEventsDInRange >= kMinEntriesForFit &&
+                             hS->GetEntries() >= kMinEntriesForFit &&
+                             pwD.ok && pwS.ok &&
+                             fD.ok && fS.ok &&
+                             std::isfinite(fD.mu) && std::isfinite(fD.muErr) &&
+                             std::isfinite(fD.sig) && std::isfinite(fD.sigErr) &&
+                             std::isfinite(fS.mu) && std::isfinite(fS.muErr) &&
+                             std::isfinite(fS.sig) && std::isfinite(fS.sigErr));
+
+      if (fitValid) {
         muDMeV = fD.mu * 1000.0;
         muDErrMeV = fD.muErr * 1000.0;
         sigDMeV = fD.sig * 1000.0;
@@ -585,8 +674,10 @@ static void ProcessOneSetting(const SettingInfo& setting,
       lat.SetNDC();
       lat.SetTextSize(0.058);
       lat.SetTextColor(kBlack);
-      lat.DrawLatex(0.43, 0.92, Form("Setting %s, dp[%g,%g] (%s)",
-                                     setting.label.Data(), dp.lo, dp.hi, dp.label.Data()));
+      const TString dpText = gSkipShmsDpCut
+        ? Form("Setting %s, no SHMS dp cut (%s)", setting.label.Data(), dp.label.Data())
+        : Form("Setting %s, dp[%g,%g] (%s)", setting.label.Data(), dp.lo, dp.hi, dp.label.Data());
+      lat.DrawLatex(0.43, 0.92, dpText);
 
       lat.SetTextSize(0.050);
       lat.DrawLatex(0.15, 0.84, Form("Data: #mu=%.5f #pm %.5f", fD.mu, fD.muErr));
@@ -594,27 +685,29 @@ static void ProcessOneSetting(const SettingInfo& setting,
 
       lat.SetTextColor(kRed + 1);
       lat.SetTextSize(0.062);
-      if (fD.ok && fS.ok) {
+      if (fitValid) {
         lat.DrawLatex(0.15, 0.72, Form("Offset = %.2f #pm %.2f MeV", offsetMeV, offsetErrMeV));
       } else {
-        lat.DrawLatex(0.15, 0.72, Form("Offset invalid  (statusD=%d, statusS=%d)", fD.status, fS.status));
+        lat.DrawLatex(0.15, 0.72, Form("Offset invalid  (D1=%d,S1=%d,D=%d,S=%d)",
+                                       pwD.statusSeed, pwS.statusSeed, fD.status, fS.status));
       }
 
       lat.SetTextColor(kGray + 2);
       lat.SetTextSize(0.042);
-	      if (pw.ok) lat.DrawLatex(0.15, 0.66, Form("NormWin: [%.5f, %.5f], SimScale=%.4g", pw.xLo, pw.xHi, simScale));
+	      if (pwD.ok) lat.DrawLatex(0.15, 0.66, Form("NormWin: [%.5f, %.5f], SimScale=%.4g", pwD.xLo, pwD.xHi, simScale));
+	      lat.DrawLatex(0.15, 0.56, Form("nD=%lld, nBins=%d", nEventsDInRange, nBins));
 	      if (std::isfinite(setting.shmsP)) {
-	        lat.DrawLatex(0.15, 0.61, Form("HMS P=%.3f, SHMS P=%.4f GeV", setting.hmsP, setting.shmsP));
+	        lat.DrawLatex(0.15, 0.51, Form("HMS P=%.3f, SHMS P=%.4f GeV", setting.hmsP, setting.shmsP));
 	      }
 	
-	      AppendCsvRow(csvPath, setting, dp, V, pw,
+	      AppendCsvRow(csvPath, setting, dp, V, nBins, pwD, pwS,
                    intDwin, intSwin, simScale,
                    hD->GetEntries(), hS->GetEntries(),
                    fD, fS,
                    muDMeV, muDErrMeV, sigDMeV, sigDErrMeV,
                    muSMeV, muSErrMeV, sigSMeV, sigSErrMeV,
                    offsetMeV, offsetErrMeV,
-                   (fD.ok && fS.ok));
+                   fitValid);
     }
 
     const TString outName = outDir + Form("/offsets_Setting%s_%sbin.png",
@@ -625,11 +718,9 @@ static void ProcessOneSetting(const SettingInfo& setting,
   }
 }
 
-void MeasuredOffsetsBySetting(double dpFocusLo = -2.0,
-                              double dpFocusHi =  3.0,
-	                              int nFocusBins = 5,
-	                              const char* outDirC = "results/PNGs/MeasuredOffsetsBySetting",
-	                              const char* csvPathC = "results/tables/MeasuredOffsetsBySetting.csv",
+void MeasuredOffsetsBySetting(int nFocusBins = 1,
+	                              const char* outDirC = "",
+	                              const char* csvPathC = "",
 	                              const char* dataDirC = "Pass0p1_DataROOTfiles",
 	                              const char* simDirC = "Pass0p1_SimROOTfiles",
 	                              const char* settingSetC = "5pass") {
@@ -637,8 +728,26 @@ void MeasuredOffsetsBySetting(double dpFocusLo = -2.0,
   gStyle->SetOptStat(0);
   TGaxis::SetMaxDigits(3);
 
-  const TString outDir(outDirC);
-  const TString csvPath(csvPathC);
+  TString settingSet(settingSetC ? settingSetC : "");
+  settingSet.ToLower();
+
+  TString passTag = "5pass";
+  const bool is4PassNoShmsDpCut =
+    (settingSet == "4passnoshmsdpcut" || settingSet == "4pass_noshmsdpcut" ||
+     settingSet == "4pass_noshms");
+
+  if (settingSet == "4pass" || settingSet == "4" || settingSet == "pass4" || is4PassNoShmsDpCut) {
+    passTag = "4pass";
+    if (is4PassNoShmsDpCut) passTag = "4passNoShmsDpCut";
+  } else if (settingSet == "5pass" || settingSet == "5" || settingSet == "pass5" || settingSet.IsNull()) {
+    passTag = "5pass";
+  }
+
+  TString outDir(outDirC ? outDirC : "");
+  TString csvPath(csvPathC ? csvPathC : "");
+  if (outDir.IsNull()) outDir = Form("results/PNGs/MeasuredOffsetsBySetting_%s", passTag.Data());
+  if (csvPath.IsNull()) csvPath = Form("results/tables/MeasuredOffsetsBySetting_%s.csv", passTag.Data());
+
   gDataDir = NormalizeDir(TString(dataDirC));
   gSimDir  = NormalizeDir(TString(simDirC));
 
@@ -651,7 +760,29 @@ void MeasuredOffsetsBySetting(double dpFocusLo = -2.0,
 
 	  const std::vector<SettingInfo> settings = GetSettings(settingSetC);
 	  if (settings.empty()) return;
+  gSkipShmsDpCut = false;
+	  if (settingSet == "5pass" || settingSet == "5" || settingSet == "pass5") {
+	    gDataCutBase = "(H.gtr.dp>-1) && (H.gtr.dp<1)";
+	    gSimCutBase  = "(hsdelta>-1) && (hsdelta<1)";
+	    std::cout << "[INFO] 5-pass HMS dp cut: [-1, 1]\n";
+    if (nFocusBins != 1) {
+      std::cout << "[INFO] For 5-pass, forcing nFocusBins=1 to use one SHMS dp bin per setting.\n";
+      nFocusBins = 1;
+    }
+	  } else {
+	    gDataCutBase = "(H.gtr.dp>-1) && (H.gtr.dp<1)";
+	    gSimCutBase  = "(hsdelta>-1) && (hsdelta<1)";
+	    gSkipShmsDpCut = is4PassNoShmsDpCut;
+	    std::cout << "[INFO] 4-pass HMS dp cut: [-1, 1]\n";
+	    if (gSkipShmsDpCut) {
+	      std::cout << "[INFO] 4-pass diagnostic: no SHMS dp cut applied\n";
+	    }
+    if (nFocusBins != 1) {
+      std::cout << "[INFO] For 4-pass, forcing nFocusBins=1.\n";
+      nFocusBins = 1;
+    }
+	  }
 	  for (const auto& setting : settings) {
-    ProcessOneSetting(setting, dpFocusLo, dpFocusHi, nFocusBins, outDir, csvPath);
+    ProcessOneSetting(setting, outDir, csvPath);
   }
 }

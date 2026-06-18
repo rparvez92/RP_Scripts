@@ -10,7 +10,7 @@ signal,25513,15.223,26.778,3784338,141322.6529,72.64685573,29.0646,0.491232,"./S
 signal,25532,29.946,52.579,7367376,140120.124,51.62310176,27.9467,0.391996,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25532_-1.root",OK
 signal,25533,29.995,30.622,4294870,140254.3923,67.67705615,28.0756,0.513625,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25533_-1.root",OK
 signal,25534,29.454,40.299,5652038,140252.5621,58.99405749,27.6714,0.444168,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25534_-1.root",OK
-signal,25536,28.447,13.434,1882904,140159.5951,102.143032,27.8813,0.770168,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25536_-1.root",OK
+signal,25536,28.447,13.434,1882904,140159.5951,102.143032,27.8839,0.770241,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25536_-1.root",OK
 signal,25538,28.263,49.644,6956343,140124.5468,53.12803178,27.4755,0.397073,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25538_-1.root",OK
 # FIT_MODEL,pol0
 # FIT_c,140672.253934

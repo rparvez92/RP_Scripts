@@ -1,0 +1,9 @@
+dataset,method,init,chi2,n_obs,n_params,ndf,chi2_ndf,max_abs_pull,exact_inversion_flag,success,message,nit,nfev
+julio_input,scipy_nelder_mead,zero_init,103.045568,12,8,4,25.761392,6.828598,0,True,Optimization terminated successfully.,2915,4331
+julio_input,scipy_nelder_mead,julio_like_init,102.646714,12,8,4,25.661678,6.838055,1,True,Optimization terminated successfully.,2628,3981
+radwan_input,scipy_nelder_mead,zero_init,29.164248,12,8,4,7.291062,2.459590,0,True,Optimization terminated successfully.,3652,5382
+radwan_input,scipy_nelder_mead,julio_like_init,12.886112,12,8,4,3.221528,1.989236,1,True,Optimization terminated successfully.,2435,3673
+radwan_rangescan_k1p5,scipy_nelder_mead,zero_init,35.257273,12,8,4,8.814318,2.704657,0,True,Optimization terminated successfully.,2636,3925
+radwan_rangescan_k1p5,scipy_nelder_mead,julio_like_init,9.432114,12,8,4,2.358029,1.633693,1,True,Optimization terminated successfully.,2249,3453
+radwan_rangescan_k2p0,scipy_nelder_mead,zero_init,28.734756,12,8,4,7.183689,2.435489,0,True,Optimization terminated successfully.,2818,4210
+radwan_rangescan_k2p0,scipy_nelder_mead,julio_like_init,12.813819,12,8,4,3.203455,1.986760,1,True,Optimization terminated successfully.,2294,3464

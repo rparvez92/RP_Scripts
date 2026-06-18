@@ -1,0 +1,9 @@
+setting,delta_center,dp_lo,dp_hi,variable,measured,measured_err,error_source,sigma,sigma_err,predicted,residual,pull,dthe,dpe,dthp,dpp,chi2,n_obs,n_params,ndf,chi2_ndf,success,message,nit,nfev
+A,-0.5000,-2.0000,1.0000,W,4.4606,0.0792,dry4pass_measured_errors,18.9206,0.0830,2.6360,1.8246,23.0490,0.8460,-1.6876,-5.2280,2.8762,6750.2301,8,4,4,1687.5575,True,Optimization terminated successfully.,491,862
+A,-0.5000,-2.0000,1.0000,Em,5.5262,0.0401,dry4pass_measured_errors,6.3837,0.0426,5.8745,-0.3483,-8.6832,0.8460,-1.6876,-5.2280,2.8762,6750.2301,8,4,4,1687.5575,True,Optimization terminated successfully.,491,862
+A,-0.5000,-2.0000,1.0000,Pmz,-5.9590,0.0326,dry4pass_measured_errors,10.1401,0.0336,-5.2545,-0.7045,-21.5862,0.8460,-1.6876,-5.2280,2.8762,6750.2301,8,4,4,1687.5575,True,Optimization terminated successfully.,491,862
+A,-0.5000,-2.0000,1.0000,Pmy,6.1958,0.0255,dry4pass_measured_errors,8.7988,0.0169,5.6323,0.5636,22.0692,0.8460,-1.6876,-5.2280,2.8762,6750.2301,8,4,4,1687.5575,True,Optimization terminated successfully.,491,862
+B,-0.5000,-2.0000,1.0000,W,7.7490,0.6158,dry4pass_measured_errors,24.9002,0.9706,-0.1134,7.8623,12.7682,0.8460,-1.6876,-5.2280,2.8762,6750.2301,8,4,4,1687.5575,True,Optimization terminated successfully.,491,862
+B,-0.5000,-2.0000,1.0000,Em,-4.8266,0.2556,dry4pass_measured_errors,7.0760,0.2976,-0.8887,-3.9379,-15.4069,0.8460,-1.6876,-5.2280,2.8762,6750.2301,8,4,4,1687.5575,True,Optimization terminated successfully.,491,862
+B,-0.5000,-2.0000,1.0000,Pmz,4.7136,0.1314,dry4pass_measured_errors,9.7603,0.1420,0.8920,3.8216,29.0855,0.8460,-1.6876,-5.2280,2.8762,6750.2301,8,4,4,1687.5575,True,Optimization terminated successfully.,491,862
+B,-0.5000,-2.0000,1.0000,Pmy,7.8984,0.1197,dry4pass_measured_errors,9.9150,0.1014,15.4176,-7.5192,-62.8029,0.8460,-1.6876,-5.2280,2.8762,6750.2301,8,4,4,1687.5575,True,Optimization terminated successfully.,491,862

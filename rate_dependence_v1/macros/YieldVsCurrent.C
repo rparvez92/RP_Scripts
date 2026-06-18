@@ -11,6 +11,7 @@
 // Reads:
 //   <setting_dir>/run_metadata.csv
 //   <results>/<same rel path as manifest>/tables/coincidence_blocking_by_run.csv
+//   <results>/<same rel path as manifest>/tables/hodo3of4_livetime_by_run.csv
 //   ./Skimmed_ROOTfiles/skimmed_coin_replay_production_<RUN>_-1.root
 //
 // Base physics cuts:
@@ -42,8 +43,21 @@
 //     fitted peak by +/-2 and +/-3 RF periods, using RF period = 4 ns.
 //
 // Corrections / normalization:
-//   yield = Nnet * (boil_corr * ps_factor)
-//                 / (comp_livetime * h_esing_Eff * coincidence_blocking_ratio * BCM2_Q)
+//   yield_no_CB_corr =
+//     Nnet * (boil_corr * ps_factor)
+//          / (comp_livetime * h_esing_Eff * BCM2_Q)
+//
+//   yield_CB_corr =
+//     yield_no_CB_corr / coincidence_blocking_ratio
+//
+//   yield_no_hodo3of4_corr =
+//     yield_CB_corr
+//
+//   yield_hodo3of4_corr =
+//     yield_no_hodo3of4_corr / hodo3of4_LT
+//
+//   The CSV columns yield and yield_err are kept as the final corrected yield:
+//     yield = yield_hodo3of4_corr
 //
 // Writes:
 //   <results>/<same rel path as manifest>/tables/yield_vs_current_signal.csv
@@ -67,6 +81,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -191,6 +206,17 @@ struct BlockingRow {
   std::string status;
 };
 
+struct HodoLTRowForYield {
+  int run = -1;
+  double p1x_rate_kHz = NAN;
+  double p1y_rate_kHz = NAN;
+  double p2x_rate_kHz = NAN;
+  double p2y_rate_kHz = NAN;
+  double dpr_ns = NAN;
+  double lt = NAN;
+  std::string status;
+};
+
 static std::vector<MetaRow> ReadRunMetadata(const std::string& path, std::ostream& log) {
   std::vector<MetaRow> rows;
   std::ifstream f(path);
@@ -282,6 +308,51 @@ ReadBlockingByRun(const std::string& path, std::ostream& log) {
   return out;
 }
 
+static std::unordered_map<int, HodoLTRowForYield>
+ReadHodoLTByRun(const std::string& path, std::ostream& log) {
+  std::unordered_map<int, HodoLTRowForYield> out;
+  std::ifstream f(path);
+  if (!f.is_open()) {
+    log << "ERROR: cannot open " << path << "\n";
+    return out;
+  }
+
+  std::string header;
+  if (!std::getline(f, header)) return out;
+
+  auto cols = SplitCSVLine(header);
+  std::unordered_map<std::string,int> idx;
+  for (int i=0; i<(int)cols.size(); ++i) idx[cols[i]] = i;
+
+  auto col = [&](const std::vector<std::string>& r, const std::string& name)->std::string{
+    auto it = idx.find(name);
+    if (it == idx.end()) return "";
+    int j = it->second;
+    if (j < 0 || j >= (int)r.size()) return "";
+    return r[j];
+  };
+
+  std::string line;
+  while (std::getline(f, line)) {
+    if (line.empty()) continue;
+    auto r = SplitCSVLine(line);
+
+    HodoLTRowForYield h;
+    try { h.run = std::stoi(col(r, "run")); } catch (...) { continue; }
+    h.p1x_rate_kHz = SafeToD(col(r, "P1X_rate_kHz"));
+    h.p1y_rate_kHz = SafeToD(col(r, "P1Y_rate_kHz"));
+    h.p2x_rate_kHz = SafeToD(col(r, "P2X_rate_kHz"));
+    h.p2y_rate_kHz = SafeToD(col(r, "P2Y_rate_kHz"));
+    h.dpr_ns       = SafeToD(col(r, "DPR_ns"));
+    h.lt           = SafeToD(col(r, "hodo3of4_LT"));
+    h.status       = col(r, "status");
+    out[h.run] = h;
+  }
+
+  log << "Loaded rows from hodo3of4_livetime_by_run.csv: " << out.size() << "\n";
+  return out;
+}
+
 // ---------- main ----------
 void YieldVsCurrent(const char* manifestPath,
                     const char* resultsDir)
@@ -335,6 +406,14 @@ void YieldVsCurrent(const char* manifestPath,
     return;
   }
 
+  // Read SHMS hodo 3-of-4 livetimes for the same setting
+  const std::string hodoLTPath = outTabs + "/hodo3of4_livetime_by_run.csv";
+  auto hodoLTByRun = ReadHodoLTByRun(hodoLTPath, log);
+  if (hodoLTByRun.empty()) {
+    log << "ERROR: no hodo 3-of-4 livetime rows. Run Hodo3of4LivetimeByRun.C first.\n";
+    return;
+  }
+
   // Physics cuts
   const TString baseCuts =
       "(H_gtr_dp>-8) && (H_gtr_dp<8) && "
@@ -353,7 +432,13 @@ void YieldVsCurrent(const char* manifestPath,
   csv << "category,run,BCM2_I,"
       << "Nnet,Nnet_err,"
       << "norm_factor,yield,yield_err,"
-      << "BCM2_Q_mC,comp_livetime,h_esing_Eff,coincidence_blocking_ratio,boil_corr,ps_choice,ps_factor,"
+      << "yield_no_CB_corr,yield_no_CB_corr_err,"
+      << "yield_CB_corr,yield_CB_corr_err,"
+      << "yield_no_hodo3of4_corr,yield_no_hodo3of4_corr_err,"
+      << "yield_hodo3of4_corr,yield_hodo3of4_corr_err,"
+      << "BCM2_Q_mC,comp_livetime,h_esing_Eff,coincidence_blocking_ratio,hodo3of4_LT,DPR_ns,"
+      << "P1X_rate_kHz,P1Y_rate_kHz,P2X_rate_kHz,P2Y_rate_kHz,"
+      << "boil_corr,ps_choice,ps_factor,"
       << "PeakCenterNs,CoinLoNs,CoinHiNs,RandomWindowListNs,rootfile,status,"
       << "fit_included,fit_excluded_reason\n";
 
@@ -377,6 +462,12 @@ void YieldVsCurrent(const char* manifestPath,
 
     std::string status = "OK";
     double coinc_blocking_ratio = NAN;
+    double hodo3of4_LT = NAN;
+    double hodo_dpr_ns = NAN;
+    double p1x_rate_kHz = NAN;
+    double p1y_rate_kHz = NAN;
+    double p2x_rate_kHz = NAN;
+    double p2y_rate_kHz = NAN;
 
     // Validate normalization scalars
     bool badNorm = false;
@@ -413,6 +504,28 @@ void YieldVsCurrent(const char* manifestPath,
         status = "BADBLOCKING";
       }
     }
+    auto hit = hodoLTByRun.find(run);
+    if (hit == hodoLTByRun.end()) {
+      warn(run, "Missing hodo3of4_LT row.");
+      badNorm = true;
+      status = (status == "OK") ? "NOHODOLTROW" : status + "_NOHODOLTROW";
+    } else {
+      hodo3of4_LT = hit->second.lt;
+      hodo_dpr_ns = hit->second.dpr_ns;
+      p1x_rate_kHz = hit->second.p1x_rate_kHz;
+      p1y_rate_kHz = hit->second.p1y_rate_kHz;
+      p2x_rate_kHz = hit->second.p2x_rate_kHz;
+      p2y_rate_kHz = hit->second.p2y_rate_kHz;
+      if (hit->second.status != "OK") {
+        warn(run, "Hodo 3-of-4 livetime status not OK: " + hit->second.status);
+        badNorm = true;
+        status = (status == "OK") ? "BADHODOLT" : status + "_BADHODOLT";
+      } else if (!std::isfinite(hodo3of4_LT) || hodo3of4_LT <= 0.0 || hodo3of4_LT > 1.0) {
+        warn(run, Form("hodo3of4_LT invalid (%.6g).", hodo3of4_LT));
+        badNorm = true;
+        status = (status == "OK") ? "BADHODOLT" : status + "_BADHODOLT";
+      }
+    }
 
     // Open ROOT file
     std::unique_ptr<TFile> f(TFile::Open(rootfile.c_str(), "READ"));
@@ -422,7 +535,11 @@ void YieldVsCurrent(const char* manifestPath,
       csv << m.category << "," << run << "," << m.BCM2_I << ","
           << "nan,nan,"
           << "nan,nan,nan,"
-          << m.BCM2_Q << "," << m.comp_livetime << "," << m.h_esing_Eff << "," << coinc_blocking_ratio << "," << m.boil_corr << ","
+          << "nan,nan,nan,nan,nan,nan,nan,nan,"
+          << m.BCM2_Q << "," << m.comp_livetime << "," << m.h_esing_Eff << ","
+          << coinc_blocking_ratio << "," << hodo3of4_LT << "," << hodo_dpr_ns << ","
+          << p1x_rate_kHz << "," << p1y_rate_kHz << "," << p2x_rate_kHz << "," << p2y_rate_kHz << ","
+          << m.boil_corr << ","
           << "\"" << m.ps_choice << "\"," << m.ps_factor << ","
           << "nan,nan,nan,"
           << "\"\","
@@ -439,7 +556,11 @@ void YieldVsCurrent(const char* manifestPath,
       csv << m.category << "," << run << "," << m.BCM2_I << ","
           << "nan,nan,"
           << "nan,nan,nan,"
-          << m.BCM2_Q << "," << m.comp_livetime << "," << m.h_esing_Eff << "," << coinc_blocking_ratio << "," << m.boil_corr << ","
+          << "nan,nan,nan,nan,nan,nan,nan,nan,"
+          << m.BCM2_Q << "," << m.comp_livetime << "," << m.h_esing_Eff << ","
+          << coinc_blocking_ratio << "," << hodo3of4_LT << "," << hodo_dpr_ns << ","
+          << p1x_rate_kHz << "," << p1y_rate_kHz << "," << p2x_rate_kHz << "," << p2y_rate_kHz << ","
+          << m.boil_corr << ","
           << "\"" << m.ps_choice << "\"," << m.ps_factor << ","
           << "nan,nan,nan,"
           << "\"\","
@@ -457,12 +578,35 @@ void YieldVsCurrent(const char* manifestPath,
 
     double norm_factor = NAN;
     double yy = NAN, yerr = NAN;
+    double yield_no_CB_corr = NAN;
+    double yield_no_CB_corr_err = NAN;
+    double yield_CB_corr = NAN;
+    double yield_CB_corr_err = NAN;
+    double yield_no_hodo3of4_corr = NAN;
+    double yield_no_hodo3of4_corr_err = NAN;
+    double yield_hodo3of4_corr = NAN;
+    double yield_hodo3of4_corr_err = NAN;
 
     if (!badNorm) {
-      norm_factor = (m.boil_corr * m.ps_factor)
-                  / (m.comp_livetime * m.h_esing_Eff * coinc_blocking_ratio * m.BCM2_Q);
-      yy   = Nnet    * norm_factor;
-      yerr = NnetErr * norm_factor;
+      const double norm_no_CB = (m.boil_corr * m.ps_factor)
+                              / (m.comp_livetime * m.h_esing_Eff * m.BCM2_Q);
+      const double norm_CB = norm_no_CB / coinc_blocking_ratio;
+      norm_factor = norm_CB / hodo3of4_LT;
+
+      yield_no_CB_corr = Nnet * norm_no_CB;
+      yield_no_CB_corr_err = NnetErr * norm_no_CB;
+
+      yield_CB_corr = Nnet * norm_CB;
+      yield_CB_corr_err = NnetErr * norm_CB;
+
+      yield_no_hodo3of4_corr = yield_CB_corr;
+      yield_no_hodo3of4_corr_err = yield_CB_corr_err;
+
+      yield_hodo3of4_corr = Nnet * norm_factor;
+      yield_hodo3of4_corr_err = NnetErr * norm_factor;
+
+      yy = yield_hodo3of4_corr;
+      yerr = yield_hodo3of4_corr_err;
     } else {
       if (status == "OK") status = "BADMETA";
     }
@@ -488,7 +632,14 @@ void YieldVsCurrent(const char* manifestPath,
     csv << m.category << "," << run << "," << m.BCM2_I << ","
         << Nnet << "," << NnetErr << ","
         << norm_factor << "," << yy << "," << yerr << ","
-        << m.BCM2_Q << "," << m.comp_livetime << "," << m.h_esing_Eff << "," << coinc_blocking_ratio << "," << m.boil_corr << ","
+        << yield_no_CB_corr << "," << yield_no_CB_corr_err << ","
+        << yield_CB_corr << "," << yield_CB_corr_err << ","
+        << yield_no_hodo3of4_corr << "," << yield_no_hodo3of4_corr_err << ","
+        << yield_hodo3of4_corr << "," << yield_hodo3of4_corr_err << ","
+        << m.BCM2_Q << "," << m.comp_livetime << "," << m.h_esing_Eff << ","
+        << coinc_blocking_ratio << "," << hodo3of4_LT << "," << hodo_dpr_ns << ","
+        << p1x_rate_kHz << "," << p1y_rate_kHz << "," << p2x_rate_kHz << "," << p2y_rate_kHz << ","
+        << m.boil_corr << ","
         << "\"" << m.ps_choice << "\"," << m.ps_factor << ","
         << R.PeakCenterNs << "," << R.CoinWindowNs.first << "," << R.CoinWindowNs.second << ","
         << "\"" << randList << "\"" << ","

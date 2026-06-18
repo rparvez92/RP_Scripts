@@ -1,0 +1,9 @@
+dataset,method,init,parameter,central_value,toy_mean_physical,toy_std_physical,toy_p16_physical,toy_p50_physical,toy_p84_physical,n_toys_physical
+radwan_input,scipy_nelder_mead_bootstrap,zero_init,dpe_C,1.325315,1.472246,2.123628,0.342522,1.479657,2.451153,1982
+radwan_input,scipy_nelder_mead_bootstrap,zero_init,dpe_E,1.455249,1.603215,2.121779,0.473757,1.606630,2.581868,1982
+radwan_input,scipy_nelder_mead_bootstrap,zero_init,dpe_D,1.410830,1.556703,2.125341,0.409829,1.571331,2.538727,1982
+radwan_input,scipy_nelder_mead_bootstrap,zero_init,dtheta_e_C,-0.672994,-0.736943,0.927868,-1.159579,-0.744374,-0.236687,1982
+radwan_input,scipy_nelder_mead_bootstrap,zero_init,dtheta_e_E,-0.811508,-0.874769,0.924900,-1.301900,-0.875336,-0.391134,1982
+radwan_input,scipy_nelder_mead_bootstrap,zero_init,dtheta_e_D,-1.020029,-1.084306,0.927557,-1.515872,-1.088449,-0.588856,1982
+radwan_input,scipy_nelder_mead_bootstrap,zero_init,dtheta_p_common,-1.265463,-1.183301,1.173005,-1.803402,-1.180734,-0.647793,1982
+radwan_input,scipy_nelder_mead_bootstrap,zero_init,dpp_common,1.012508,0.804471,3.009393,-0.582505,0.787007,2.418828,1982

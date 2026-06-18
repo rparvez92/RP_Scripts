@@ -1,0 +1,19 @@
+quantity,value
+dataset,radwan_input
+method,scipy_least_squares
+init,zero_init
+success,True
+status,2
+message,`ftol` termination condition is satisfied.
+nfev,11
+njev,10
+chi2,12.886112
+n_obs,12
+n_params,8
+ndf,4
+chi2_ndf,3.221528
+max_abs_pull,1.989236
+exact_inversion_flag,1
+covariance_method,inverse
+jtj_rank,8
+jtj_condition_number,6.90909e+06

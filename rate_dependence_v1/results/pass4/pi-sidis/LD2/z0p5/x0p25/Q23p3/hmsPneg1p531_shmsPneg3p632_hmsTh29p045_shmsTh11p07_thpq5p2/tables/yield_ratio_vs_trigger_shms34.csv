@@ -13,4 +13,4 @@
 # fit2_status: FAILED_OR_INSUFFICIENT_POINTS
 
 run,hms34_rate_kHz,shms34_rate_kHz,total34_rate_kHz,yield,yield_err,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,raw_ratio,raw_ratio_err,ynorm,ynorm_err,status_yield_csv,status_elclean_csv,join_flag,use_in_fit,reason
-23862,72.328,425.381,497.709,6.46717,0.206367,38103.41024,30.2290369,0.0001697268029,5.417645509e-06,nan,nan,OK,OK,OK,0,"cannot normalize (invalid a/aerr)"
+23862,72.328,425.381,497.709,6.50513,0.207578,38103.41024,30.2290369,0.0001707230392,5.449437267e-06,nan,nan,OK,OK,OK,0,"cannot normalize (invalid a/aerr)"
