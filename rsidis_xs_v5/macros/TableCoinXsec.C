@@ -366,7 +366,7 @@ static double ReadSigmaModel(const std::string& leafDir, std::ostream& log) {
 
 static std::string DataRootPath(int run) {
   char buf[512];
-  std::snprintf(buf, sizeof(buf), "./Skimmed_ROOTfiles/skimmed_coin_replay_production_%d_-1.root", run);
+  std::snprintf(buf, sizeof(buf), "./Pass0_SkimmedDataROOTfiles/skimmed_coin_replay_production_%d_-1.root", run);
   return std::string(buf);
 }
 
@@ -878,7 +878,7 @@ static void TableCoinXsec_Single(const char* manifestPath,
   // SIM chain
   TChain sim("h10");
   const std::string projectRoot = NormalizeSlashes(Dirname(NormalizeSlashes(settingsRoot)));
-  std::string simGlob = projectRoot + "/simc_worksim/" + settingId + "/*.root";
+  std::string simGlob = projectRoot + "/Pass0_SimROOTfiles/" + settingId + "/*.root";
   int nAdded = sim.Add(simGlob.c_str());
   log << "SIM glob: " << simGlob << " added=" << nAdded << "\n";
   const Long64_t nGenSim = sim.GetEntries();
@@ -898,8 +898,8 @@ static void TableCoinXsec_Single(const char* manifestPath,
 
   // --- SIM normalization: MUST come from the corresponding SIMC .hist file ---
   // Directory layout assumption (your case):
-  //   <projectRoot>/simc_worksim/<settingId>/<stem>.root
-  //   <projectRoot>/simc_worksim/<settingId>/<stem>.hist
+  //   <projectRoot>/Pass0_SimROOTfiles/<settingId>/<stem>.root
+  //   <projectRoot>/Pass0_SimROOTfiles/<settingId>/<stem>.hist
   const std::string simRootPath = GetFirstRootFileFromChain(sim, log, simGlob);
   std::string simHistPath;
   const double simNormalizationFactor = GrabNormfacFromHist(simRootPath, &simHistPath, log);
@@ -1135,7 +1135,7 @@ static void TableCoinXsec_Group(const char* groupPath,
     // SIM chain
     std::unique_ptr<TChain> sim(new TChain("h10"));
     const std::string projectRoot = NormalizeSlashes(Dirname(NormalizeSlashes(settingsRoot)));
-    std::string simGlob = projectRoot + "/simc_worksim/" + settingId + "/*.root";
+    std::string simGlob = projectRoot + "/Pass0_SimROOTfiles/" + settingId + "/*.root";
     int nAdded = sim->Add(simGlob.c_str());
     log << "SIM glob: " << simGlob << " added=" << nAdded << "\n";
     const Long64_t nGenSim = sim->GetEntries();

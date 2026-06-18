@@ -105,7 +105,44 @@ Remove `--dry-run` to execute.
 
 ---
 
-## 5) Validate output CSV schema (optional)
+## 5) Structure local SIMC files for `TableCoinXsec.C`
+
+`structure_SimROOTfiles.py` is for local running when the SIMC ROOT files and
+their `.hist` files live outside the project, for example on a Samsung T7.
+
+`TableCoinXsec.C` expects:
+```text
+Pass0_SimROOTfiles/<setting-id>/<sim-stem>.root
+Pass0_SimROOTfiles/<setting-id>/<sim-stem>.hist
+```
+
+On the local T7 setup, the payloads are flat:
+```text
+/Volumes/T7/RSIDIS/Pass0_SimROOTfiles/*.root
+/Volumes/T7/RSIDIS/Pass0_SimOUTfiles/*.hist
+```
+
+The script scans `settings/**/manifest.json`, derives the expected SIMC stem,
+and creates project-local symlinks. It does not copy the large ROOT files.
+
+Preview:
+```bash
+python3 tools/structure_SimROOTfiles.py
+```
+
+Create symlinks:
+```bash
+python3 tools/structure_SimROOTfiles.py --execute
+```
+
+If stale or wrong symlinks already exist:
+```bash
+python3 tools/structure_SimROOTfiles.py --execute --replace
+```
+
+---
+
+## 6) Validate output CSV schema (optional)
 
 After your macro writes an `xsec_phipq.csv`, you can verify it contains required columns:
 

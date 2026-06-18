@@ -65,20 +65,21 @@ These files are read in `TableCoinXsec_Single()` and again per-curve in `TableCo
 For each run number `run`, DATA is expected at:
 
 ```
-./Skimmed_ROOTfiles/skimmed_coin_replay_production_<run>_-1.root
+./Pass0_SkimmedDataROOTfiles/skimmed_coin_replay_production_<run>_-1.root
 ```
 
 This is hard-coded in:
 
 - `static std::string DataRootPath(int run)`
 
-So **your working directory matters**: the macro expects `Skimmed_ROOTfiles/` relative to where ROOT is launched.
+So **your working directory matters**: the macro expects
+`Pass0_SkimmedDataROOTfiles/` relative to where ROOT is launched.
 
 ### 2.4 SIM ROOT files location + SIMC `.hist` location
 For a given `settingId`, SIM files are expected at:
 
 ```
-<projectRoot>/simc_worksim/<settingId>/*.root
+<projectRoot>/Pass0_SimROOTfiles/<settingId>/*.root
 ```
 
 Where:
