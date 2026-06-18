@@ -39,7 +39,12 @@ For each kinematic **setting** (one `manifest.json`), v1 generates:
 5. **Coincidence Blocking by Run**
    - Uses Pass0p1 replay ROOT files to measure a simple coincidence-blocking ratio from raw coincidence time.
 
-6. **Outliers by Current**
+6. **SHMS Hodo 3-of-4 Livetime by Run**
+   - Parses Pass0p1 report files to get `P1X`, `P1Y`, `P2X`, and `P2Y` plane rates.
+   - Computes the Dave Mack combinatoric/incoherent 3-of-4 hodoscope trigger livetime using a configurable DPR, default `48 ns`.
+   - Writes a run-keyed CSV used by `YieldVsCurrent.C`.
+
+7. **Outliers by Current**
    - Scans existing `yield_vs_current_signal.csv` files and writes a combined list of flagged runs.
    - Flags both pull outliers and runs excluded from the fit.
 
@@ -100,6 +105,7 @@ rate_dependence_v1/
     TriggerVsCurrent.C          # HMS_hEL_CLEAN counts / BCM2_Q vs current; const fit
     YieldRatioVsTrigger.C       # normalized yield/EL-clean ratio vs SHMS 3/4 rate; tau extraction
     CoincidenceBlockingByRun.C  # coincidence-blocking ratio by run from Pass0p1 replay ROOT files
+    Hodo3of4LivetimeByRun.C     # SHMS hodo 3-of-4 LT by run from report P1X/P1Y/P2X/P2Y rates
     OutlierByCurrent.C          # combined current-yield outlier/problem-run CSV
     TauHistogram.C              # histogram tau values from yield-ratio outputs
     TauVsRateAndCurrent.C       # tau summaries vs SHMS 3/4 rate and current
@@ -150,6 +156,13 @@ The macros parse lines such as:
   - `SHMS 3/4 Trigger Rate         : 864.802 kHz`
 - HMS EL_CLEAN counts:
   - `HMS_hEL_CLEAN : 590009    [ 0.327 kHz ]`
+- SHMS hodoscope plane rates:
+  - `P1X    : 2250064938.000000 [ 1263.920 kHz ] AND between + and - sides of P1X`
+  - `P1Y    : ... [ ... kHz ] ...`
+  - `P2X    : ... [ ... kHz ] ...`
+  - `P2Y    : ... [ ... kHz ] ...`
+
+`Hodo3of4LivetimeByRun.C` parses the `P1X`, `P1Y`, `P2X`, and `P2Y` lines by label, not by line number.
 
 ### Pass0p1 replay ROOT files
 `CoincidenceBlockingByRun.C` reads full replay ROOT files via:
@@ -205,7 +218,19 @@ results/<same path as settings>/<setting_id>/
 
 The CSV includes run-by-run values such as:
 - `BCM2_I`, `yield`, `yield_err`, `Nnet`, `Nnet_err`, `norm_factor`, etc.
+- staged yield columns:
+  - `yield_no_CB_corr`
+  - `yield_CB_corr`
+  - `yield_no_hodo3of4_corr`
+  - `yield_hodo3of4_corr`
+- correction inputs:
+  - `coincidence_blocking_ratio`
+  - `hodo3of4_LT`
+  - `DPR_ns`
+  - `P1X_rate_kHz`, `P1Y_rate_kHz`, `P2X_rate_kHz`, `P2Y_rate_kHz`
 and flags `status` for bad/missing values.
+
+The standard `yield` and `yield_err` columns are the final corrected values, currently equal to `yield_hodo3of4_corr` and `yield_hodo3of4_corr_err`, so downstream macros continue to work without schema changes.
 
 Includes constant-fit summary (C, chi2/ndf, Prob) in plot and/or CSV summary lines.
 
@@ -247,6 +272,10 @@ It builds a raw ratio, normalizes it by the zero-rate intercept, then fits the n
 ### 5) CoincidenceBlockingByRun.C
 - CSV:
   - `tables/coincidence_blocking_by_run.csv`
+- PNG:
+  - `PNGs/coincidence_blocking_ratio_vs_run.png`
+- ROOT canvas:
+  - `canvases/coincidence_blocking_ratio_vs_run.root`
 - Log:
   - `logs/CoincidenceBlockingByRun.log`
 
@@ -258,7 +287,37 @@ coincidence_blocking_ratio = ctime_good_withstart / ctime_raw_withstart
 
 where `ctime_raw_withstart` uses raw coincidence time in `[-400,400] ns` plus HMS/SHMS good-start-time cuts, and `ctime_good_withstart` additionally requires `5 < CTime.CoinTime_RAW_ROC2 < 70`.
 
-### 6) OutlierByCurrent.C
+### 6) Hodo3of4LivetimeByRun.C
+- CSV:
+  - `tables/hodo3of4_livetime_by_run.csv`
+- Log:
+  - `logs/Hodo3of4LivetimeByRun.log`
+
+The macro computes the SHMS hodoscope 3-of-4 trigger electronic livetime using the incoherent combinatoric approximation:
+
+```text
+D_i = R_i * DPR
+L_i = 1 - D_i
+
+LT_3of4 =
+  L1*L2*L3*L4
+  + D1*L2*L3*L4
+  + L1*D2*L3*L4
+  + L1*L2*D3*L4
+  + L1*L2*L3*D4
+```
+
+where `R_i` is the report rate for `P1X`, `P1Y`, `P2X`, or `P2Y`, converted from kHz to Hz. The DPR argument is in ns and defaults to `48.0`.
+
+Single-setting run example:
+
+```bash
+root -l -b -q 'macros/Hodo3of4LivetimeByRun.C("settings/pass4/pi+sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg1p531_shmsP2p615_hmsTh29p045_shmsTh7p865_thpq2/manifest.json","results",48.0)'
+```
+
+The output CSV is keyed by run number and is read by `YieldVsCurrent.C`.
+
+### 7) OutlierByCurrent.C
 - Combined CSV:
   - `results/outliers/outliers_by_current.csv`
 
@@ -279,7 +338,7 @@ where:
 abs_pull = |(yield - fit_const) / yield_err|
 ```
 
-### 7) Tau summary macros
+### 8) Tau summary macros
 - `TauHistogram.C`
   - reads all `yield_ratio_vs_trigger_shms34.csv` files
   - writes `results/tau/tau_hist_all.png`
@@ -296,8 +355,46 @@ These commands run each macro over **all settings** by iterating over every `set
 
 **Important:** tcsh quoting is picky. Use the exact commands below.
 
-### A) Run YieldVsCurrent for all settings
+### A) Run CoincidenceBlockingByRun for all settings
 From `rate_dependence_v1/`:
+
+```tcsh
+set RESULTS = "$cwd/results"
+
+foreach mf (`find settings -name manifest.json | sort`)
+  set rel = `echo "$mf" | sed 's|^settings/||'`
+  set rel_dir = `echo "$rel" | sed 's|/manifest.json$||'`
+
+  mkdir -p "$RESULTS/$rel_dir/logs"
+
+  echo "RUN CoincidenceBlockingByRun: $mf"
+  root -l -b -q 'macros/CoincidenceBlockingByRun.C("'"$cwd/$mf"'","'"$RESULTS"'")' \
+    >&! "$RESULTS/$rel_dir/logs/CoincidenceBlockingByRun.batch.log"
+end
+```
+
+### B) Run Hodo3of4LivetimeByRun for all settings
+The third argument is DPR in ns. If omitted, the macro uses the default `48.0`.
+
+```tcsh
+set RESULTS = "$cwd/results"
+
+foreach mf (`find settings -name manifest.json | sort`)
+  set rel = `echo "$mf" | sed 's|^settings/||'`
+  set rel_dir = `echo "$rel" | sed 's|/manifest.json$||'`
+
+  mkdir -p "$RESULTS/$rel_dir/logs"
+
+  echo "RUN Hodo3of4LivetimeByRun: $mf"
+  root -l -b -q 'macros/Hodo3of4LivetimeByRun.C("'"$cwd/$mf"'","'"$RESULTS"'",50.0)' \
+    >&! "$RESULTS/$rel_dir/logs/Hodo3of4LivetimeByRun.batch.log"
+end
+```
+
+### C) Run YieldVsCurrent for all settings
+Requires:
+- `tables/coincidence_blocking_by_run.csv` from `CoincidenceBlockingByRun.C`
+- `tables/hodo3of4_livetime_by_run.csv` from `Hodo3of4LivetimeByRun.C`
 
 ```tcsh
 set RESULTS = "$cwd/results"
@@ -314,8 +411,8 @@ foreach mf (`find settings -name manifest.json | sort`)
 end
 ```
 
-### B) Run YieldVsTrigger for all settings
-(Requires that YieldVsCurrent has already produced `tables/yield_vs_current_signal.csv`.)
+### D) Run YieldVsTrigger for all settings
+Requires that `YieldVsCurrent.C` has already produced `tables/yield_vs_current_signal.csv`.
 
 ```tcsh
 set RESULTS = "$cwd/results"
@@ -332,7 +429,7 @@ foreach mf (`find settings -name manifest.json | sort`)
 end
 ```
 
-### C) Run TriggerVsCurrent for all settings
+### E) Run TriggerVsCurrent for all settings
 ```tcsh
 set RESULTS = "$cwd/results"
 
@@ -348,8 +445,8 @@ foreach mf (`find settings -name manifest.json | sort`)
 end
 ```
 
-### D) Run YieldRatioVsTrigger for all settings
-(Requires `YieldVsTrigger.C` and `TriggerVsCurrent.C` outputs.)
+### F) Run YieldRatioVsTrigger for all settings
+Requires `YieldVsTrigger.C` and `TriggerVsCurrent.C` outputs.
 
 ```tcsh
 set RESULTS = "$cwd/results"
@@ -366,23 +463,7 @@ foreach mf (`find settings -name manifest.json | sort`)
 end
 ```
 
-### E) Run CoincidenceBlockingByRun for all settings
-```tcsh
-set RESULTS = "$cwd/results"
-
-foreach mf (`find settings -name manifest.json | sort`)
-  set rel = `echo "$mf" | sed 's|^settings/||'`
-  set rel_dir = `echo "$rel" | sed 's|/manifest.json$||'`
-
-  mkdir -p "$RESULTS/$rel_dir/logs"
-
-  echo "RUN CoincidenceBlockingByRun: $mf"
-  root -l -b -q 'macros/CoincidenceBlockingByRun.C("'"$cwd/$mf"'","'"$RESULTS"'")' \
-    >&! "$RESULTS/$rel_dir/logs/CoincidenceBlockingByRun.batch.log"
-end
-```
-
-### F) Run summary macros
+### G) Run summary macros
 From `rate_dependence_v1/`:
 
 ```bash
@@ -419,6 +500,11 @@ This is tcsh-safe and avoids nested quote issues.
 ### Missing replay ROOT file for coincidence blocking
 - `CoincidenceBlockingByRun.C` marks runs as `NOFILE` if the replay ROOT file is missing.
 - Verify `Pass0p1_ROOTfiles/coin_replay_production_<RUN>_-1.root` exists or that the symlink points to the correct cdaq location.
+
+### Missing hodo 3-of-4 livetime CSV
+- `YieldVsCurrent.C` now requires `tables/hodo3of4_livetime_by_run.csv`.
+- Run `Hodo3of4LivetimeByRun.C` before `YieldVsCurrent.C`.
+- If a run has missing report lines, it will be marked in `hodo3of4_livetime_by_run.csv` and then excluded from the corrected yield fit by `YieldVsCurrent.C`.
 
 ### `boil_corr = -999`
 - v1 flags `-999` values in logs and runtime warnings (diagnostic intent).
