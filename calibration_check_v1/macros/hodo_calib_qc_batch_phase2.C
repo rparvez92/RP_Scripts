@@ -191,21 +191,6 @@ TString OutputDir(const TString &spec) {
   return TString::Format("results/Phase2/%sPNGs", spec.Data());
 }
 
-void DrawGuideLines(TH2D *hist) {
-  const double xmin = hist->GetXaxis()->GetXmin();
-  const double xmax = hist->GetXaxis()->GetXmax();
-  TLine low(xmin, 0.95, xmax, 0.95);
-  TLine high(xmin, 1.05, xmax, 1.05);
-  low.SetLineStyle(2);
-  high.SetLineStyle(2);
-  low.SetLineColor(kBlack);
-  high.SetLineColor(kBlack);
-  low.SetLineWidth(5);
-  high.SetLineWidth(5);
-  low.Draw("SAME");
-  high.Draw("SAME");
-}
-
 void DrawBetaVsXfp(TTree *tree, const TString &selectionSpec,
                    const TString &viewSpec, int run) {
   const bool hmsView = viewSpec == "hms";
@@ -226,7 +211,18 @@ void DrawBetaVsXfp(TTree *tree, const TString &selectionSpec,
   canvas.SetRightMargin(0.12);
   gStyle->SetOptStat(0);
   hist.Draw("COLZ");
-  DrawGuideLines(&hist);
+  const double xmin = hist.GetXaxis()->GetXmin();
+  const double xmax = hist.GetXaxis()->GetXmax();
+  TLine low(xmin, 0.95, xmax, 0.95);
+  TLine high(xmin, 1.05, xmax, 1.05);
+  low.SetLineStyle(2);
+  high.SetLineStyle(2);
+  low.SetLineColor(kBlack);
+  high.SetLineColor(kBlack);
+  low.SetLineWidth(5);
+  high.SetLineWidth(5);
+  low.Draw("SAME");
+  high.Draw("SAME");
 
   TString output;
   if (selectionSpec == "coin") {
