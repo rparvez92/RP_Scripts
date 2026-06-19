@@ -260,6 +260,24 @@ bool ComputeBetaMetrics(TTree *tree, const TString &spec, int run,
   return true;
 }
 
+bool FitCoinTimePeak(TH1D &hist, TF1 &fit,
+                     double fitLow, double peak, double fitHigh) {
+  const double maximum = hist.GetMaximum();
+  fit.SetParameters(maximum, peak, 0.5);
+  fit.SetParLimits(0, 0.0, std::max(1.0, maximum * 10.0));
+  fit.SetParLimits(1, fitLow, fitHigh);
+  fit.SetParLimits(2, 0.05, 2.0);
+
+  if (hist.Fit(&fit, "QNR") != 0)
+    return false;
+
+  const double mean = fit.GetParameter(1);
+  const double sigma = std::abs(fit.GetParameter(2));
+  return std::isfinite(mean) && std::isfinite(sigma) &&
+         mean >= fitLow && mean <= fitHigh &&
+         sigma >= 0.05 && sigma <= 2.0;
+}
+
 void DrawCoinTime1D(TTree *tree, int run) {
   const TString histName = TString::Format("h_ctime_%d", run);
   TH1D hist(histName,
@@ -275,15 +293,20 @@ void DrawCoinTime1D(TTree *tree, int run) {
   const double fitLow = std::max(0.0, peak - 2.0);
   const double fitHigh = std::min(100.0, peak + 2.0);
   TF1 fit(TString::Format("f_ctime_%d", run), "gaus", fitLow, fitHigh);
-  hist.Fit(&fit, "QNR");
+  const bool fitValid = FitCoinTimePeak(hist, fit, fitLow, peak, fitHigh);
 
   TCanvas canvas(TString::Format("c_ctime_%d", run), "", 800, 600);
   canvas.SetLeftMargin(0.12);
   gStyle->SetOptStat(0);
   hist.Draw("HIST");
-  fit.SetLineColor(kRed);
-  fit.SetLineWidth(3);
-  fit.Draw("SAME");
+  if (fitValid) {
+    fit.SetLineColor(kRed);
+    fit.SetLineWidth(3);
+    fit.Draw("SAME");
+  } else {
+    std::cerr << "[WARN] Coin-time display fit rejected for run "
+              << run << '\n';
+  }
   canvas.SaveAs(TString::Format(
       "%s/coin_run%d_ctime1D_ROC2.png", OutputDir("coin").Data(), run));
 }
@@ -304,10 +327,10 @@ bool ComputeCoinTimeMetrics(TTree *tree, int run, double &mean,
   const double fitHigh = std::min(100.0, peak + 2.0);
   TF1 fit(TString::Format("f_ctime_metric_%d", run),
           "gaus", fitLow, fitHigh);
-  if (hist.Fit(&fit, "QNR") != 0)
+  if (!FitCoinTimePeak(hist, fit, fitLow, peak, fitHigh))
     return false;
   mean = fit.GetParameter(1);
-  sigma = fit.GetParameter(2);
+  sigma = std::abs(fit.GetParameter(2));
   return true;
 }
 
