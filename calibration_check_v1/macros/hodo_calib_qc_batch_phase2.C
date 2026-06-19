@@ -20,9 +20,9 @@
 //   root -l -b -q \
 //     'macros/hodo_calib_qc_batch_phase2.C+("coin","/net/cdaq/cdaql3data/cdaq/hallc-online-rsidis2025/ROOTfiles","27128")'
 //
-// Current Phase-2 COIN set:
+// Current validated Phase-2 COIN set (27133 replay is presently incomplete):
 //   root -l -b -q \
-//     'macros/hodo_calib_qc_batch_phase2.C+("coin","/net/cdaq/cdaql3data/cdaq/hallc-online-rsidis2025/ROOTfiles","27122-27133")'
+//     'macros/hodo_calib_qc_batch_phase2.C+("coin","/net/cdaq/cdaql3data/cdaq/hallc-online-rsidis2025/ROOTfiles","27122-27132")'
 
 #include <TCanvas.h>
 #include <TCut.h>
@@ -58,7 +58,7 @@ const std::vector<int> kPhase2HmsRuns;
 const std::vector<int> kPhase2ShmsRuns;
 const std::vector<int> kPhase2CoinRuns = {
     27122, 27123, 27124, 27125, 27126, 27127,
-    27128, 27129, 27130, 27131, 27132, 27133};
+    27128, 27129, 27130, 27131, 27132};
 
 TString MakeFileName(const TString &spec, int run) {
   if (spec == "hms")
