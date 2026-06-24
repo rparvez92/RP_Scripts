@@ -11,6 +11,7 @@ __pycache__/
 *.old
 *.root
 *.hist
+calibration_check_v1/macros/phase2_hodo_root_commands.txt
 
 # ROOT/ACLiC generated build artifacts
 *_C.d

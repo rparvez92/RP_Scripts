@@ -1,28 +1,34 @@
 // hodo_calib_qc_batch_phase2.C
 //
 // Phase-2 hodoscope calibration QC using unskimmed/main replay ROOT files.
-// The physics cuts and fit windows intentionally match hodo_calib_qc_batch.C.
+//
+// Supported modes:
+//   hms           : HMS electron selection, fit H.gtr.beta
+//   shms_electron : SHMS electron selection, fit P.gtr.beta
+//   coin          : HMS electron + SHMS pion selection, fit CTime.ePiCoinTime_ROC2
 //
 // Input filename conventions:
-//   hms  : hms_coin_replay_production_<run>_-1.root
-//   shms : shms_coin_replay_production_<run>_-1.root
-//   coin : coin_replay_production_<run>_-1.root
+//   hms           : hms_coin_replay_production_<run>_-1.root
+//   shms_*        : shms_coin_replay_production_<run>_-1.root
+//   coin          : coin_replay_production_<run>_-1.root
 //
-// Output:
-//   results/Phase2/hmsPNGs/
-//   results/Phase2/shmsPNGs/
-//   results/Phase2/coinPNGs/
+// Standard output:
+//   results/Phase2/tables/hodo_qc_<spec>_summary.csv
+//   results/Phase2/pdfs/hodo_qc_<spec>_by_run.pdf
+//
+// Optional PNG output:
+//   results/Phase2/<spec>PNGs/
 //
 // Compile only:
 //   root -l -b -q -e '.L macros/hodo_calib_qc_batch_phase2.C+'
 //
-// First COIN test (run only after reviewing the printed physics cuts):
-//   root -l -b -q \
-//     'macros/hodo_calib_qc_batch_phase2.C+("coin","/net/cdaq/cdaql3data/cdaq/hallc-online-rsidis2025/ROOTfiles","27128")'
-//
-// Current validated Phase-2 COIN set (27133 replay is presently incomplete):
+// Standard compact output:
 //   root -l -b -q \
 //     'macros/hodo_calib_qc_batch_phase2.C+("coin","/net/cdaq/cdaql3data/cdaq/hallc-online-rsidis2025/ROOTfiles","27122-27132")'
+//
+// Compact output plus PNGs:
+//   root -l -b -q \
+//     'macros/hodo_calib_qc_batch_phase2.C+("coin","/net/cdaq/cdaql3data/cdaq/hallc-online-rsidis2025/ROOTfiles","27122-27132","pdf,csv,png")'
 
 #include <TCanvas.h>
 #include <TCut.h>
@@ -43,6 +49,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -53,17 +60,48 @@ namespace {
 const char *kDefaultRootDir =
     "/net/cdaq/cdaql3data/cdaq/hallc-online-rsidis2025/ROOTfiles";
 
-// Dedicated HMS/SHMS Phase-2 runs are not available yet.
+// These defaults are intentionally conservative. During live Phase-2 running,
+// prefer passing explicit run lists generated from rsidis_runlist_phaseII.dat.
 const std::vector<int> kPhase2HmsRuns;
-const std::vector<int> kPhase2ShmsRuns;
+const std::vector<int> kPhase2ShmsElectronRuns;
 const std::vector<int> kPhase2CoinRuns = {
     27122, 27123, 27124, 27125, 27126, 27127,
     27128, 27129, 27130, 27131, 27132};
 
+struct OutputOptions {
+  bool pdf = true;
+  bool csv = true;
+  bool png = false;
+};
+
+struct RunSummary {
+  int run = 0;
+  TString spec;
+  TString filePath;
+  TString fitVariable;
+  Long64_t allEvents = -1;
+  Long64_t selectedEvents = -1;
+  double fitMean = std::nan("");
+  double fitSigma = std::nan("");
+  double fitEntries = std::nan("");
+  TString status = "NOT_RUN";
+};
+
+TString NormalizeSpec(const TString &rawSpec) {
+  TString spec = rawSpec;
+  spec.ToLower();
+  spec.ReplaceAll("-", "_");
+  return spec;
+}
+
+bool IsValidSpec(const TString &spec) {
+  return spec == "hms" || spec == "shms_electron" || spec == "coin";
+}
+
 TString MakeFileName(const TString &spec, int run) {
   if (spec == "hms")
     return TString::Format("hms_coin_replay_production_%d_-1.root", run);
-  if (spec == "shms")
+  if (spec == "shms_electron")
     return TString::Format("shms_coin_replay_production_%d_-1.root", run);
   if (spec == "coin")
     return TString::Format("coin_replay_production_%d_-1.root", run);
@@ -78,8 +116,11 @@ std::vector<int> ParseRunsList(const std::string &text) {
   std::stringstream stream(text);
   std::string token;
   while (std::getline(stream, token, ',')) {
+    token.erase(std::remove_if(token.begin(), token.end(), ::isspace),
+                token.end());
     if (token.empty())
       continue;
+
     const std::string::size_type dash = token.find('-');
     if (dash == std::string::npos) {
       runs.push_back(std::stoi(token));
@@ -96,31 +137,77 @@ std::vector<int> ParseRunsList(const std::string &text) {
   return runs;
 }
 
-TCut BuildCuts(const TString &spec) {
-  const TCut hmsPid =
-      "(H.gtr.dp>-8) && (H.gtr.dp<8)"
-      " && (H.gtr.beta>0) && (H.gtr.beta<1.2)"
-      " && (H.cal.etottracknorm>0.7)"
-      " && (H.cer.npeSum>2.0)";
+OutputOptions ParseOutputOptions(const TString &modeText) {
+  OutputOptions options;
+  options.pdf = false;
+  options.csv = false;
+  options.png = false;
 
+  TString text = modeText;
+  text.ToLower();
+  text.ReplaceAll(" ", "");
+  if (text.IsNull())
+    text = "pdf,csv";
+
+  std::stringstream stream(text.Data());
+  std::string token;
+  while (std::getline(stream, token, ',')) {
+    if (token == "pdf")
+      options.pdf = true;
+    else if (token == "csv")
+      options.csv = true;
+    else if (token == "png")
+      options.png = true;
+    else if (token == "all") {
+      options.pdf = true;
+      options.csv = true;
+      options.png = true;
+    } else if (!token.empty()) {
+      std::cerr << "[WARN] Unknown output token '" << token
+                << "' ignored. Valid tokens: pdf,csv,png,all\n";
+    }
+  }
+
+  if (!options.pdf && !options.csv && !options.png) {
+    std::cerr << "[WARN] No valid output modes requested; using pdf,csv.\n";
+    options.pdf = true;
+    options.csv = true;
+  }
+  return options;
+}
+
+TCut HmsElectronCuts() {
+  return TCut("(H.gtr.dp>-8) && (H.gtr.dp<8)"
+              " && (H.gtr.beta>0) && (H.gtr.beta<1.2)"
+              " && (H.cal.etottracknorm>0.7)"
+              " && (H.cer.npeSum>2.0)");
+}
+
+TCut ShmsElectronCuts() {
+  return TCut("(P.gtr.dp>-10) && (P.gtr.dp<22)"
+              " && (P.gtr.beta>0) && (P.gtr.beta<1.2)"
+              " && (P.cal.etottracknorm>0.7)");
+}
+
+TCut ShmsPionCuts() {
   const TCut shmsBase =
       "(P.gtr.dp>-10) && (P.gtr.dp<22)"
       " && (P.gtr.beta>0) && (P.gtr.beta<1.2)"
       " && (P.cal.etottracknorm<0.8)";
-
-  const TCut shmsAero =
-      "(P.gtr.p<2.7) && (P.aero.npeSum>2)";
+  const TCut shmsAero = "(P.gtr.p<2.7) && (P.aero.npeSum>2)";
   const TCut shmsHgc =
       "(P.gtr.p>=2.7) && (P.hgcer.npeSum>1)"
       " && (P.aero.npeSum>2)";
-  const TCut shmsPid = shmsBase && (shmsAero || shmsHgc);
+  return shmsBase && (shmsAero || shmsHgc);
+}
 
+TCut BuildCuts(const TString &spec) {
   if (spec == "hms")
-    return hmsPid;
-  if (spec == "shms")
-    return shmsPid;
+    return HmsElectronCuts();
+  if (spec == "shms_electron")
+    return ShmsElectronCuts();
   if (spec == "coin")
-    return hmsPid && shmsPid;
+    return HmsElectronCuts() && ShmsPionCuts();
   return TCut("");
 }
 
@@ -132,6 +219,11 @@ void PrintPhysicsLogic() {
       << "  0 < H.gtr.beta < 1.2\n"
       << "  H.cal.etottracknorm > 0.7\n"
       << "  H.cer.npeSum > 2.0\n\n"
+      << "SHMS electron selection:\n"
+      << "  -10 < P.gtr.dp < 22\n"
+      << "  0 < P.gtr.beta < 1.2\n"
+      << "  P.cal.etottracknorm > 0.7\n"
+      << "  No P.ngcer/P.hgcer electron cuts are applied.\n\n"
       << "SHMS pion selection:\n"
       << "  -10 < P.gtr.dp < 22\n"
       << "  0 < P.gtr.beta < 1.2\n"
@@ -139,7 +231,7 @@ void PrintPhysicsLogic() {
       << "  P.gtr.p < 2.7: P.aero.npeSum > 2\n"
       << "  P.gtr.p >= 2.7: P.hgcer.npeSum > 1 AND "
          "P.aero.npeSum > 2\n\n"
-      << "COIN selection: HMS AND SHMS selections above.\n"
+      << "COIN selection: HMS electron AND SHMS pion selections above.\n"
       << "No coincidence-time gate is applied.\n"
       << "Beta Gaussian fit: +/-0.03 around peak, bounded to [0.9,1.1].\n"
       << "Coin-time Gaussian fit: +/-2 ns around peak, bounded to [0,100].\n"
@@ -152,18 +244,19 @@ std::vector<const char *> RequiredBranches(const TString &spec) {
   const std::vector<const char *> hms = {
       "H.gtr.dp", "H.gtr.beta", "H.cal.etottracknorm",
       "H.cer.npeSum", "H.dc.x_fp"};
-  const std::vector<const char *> shms = {
+  const std::vector<const char *> shmsElectron = {
+      "P.gtr.dp", "P.gtr.beta", "P.cal.etottracknorm", "P.dc.x_fp"};
+  const std::vector<const char *> shmsPion = {
       "P.gtr.dp", "P.gtr.beta", "P.cal.etottracknorm",
-      "P.ngcer.npeSum", "P.hgcer.npeSum", "P.aero.npeSum",
-      "P.gtr.p", "P.dc.x_fp"};
+      "P.hgcer.npeSum", "P.aero.npeSum", "P.gtr.p", "P.dc.x_fp"};
 
   if (spec == "hms")
     return hms;
-  if (spec == "shms")
-    return shms;
+  if (spec == "shms_electron")
+    return shmsElectron;
 
   std::vector<const char *> coin = hms;
-  coin.insert(coin.end(), shms.begin(), shms.end());
+  coin.insert(coin.end(), shmsPion.begin(), shmsPion.end());
   coin.push_back("CTime.ePiCoinTime_ROC2");
   return coin;
 }
@@ -187,12 +280,45 @@ bool ValidateAndEnableBranches(TTree *tree, const TString &spec, int run) {
   return true;
 }
 
-TString OutputDir(const TString &spec) {
+TString PngDir(const TString &spec) {
   return TString::Format("results/Phase2/%sPNGs", spec.Data());
 }
 
+TString PdfPath(const TString &spec) {
+  return TString::Format("results/Phase2/pdfs/hodo_qc_%s_by_run.pdf",
+                         spec.Data());
+}
+
+TString CsvPath(const TString &spec) {
+  return TString::Format("results/Phase2/tables/hodo_qc_%s_summary.csv",
+                         spec.Data());
+}
+
+void SaveCanvas(TCanvas &canvas, const TString &pdfPath,
+                const TString &pngPath, const OutputOptions &options) {
+  if (options.pdf)
+    canvas.Print(pdfPath);
+  if (options.png)
+    canvas.SaveAs(pngPath);
+}
+
+void OpenPdf(const TString &pdfPath, const OutputOptions &options) {
+  if (options.pdf) {
+    TCanvas opener("c_pdf_open", "", 1, 1);
+    opener.Print(TString::Format("%s[", pdfPath.Data()));
+  }
+}
+
+void ClosePdf(const TString &pdfPath, const OutputOptions &options) {
+  if (options.pdf) {
+    TCanvas closer("c_pdf_close", "", 1, 1);
+    closer.Print(TString::Format("%s]", pdfPath.Data()));
+  }
+}
+
 void DrawBetaVsXfp(TTree *tree, const TString &selectionSpec,
-                   const TString &viewSpec, int run) {
+                   const TString &viewSpec, int run,
+                   const TString &pdfPath, const OutputOptions &options) {
   const bool hmsView = viewSpec == "hms";
   const TString expression =
       hmsView ? "H.gtr.beta:H.dc.x_fp" : "P.gtr.beta:P.dc.x_fp";
@@ -224,22 +350,22 @@ void DrawBetaVsXfp(TTree *tree, const TString &selectionSpec,
   low.Draw("SAME");
   high.Draw("SAME");
 
-  TString output;
+  TString pngPath;
   if (selectionSpec == "coin") {
-    output = TString::Format("%s/coin_%s_run%d_beta_vs_xfp.png",
-                             OutputDir("coin").Data(), viewSpec.Data(), run);
+    pngPath = TString::Format("%s/coin_%s_run%d_beta_vs_xfp.png",
+                              PngDir("coin").Data(), viewSpec.Data(), run);
   } else {
-    output = TString::Format("%s/%s_run%d_beta_vs_xfp.png",
-                             OutputDir(selectionSpec).Data(),
-                             selectionSpec.Data(), run);
+    pngPath = TString::Format("%s/%s_run%d_beta_vs_xfp.png",
+                              PngDir(selectionSpec).Data(),
+                              selectionSpec.Data(), run);
   }
-  canvas.SaveAs(output);
+  SaveCanvas(canvas, pdfPath, pngPath, options);
 }
 
 bool ComputeBetaMetrics(TTree *tree, const TString &spec, int run,
                         double &mean, double &sigma, double &entries) {
   mean = sigma = entries = std::nan("");
-  const TString variable = spec == "shms" ? "P.gtr.beta" : "H.gtr.beta";
+  const TString variable = spec == "hms" ? "H.gtr.beta" : "P.gtr.beta";
   const TString histName = TString::Format("h_beta_fit_%s_%d", spec.Data(), run);
   TH1D hist(histName, ";#beta;Counts", 200, 0.2, 1.2);
   hist.Sumw2();
@@ -256,8 +382,8 @@ bool ComputeBetaMetrics(TTree *tree, const TString &spec, int run,
   if (hist.Fit(&fit, "QNR") != 0)
     return false;
   mean = fit.GetParameter(1);
-  sigma = fit.GetParameter(2);
-  return true;
+  sigma = std::abs(fit.GetParameter(2));
+  return std::isfinite(mean) && std::isfinite(sigma);
 }
 
 bool FitCoinTimePeak(TH1D &hist, TF1 &fit,
@@ -278,7 +404,8 @@ bool FitCoinTimePeak(TH1D &hist, TF1 &fit,
          sigma >= 0.05 && sigma <= 2.0;
 }
 
-void DrawCoinTime1D(TTree *tree, int run) {
+void DrawCoinTime1D(TTree *tree, int run, const TString &pdfPath,
+                    const OutputOptions &options) {
   const TString histName = TString::Format("h_ctime_%d", run);
   TH1D hist(histName,
             TString::Format(
@@ -307,8 +434,10 @@ void DrawCoinTime1D(TTree *tree, int run) {
     std::cerr << "[WARN] Coin-time display fit rejected for run "
               << run << '\n';
   }
-  canvas.SaveAs(TString::Format(
-      "%s/coin_run%d_ctime1D_ROC2.png", OutputDir("coin").Data(), run));
+
+  const TString pngPath = TString::Format(
+      "%s/coin_run%d_ctime1D_ROC2.png", PngDir("coin").Data(), run);
+  SaveCanvas(canvas, pdfPath, pngPath, options);
 }
 
 bool ComputeCoinTimeMetrics(TTree *tree, int run, double &mean,
@@ -337,7 +466,8 @@ bool ComputeCoinTimeMetrics(TTree *tree, int run, double &mean,
 void DrawDualTrend(const std::vector<int> &runs,
                    const std::vector<double> &means,
                    const std::vector<double> &sigmas,
-                   const TString &spec, bool coinTime) {
+                   const TString &spec, bool coinTime,
+                   const TString &pdfPath, const OutputOptions &options) {
   if (runs.empty())
     return;
 
@@ -399,76 +529,103 @@ void DrawDualTrend(const std::vector<int> &runs,
   legend.AddEntry(&sigmaGraph, "sigma", "p");
   legend.Draw();
 
-  const TString output =
+  const TString pngPath =
       coinTime
           ? TString::Format("%s/coin_ctime_trends_ROC2.png",
-                            OutputDir("coin").Data())
+                            PngDir("coin").Data())
           : TString::Format("%s/%s_beta_trends.png",
-                            OutputDir(spec).Data(), spec.Data());
-  canvas.SaveAs(output);
+                            PngDir(spec).Data(), spec.Data());
+  SaveCanvas(canvas, pdfPath, pngPath, options);
 }
 
-bool ProcessOneRun(const TString &spec, const TString &rootDir, int run,
-                   std::vector<int> &trendRuns,
-                   std::vector<double> &means,
-                   std::vector<double> &sigmas) {
-  const TString path =
+RunSummary ProcessOneRun(const TString &spec, const TString &rootDir, int run,
+                         const TString &pdfPath,
+                         const OutputOptions &options,
+                         std::vector<int> &trendRuns,
+                         std::vector<double> &means,
+                         std::vector<double> &sigmas) {
+  RunSummary summary;
+  summary.run = run;
+  summary.spec = spec;
+  summary.fitVariable =
+      spec == "coin" ? "CTime.ePiCoinTime_ROC2"
+                     : (spec == "hms" ? "H.gtr.beta" : "P.gtr.beta");
+  summary.filePath =
       TString::Format("%s/%s", rootDir.Data(), MakeFileName(spec, run).Data());
-  TFile *file = TFile::Open(path, "READ");
+
+  if (gSystem->AccessPathName(summary.filePath)) {
+    summary.status = "MISSING_FILE";
+    std::cerr << "[WARN] Missing file for run " << run << ": "
+              << summary.filePath << '\n';
+    return summary;
+  }
+
+  TFile *file = TFile::Open(summary.filePath, "READ");
   if (!file || file->IsZombie()) {
-    std::cerr << "[WARN] Could not open run " << run << ": " << path << '\n';
+    summary.status = "ZOMBIE_FILE";
+    std::cerr << "[WARN] Could not open run " << run << ": "
+              << summary.filePath << '\n';
     if (file)
       delete file;
-    return false;
+    return summary;
   }
 
   TTree *tree = dynamic_cast<TTree *>(file->Get("T"));
   if (!tree) {
+    summary.status = "MISSING_TREE";
     std::cerr << "[WARN] Tree 'T' missing for run " << run << ": "
-              << path << '\n';
+              << summary.filePath << '\n';
     file->Close();
     delete file;
-    return false;
+    return summary;
   }
   if (!ValidateAndEnableBranches(tree, spec, run)) {
+    summary.status = "MISSING_BRANCH";
     file->Close();
     delete file;
-    return false;
+    return summary;
   }
 
-  const Long64_t allEvents = tree->GetEntries();
-  const Long64_t selectedEvents = tree->GetEntries(BuildCuts(spec));
-  std::cout << "[RUN " << run << "] all=" << allEvents
-            << ", selected=" << selectedEvents << '\n';
+  summary.allEvents = tree->GetEntries();
+  summary.selectedEvents = tree->GetEntries(BuildCuts(spec));
+  std::cout << "[RUN " << run << "] all=" << summary.allEvents
+            << ", selected=" << summary.selectedEvents << '\n';
 
-  if (spec == "hms" || spec == "shms") {
-    DrawBetaVsXfp(tree, spec, spec, run);
-    double mean, sigma, entries;
-    if (ComputeBetaMetrics(tree, spec, run, mean, sigma, entries)) {
+  if (spec == "hms" || spec == "shms_electron") {
+    const TString viewSpec = spec == "hms" ? "hms" : "shms";
+    DrawBetaVsXfp(tree, spec, viewSpec, run, pdfPath, options);
+    if (ComputeBetaMetrics(tree, spec, run, summary.fitMean,
+                           summary.fitSigma, summary.fitEntries)) {
+      summary.status = "OK";
       trendRuns.push_back(run);
-      means.push_back(mean);
-      sigmas.push_back(sigma);
-      std::cout << "[RUN " << run << "] beta mean=" << mean
-                << ", sigma=" << sigma
-                << ", fit entries=" << entries << '\n';
+      means.push_back(summary.fitMean);
+      sigmas.push_back(summary.fitSigma);
+      std::cout << "[RUN " << run << "] beta mean=" << summary.fitMean
+                << ", sigma=" << summary.fitSigma
+                << ", fit entries=" << summary.fitEntries << '\n';
     } else {
+      summary.status = summary.selectedEvents < 50 ? "LOW_STATISTICS"
+                                                   : "FIT_FAILED";
       std::cerr << "[WARN] Beta fit failed or had fewer than 50 entries for run "
                 << run << '\n';
     }
   } else {
-    DrawBetaVsXfp(tree, "coin", "hms", run);
-    DrawBetaVsXfp(tree, "coin", "shms", run);
-    DrawCoinTime1D(tree, run);
+    DrawBetaVsXfp(tree, "coin", "hms", run, pdfPath, options);
+    DrawBetaVsXfp(tree, "coin", "shms", run, pdfPath, options);
+    DrawCoinTime1D(tree, run, pdfPath, options);
 
-    double mean, sigma, entries;
-    if (ComputeCoinTimeMetrics(tree, run, mean, sigma, entries)) {
+    if (ComputeCoinTimeMetrics(tree, run, summary.fitMean,
+                               summary.fitSigma, summary.fitEntries)) {
+      summary.status = "OK";
       trendRuns.push_back(run);
-      means.push_back(mean);
-      sigmas.push_back(sigma);
-      std::cout << "[RUN " << run << "] CTime mean=" << mean
-                << " ns, sigma=" << sigma
-                << " ns, fit entries=" << entries << '\n';
+      means.push_back(summary.fitMean);
+      sigmas.push_back(summary.fitSigma);
+      std::cout << "[RUN " << run << "] CTime mean=" << summary.fitMean
+                << " ns, sigma=" << summary.fitSigma
+                << " ns, fit entries=" << summary.fitEntries << '\n';
     } else {
+      summary.status = summary.selectedEvents < 50 ? "LOW_STATISTICS"
+                                                   : "FIT_FAILED";
       std::cerr
           << "[WARN] Coin-time fit failed or had fewer than 50 entries for run "
           << run << '\n';
@@ -477,19 +634,44 @@ bool ProcessOneRun(const TString &spec, const TString &rootDir, int run,
 
   file->Close();
   delete file;
-  return true;
+  return summary;
+}
+
+void WriteCsv(const TString &path, const std::vector<RunSummary> &summaries) {
+  std::ofstream out(path.Data());
+  out << "run,spec,fit_variable,all_events,selected_events,"
+      << "fit_mean,fit_sigma,fit_entries,status\n";
+  for (const RunSummary &row : summaries) {
+    out << row.run << ','
+        << row.spec << ','
+        << row.fitVariable << ','
+        << row.allEvents << ','
+        << row.selectedEvents << ',';
+    if (std::isfinite(row.fitMean))
+      out << row.fitMean;
+    out << ',';
+    if (std::isfinite(row.fitSigma))
+      out << row.fitSigma;
+    out << ',';
+    if (std::isfinite(row.fitEntries))
+      out << row.fitEntries;
+    out << ','
+        << row.status << '\n';
+  }
 }
 
 } // namespace
 
 void hodo_calib_qc_batch_phase2(const char *Spec = "",
                                 const char *RootDir = "",
-                                const char *RunsList = "") {
+                                const char *RunsList = "",
+                                const char *OutputMode = "pdf,csv") {
   gROOT->SetBatch(kTRUE);
 
-  const TString spec = Spec ? Spec : "";
-  if (!(spec == "hms" || spec == "shms" || spec == "coin")) {
-    std::cerr << "[ERROR] Spec must be 'hms', 'shms', or 'coin'\n";
+  const TString spec = NormalizeSpec(Spec ? Spec : "");
+  if (!IsValidSpec(spec)) {
+    std::cerr << "[ERROR] Spec must be 'hms', 'shms_electron', "
+              << "or 'coin'.\n";
     return;
   }
 
@@ -497,12 +679,15 @@ void hodo_calib_qc_batch_phase2(const char *Spec = "",
   if (rootDir.IsNull())
     rootDir = kDefaultRootDir;
 
+  const OutputOptions options =
+      ParseOutputOptions(OutputMode ? OutputMode : "pdf,csv");
+
   std::vector<int> runs = ParseRunsList(RunsList ? RunsList : "");
   if (runs.empty()) {
     if (spec == "hms")
       runs = kPhase2HmsRuns;
-    else if (spec == "shms")
-      runs = kPhase2ShmsRuns;
+    else if (spec == "shms_electron")
+      runs = kPhase2ShmsElectronRuns;
     else
       runs = kPhase2CoinRuns;
   }
@@ -516,29 +701,62 @@ void hodo_calib_qc_batch_phase2(const char *Spec = "",
   std::cout << "[INFO] Spec: " << spec << '\n'
             << "[INFO] ROOT directory: " << rootDir << '\n'
             << "[INFO] Requested runs: " << runs.size() << '\n'
-            << "[INFO] Output directory: " << OutputDir(spec) << '\n';
+            << "[INFO] Output modes: "
+            << (options.pdf ? "pdf " : "")
+            << (options.csv ? "csv " : "")
+            << (options.png ? "png " : "") << '\n';
 
   gSystem->mkdir("results/Phase2", true);
-  gSystem->mkdir(OutputDir(spec), true);
+  gSystem->mkdir("results/Phase2/pdfs", true);
+  gSystem->mkdir("results/Phase2/tables", true);
+  if (options.png)
+    gSystem->mkdir(PngDir(spec), true);
+
+  const TString pdfPath = PdfPath(spec);
+  const TString csvPath = CsvPath(spec);
+  if (options.pdf)
+    std::cout << "[INFO] PDF output: " << pdfPath << '\n';
+  if (options.csv)
+    std::cout << "[INFO] CSV output: " << csvPath << '\n';
+  if (options.png)
+    std::cout << "[INFO] PNG output directory: " << PngDir(spec) << '\n';
 
   std::vector<int> trendRuns;
   std::vector<double> means;
   std::vector<double> sigmas;
+  std::vector<RunSummary> summaries;
   trendRuns.reserve(runs.size());
   means.reserve(runs.size());
   sigmas.reserve(runs.size());
+  summaries.reserve(runs.size());
 
+  OpenPdf(pdfPath, options);
   int processed = 0;
+  int ok = 0;
   for (int run : runs) {
-    if (ProcessOneRun(spec, rootDir, run, trendRuns, means, sigmas))
+    RunSummary summary = ProcessOneRun(spec, rootDir, run, pdfPath, options,
+                                       trendRuns, means, sigmas);
+    if (summary.status != "MISSING_FILE" &&
+        summary.status != "ZOMBIE_FILE" &&
+        summary.status != "MISSING_TREE" &&
+        summary.status != "MISSING_BRANCH")
       ++processed;
+    if (summary.status == "OK")
+      ++ok;
+    summaries.push_back(summary);
   }
 
   if (spec == "coin")
-    DrawDualTrend(trendRuns, means, sigmas, spec, true);
+    DrawDualTrend(trendRuns, means, sigmas, spec, true, pdfPath, options);
   else
-    DrawDualTrend(trendRuns, means, sigmas, spec, false);
+    DrawDualTrend(trendRuns, means, sigmas, spec, false, pdfPath, options);
+  ClosePdf(pdfPath, options);
 
-  std::cout << "[SUMMARY] Successfully opened and processed " << processed
-            << " of " << runs.size() << " requested runs.\n";
+  if (options.csv)
+    WriteCsv(csvPath, summaries);
+
+  std::cout << "[SUMMARY] Successfully opened/processed " << processed
+            << " of " << runs.size() << " requested runs.\n"
+            << "[SUMMARY] OK fits: " << ok << " of " << runs.size()
+            << " requested runs.\n";
 }
