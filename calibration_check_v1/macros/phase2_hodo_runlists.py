@@ -112,7 +112,7 @@ def root_command(spec: str, run_string: str, rootdir: str, output_mode: str) -> 
 def cdaq_command(spec: str, run_string: str, rootdir: str, output_mode: str) -> str:
     return "\n".join(
         [
-            'builddir="/tmp/hodo_phase2_${USER}"',
+            'builddir="/tmp/hodo_phase2_rparvez"',
             'mkdir -p "$builddir"',
             "",
             "ionice -c 3 nice -n 19 root -l -b -q \\",

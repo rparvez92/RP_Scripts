@@ -68,6 +68,9 @@ const std::vector<int> kPhase2CoinRuns = {
     27122, 27123, 27124, 27125, 27126, 27127,
     27128, 27129, 27130, 27131, 27132};
 
+const int kCanvasWidth = 1250;
+const int kCanvasHeight = 850;
+
 struct OutputOptions {
   bool pdf = true;
   bool csv = true;
@@ -333,9 +336,18 @@ void DrawBetaVsXfp(TTree *tree, const TString &selectionSpec,
   tree->Project(histName, expression, BuildCuts(selectionSpec));
 
   TCanvas canvas(TString::Format("c_beta_xfp_%s_%d", viewSpec.Data(), run),
-                 "", 900, 700);
-  canvas.SetRightMargin(0.12);
+                 "", kCanvasWidth, kCanvasHeight);
+  canvas.SetLeftMargin(0.12);
+  canvas.SetRightMargin(0.18);
+  canvas.SetBottomMargin(0.13);
+  canvas.SetTopMargin(0.10);
   gStyle->SetOptStat(0);
+  hist.GetXaxis()->SetTitleOffset(1.15);
+  hist.GetYaxis()->SetTitleOffset(1.15);
+  hist.GetXaxis()->SetLabelSize(0.035);
+  hist.GetYaxis()->SetLabelSize(0.035);
+  hist.GetZaxis()->SetLabelSize(0.035);
+  hist.GetZaxis()->SetTitleOffset(1.25);
   hist.Draw("COLZ");
   const double xmin = hist.GetXaxis()->GetXmin();
   const double xmax = hist.GetXaxis()->GetXmax();
@@ -422,9 +434,17 @@ void DrawCoinTime1D(TTree *tree, int run, const TString &pdfPath,
   TF1 fit(TString::Format("f_ctime_%d", run), "gaus", fitLow, fitHigh);
   const bool fitValid = FitCoinTimePeak(hist, fit, fitLow, peak, fitHigh);
 
-  TCanvas canvas(TString::Format("c_ctime_%d", run), "", 800, 600);
-  canvas.SetLeftMargin(0.12);
+  TCanvas canvas(TString::Format("c_ctime_%d", run), "", kCanvasWidth,
+                 kCanvasHeight);
+  canvas.SetLeftMargin(0.13);
+  canvas.SetRightMargin(0.05);
+  canvas.SetBottomMargin(0.13);
+  canvas.SetTopMargin(0.10);
   gStyle->SetOptStat(0);
+  hist.GetXaxis()->SetTitleOffset(1.15);
+  hist.GetYaxis()->SetTitleOffset(1.15);
+  hist.GetXaxis()->SetLabelSize(0.035);
+  hist.GetYaxis()->SetLabelSize(0.035);
   hist.Draw("HIST");
   if (fitValid) {
     fit.SetLineColor(kRed);
@@ -486,7 +506,12 @@ void DrawDualTrend(const std::vector<int> &runs,
                 "Phase 2 %s: beta mean / sigma vs run;Run;beta mean",
                 spec.Data());
 
-  TCanvas canvas(TString::Format("c_trend_%s", spec.Data()), "", 1000, 600);
+  TCanvas canvas(TString::Format("c_trend_%s", spec.Data()), "",
+                 kCanvasWidth, kCanvasHeight);
+  canvas.SetLeftMargin(0.12);
+  canvas.SetRightMargin(0.13);
+  canvas.SetBottomMargin(0.18);
+  canvas.SetTopMargin(0.10);
   TH1F frame(frameName, title, count, 0.0, static_cast<double>(count));
   const int labelStep = count > 20 ? 5 : 1;
   for (int index = 0; index < count; ++index) {
@@ -497,8 +522,9 @@ void DrawDualTrend(const std::vector<int> &runs,
   frame.SetMinimum(meanLow);
   frame.SetMaximum(meanHigh);
   frame.GetXaxis()->LabelsOption("v");
-  frame.GetXaxis()->SetLabelSize(0.035);
-  frame.GetYaxis()->SetTitleOffset(1.2);
+  frame.GetXaxis()->SetLabelSize(0.030);
+  frame.GetYaxis()->SetTitleOffset(1.20);
+  frame.GetYaxis()->SetLabelSize(0.035);
   frame.Draw("HIST");
 
   std::vector<double> x(count), scaledSigma(count);
@@ -521,7 +547,8 @@ void DrawDualTrend(const std::vector<int> &runs,
   TGaxis rightAxis(count, meanLow, count, meanHigh,
                    sigmaLow, sigmaHigh, 510, "+L");
   rightAxis.SetTitle(coinTime ? "CTime sigma (ns)" : "beta sigma");
-  rightAxis.SetTitleOffset(1.2);
+  rightAxis.SetTitleOffset(1.20);
+  rightAxis.SetLabelSize(0.035);
   rightAxis.Draw();
 
   TLegend legend(0.12, 0.84, 0.24, 0.92);
