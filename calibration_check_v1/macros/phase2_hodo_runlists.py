@@ -207,12 +207,17 @@ def main() -> int:
     rows = parse_runlist(runlist)
     specs = ["coin", "hms", "shms_electron"] if args.spec == "all" else [args.spec]
 
+    command_text = command_file_text(
+        runlist, rows, specs, args.rootdir, args.output_mode
+    )
+
     if args.write_command_file:
         output = args.command_file.expanduser()
-        output.write_text(
-            command_file_text(runlist, rows, specs, args.rootdir, args.output_mode)
-        )
+        output.write_text(command_text)
         print(f"Wrote command file: {output}")
+        print()
+        print(command_text, end="")
+        return 0
 
     if args.format == "summary":
         print(f"Runlist: {runlist}")
