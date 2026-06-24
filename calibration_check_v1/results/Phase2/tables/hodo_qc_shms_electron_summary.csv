@@ -1,0 +1,6 @@
+run,spec,fit_variable,all_events,selected_events,fit_mean,fit_sigma,fit_entries,status
+27108,shms_electron,P.gtr.beta,1526343,349033,0.999491,0.0468076,349033,OK
+27109,shms_electron,P.gtr.beta,1507271,367449,0.998646,0.0446922,367449,OK
+27116,shms_electron,P.gtr.beta,-1,-1,,,,MISSING_FILE
+27120,shms_electron,P.gtr.beta,-1,-1,,,,MISSING_FILE
+27121,shms_electron,P.gtr.beta,-1,-1,,,,MISSING_FILE
