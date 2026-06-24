@@ -325,7 +325,7 @@ void DrawBetaVsXfp(TTree *tree, const TString &selectionSpec,
   const TString histName =
       TString::Format("h_beta_xfp_%s_%d", viewSpec.Data(), run);
   const TString title = TString::Format(
-      "Phase 2 run %d: #beta vs x_{fp} (%s);x_{fp} (cm);#beta",
+      "Phase 2 run %d: beta vs xfp (%s);xfp (cm);beta",
       run, hmsView ? "HMS" : "SHMS");
 
   TH2D hist(histName, title, 80, -45, 45, 120, 0.2, 1.2);
@@ -367,7 +367,7 @@ bool ComputeBetaMetrics(TTree *tree, const TString &spec, int run,
   mean = sigma = entries = std::nan("");
   const TString variable = spec == "hms" ? "H.gtr.beta" : "P.gtr.beta";
   const TString histName = TString::Format("h_beta_fit_%s_%d", spec.Data(), run);
-  TH1D hist(histName, ";#beta;Counts", 200, 0.2, 1.2);
+  TH1D hist(histName, ";beta;Counts", 200, 0.2, 1.2);
   hist.Sumw2();
   tree->Project(histName, variable, BuildCuts(spec));
   entries = hist.GetEntries();
@@ -483,7 +483,7 @@ void DrawDualTrend(const std::vector<int> &runs,
           ? "Phase 2 COIN: CTime (ROC2) mean / sigma vs run;Run;"
             "CTime mean (ns)"
           : TString::Format(
-                "Phase 2 %s: #beta mean / sigma vs run;Run;#beta mean",
+                "Phase 2 %s: beta mean / sigma vs run;Run;beta mean",
                 spec.Data());
 
   TCanvas canvas(TString::Format("c_trend_%s", spec.Data()), "", 1000, 600);
@@ -520,7 +520,7 @@ void DrawDualTrend(const std::vector<int> &runs,
 
   TGaxis rightAxis(count, meanLow, count, meanHigh,
                    sigmaLow, sigmaHigh, 510, "+L");
-  rightAxis.SetTitle(coinTime ? "CTime sigma (ns)" : "#beta sigma");
+  rightAxis.SetTitle(coinTime ? "CTime sigma (ns)" : "beta sigma");
   rightAxis.SetTitleOffset(1.2);
   rightAxis.Draw();
 
