@@ -115,7 +115,7 @@ def cdaq_command(spec: str, run_string: str, rootdir: str, output_mode: str) -> 
             'builddir="/tmp/hodo_phase2_rparvez"',
             'mkdir -p "$builddir"',
             "",
-            "ionice -c 3 nice -n 19 root -l -b -q \\",
+            "root -l -b -q \\",
             '  -e "gSystem->SetBuildDir(\\"$builddir\\", kTRUE);" \\',
             (
                 "  'macros/hodo_calib_qc_batch_phase2.C+("
