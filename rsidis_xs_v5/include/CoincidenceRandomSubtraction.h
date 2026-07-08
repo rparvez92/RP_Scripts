@@ -4,9 +4,11 @@
 #include <utility>
 #include <vector>
 #include <cmath>
+#include <algorithm>
 #include "TTree.h"
 #include "TH1.h"
 #include "TH1D.h"
+#include "TF1.h"
 #include "TString.h"
 #include "TAxis.h"
 
@@ -18,8 +20,10 @@ struct CoincidenceConfig {
 
   int    CtHistogramNBins = 400;
 
-  double RfPeriodNs = 4.0;
+  //double RfPeriodNs = 4.0;
+  double RfPeriodNs = 2.0;
 
+  //double PeakHalfWidthNs = 2.0;
   double PeakHalfWidthNs = 1.0;
 
   int    MaxSidePeaks = 3;
@@ -70,6 +74,34 @@ inline TString BuildWeightedSelection(const TString& WeightExpr, const TString& 
   return Form("(%s) * (%s)", WeightExpr.Data(), CutExpr.Data());
 }
 
+inline double FitCoincidencePeakCenter(TH1D* Hct) {
+  if (!Hct || Hct->GetEntries() == 0) return 0.0;
+
+  const int maxBin = Hct->GetMaximumBin();
+  const double maxCenter = Hct->GetXaxis()->GetBinCenter(maxBin);
+  const double xmin = Hct->GetXaxis()->GetXmin();
+  const double xmax = Hct->GetXaxis()->GetXmax();
+
+  double fitLo = std::max(xmin, maxCenter - 1.5);
+  double fitHi = std::min(xmax, maxCenter + 1.5);
+  TF1 fit1(UniqueHistName("FctPeak1").Data(), "gaus", fitLo, fitHi);
+  if (Hct->Fit(&fit1, "NO+RQ") != 0) return maxCenter;
+
+  const double mean1 = fit1.GetParameter(1);
+  const double sigma1 = std::fabs(fit1.GetParameter(2));
+  if (!std::isfinite(mean1) || !std::isfinite(sigma1) || sigma1 <= 0.0) return maxCenter;
+
+  fitLo = std::max(xmin, mean1 - 2.0 * sigma1);
+  fitHi = std::min(xmax, mean1 + 2.0 * sigma1);
+  TF1 fit2(UniqueHistName("FctPeak2").Data(), "gaus", fitLo, fitHi);
+  fit2.SetParameters(fit1.GetParameter(0), mean1, sigma1);
+  if (Hct->Fit(&fit2, "NO+RQ") != 0) return mean1;
+
+  const double mean2 = fit2.GetParameter(1);
+  if (!std::isfinite(mean2) || mean2 < xmin || mean2 > xmax) return mean1;
+  return mean2;
+}
+
 inline CoincidenceResult ComputeCoincidenceRandomSubtraction(
     TTree* Tree,
     const TString& BaseCuts,
@@ -87,8 +119,7 @@ inline CoincidenceResult ComputeCoincidenceRandomSubtraction(
   Tree->Project(Hct->GetName(), Config.CtBranchName, CutsWide);
   if (Hct->GetEntries()==0) return R;
 
-  int    MaxBin     = Hct->GetMaximumBin();
-  double PeakCenter = Hct->GetBinCenter(MaxBin);
+  double PeakCenter = FitCoincidencePeakCenter(Hct.get());
   R.PeakCenterNs    = PeakCenter;
 
   double CoinLo = PeakCenter - Config.PeakHalfWidthNs;
@@ -98,7 +129,7 @@ inline CoincidenceResult ComputeCoincidenceRandomSubtraction(
   int CoinBinLo = Hct->GetXaxis()->FindFixBin(CoinLo);
   int CoinBinHi = Hct->GetXaxis()->FindFixBin(CoinHi) - 1;
   double CoinErr = 0.0;
-  double CoinVal = Hct->IntegralAndError(CoinBinLo, CoinBinHi, CoinErr, "width");
+  double CoinVal = Hct->IntegralAndError(CoinBinLo, CoinBinHi, CoinErr);
   R.CoinYield     = CoinVal;
   R.CoinYieldErr  = CoinErr;
 
@@ -116,7 +147,7 @@ inline CoincidenceResult ComputeCoincidenceRandomSubtraction(
       int BinHi = Hct->GetXaxis()->FindFixBin(Hi) - 1;
 
       double RandErr = 0.0;
-      double RandVal = Hct->IntegralAndError(BinLo, BinHi, RandErr, "width");
+      double RandVal = Hct->IntegralAndError(BinLo, BinHi, RandErr);
       SumRand    += RandVal;
       SumRandVar += RandErr*RandErr;
       ++Nused;
