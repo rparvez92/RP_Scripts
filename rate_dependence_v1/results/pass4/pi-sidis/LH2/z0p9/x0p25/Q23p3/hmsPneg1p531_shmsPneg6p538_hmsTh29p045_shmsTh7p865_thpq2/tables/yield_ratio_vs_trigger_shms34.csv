@@ -1,0 +1,31 @@
+# YieldRatioVsTrigger
+# manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass4/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg1p531_shmsPneg6p538_hmsTh29p045_shmsTh7p865_thpq2/manifest.json
+# rel_under_settings: pass4/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg1p531_shmsPneg6p538_hmsTh29p045_shmsTh7p865_thpq2
+# inputs:
+#   /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg1p531_shmsPneg6p538_hmsTh29p045_shmsTh7p865_thpq2/tables/yield_vs_trigger_shms34.csv
+#   /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass4/pi-sidis/LH2/z0p9/x0p25/Q23p3/hmsPneg1p531_shmsPneg6p538_hmsTh29p045_shmsTh7p865_thpq2/tables/hms_elclean_chargeNorm_vs_current.csv
+# N_total: 4
+# N_valid_for_fit1: 4
+# N_valid_for_fit2: 4
+# fit1_model: raw_ratio = a + b*x   (x in kHz)
+# fit1_a: 4.98025882864e-05
+# fit1_a_err: 9.45600672115e-06
+# fit1_b_per_kHz: 8.92640609515e-09
+# fit1_b_err_per_kHz: 1.61925846286e-08
+# fit1_chi2: 1.90474897748
+# fit1_ndf: 2
+# fit1_prob: 0.385823800648
+# fit2_model: y_norm = 1 + m*x   (x in kHz)
+# fit2_m_per_kHz: 0.00015643341863
+# fit2_m_err_per_kHz: 0.000220883440885
+# tau_ns: -156.43341863
+# tau_ns_err: 220.883440885
+# fit2_chi2: 0.463944910868
+# fit2_ndf: 3
+# fit2_prob: 0.92673807299
+
+run,hms34_rate_kHz,shms34_rate_kHz,total34_rate_kHz,yield,yield_err,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,raw_ratio,raw_ratio_err,ynorm,ynorm_err,status_yield_csv,status_elclean_csv,join_flag,use_in_fit,reason
+23957,32.187,613.462,645.649,1.03565,0.109788,20028.72216,34.26392475,5.170824138e-05,5.482241653e-06,1.038264138,0.2257868232,OK,OK,OK,1,""
+23960,32.495,619.493,651.988,1.11954,0.065373,19989.211,19.98441532,5.600721309e-05,3.270893533e-06,1.124584384,0.223397056,OK,OK,OK,1,""
+23961,21.663,413.803,435.466,1.19062,0.112952,20064.7482,34.53955769,5.933889567e-05,5.630302061e-06,1.191482164,0.2529016745,OK,OK,OK,1,""
+23962,10.519,201.292,211.811,0.943693,0.145435,20010.71955,51.7815006,4.715937364e-05,7.268879049e-06,0.946926159,0.2315770421,OK,OK,OK,1,""

@@ -1,0 +1,37 @@
+# YieldRatioVsTrigger
+# manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi-sidis/LH2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsPneg4p868_hmsTh16p75_shmsTh7p51_thpqneg0p8/manifest.json
+# rel_under_settings: pass5/pi-sidis/LH2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsPneg4p868_hmsTh16p75_shmsTh7p51_thpqneg0p8
+# inputs:
+#   /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsPneg4p868_hmsTh16p75_shmsTh7p51_thpqneg0p8/tables/yield_vs_trigger_shms34.csv
+#   /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LH2/z0p67/x0p25/Q23p3/hmsPneg3p642_shmsPneg4p868_hmsTh16p75_shmsTh7p51_thpqneg0p8/tables/hms_elclean_chargeNorm_vs_current.csv
+# N_total: 10
+# N_valid_for_fit1: 10
+# N_valid_for_fit2: 10
+# fit1_model: raw_ratio = a + b*x   (x in kHz)
+# fit1_a: 0.000177693877997
+# fit1_a_err: 3.00626244716e-06
+# fit1_b_per_kHz: -9.00380326407e-09
+# fit1_b_err_per_kHz: 3.9395547513e-09
+# fit1_chi2: 28.323552045
+# fit1_ndf: 8
+# fit1_prob: 0.000416480570612
+# fit2_model: y_norm = 1 + m*x   (x in kHz)
+# fit2_m_per_kHz: -4.85801882582e-05
+# fit2_m_err_per_kHz: 9.14135022945e-06
+# tau_ns: 48.5801882582
+# tau_ns_err: 9.14135022945
+# fit2_chi2: 13.4832706439
+# fit2_ndf: 9
+# fit2_prob: 0.141929973917
+
+run,hms34_rate_kHz,shms34_rate_kHz,total34_rate_kHz,yield,yield_err,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,raw_ratio,raw_ratio_err,ynorm,ynorm_err,status_yield_csv,status_elclean_csv,join_flag,use_in_fit,reason
+25049,24.106,818.304,842.41,23.4819,0.300782,139664.1342,46.06699697,0.0001681312109,2.154323356e-06,0.9461846,0.02008069638,OK,OK,OK,1,""
+25050,25.049,849.764,874.813,23.766,0.29129,139762.2081,44.03912765,0.0001700459682,2.084871511e-06,0.9569601956,0.01999449225,OK,OK,OK,1,""
+25051,24.463,831.003,855.466,25.498,0.415317,139659.1236,58.35728338,0.0001825731062,2.974769072e-06,1.027458617,0.02413339366,OK,OK,OK,1,""
+25052,16.201,551.402,567.603,23.9465,0.348601,140649.538,57.07064092,0.0001702565137,2.479470577e-06,0.9581450732,0.02138856002,OK,OK,OK,1,""
+25053,8.221,280.051,288.272,24.1789,0.453684,141594.74,80.68706412,0.0001707612868,3.20557933e-06,0.960985762,0.02428509108,OK,OK,OK,1,""
+25069,24.253,823.195,847.448,23.5453,0.299503,139702.3641,45.67629953,0.0001685390233,2.144573007e-06,0.9484796281,0.02007863223,OK,OK,OK,1,""
+25070,23.774,806.253,830.027,23.8873,0.310573,139881.4494,47.16055489,0.0001707681762,2.221005018e-06,0.9610245335,0.02050793456,OK,OK,OK,1,""
+25071,24.818,841.892,866.71,23.4091,0.287628,139775.7582,43.80543311,0.0001674761082,2.058450984e-06,0.9424979074,0.0197091354,OK,OK,OK,1,""
+25072,16.503,561.428,577.931,24.1266,0.359397,140622.0712,58.52317103,0.0001715705066,2.556762466e-06,0.9655397731,0.02176855864,OK,OK,OK,1,""
+25073,8.241,280.17,288.411,25.7862,0.453748,141588.7785,78.53555362,0.0001821203649,3.206280719e-06,1.024910745,0.02502486745,OK,OK,OK,1,""

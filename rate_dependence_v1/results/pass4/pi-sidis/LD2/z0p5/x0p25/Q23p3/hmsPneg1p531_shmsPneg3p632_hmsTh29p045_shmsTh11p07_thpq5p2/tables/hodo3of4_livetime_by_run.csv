@@ -1,0 +1,3 @@
+category,run,P1X_rate_kHz,P1Y_rate_kHz,P2X_rate_kHz,P2Y_rate_kHz,DPR_ns,P1X_dead_prob,P1Y_dead_prob,P2X_dead_prob,P2Y_dead_prob,P1X_live_prob,P1Y_live_prob,P2X_live_prob,P2Y_live_prob,hodo3of4_LT,reportfile,status
+signal,23862,783.663,698.6,629.782,550.189,50,0.03918315,0.03493,0.0314891,0.02750945,0.96081685,0.96507,0.9685109,0.97249055,0.993678859044,"./Pass0p1_REPORTfiles/COIN/PRODUCTION/replay_coin_production_23862_-1.report",OK
+dummy,23866,521.55,455.423,396.429,323.77,50,0.0260775,0.02277115,0.01982145,0.0161885,0.9739225,0.97722885,0.98017855,0.9838115,0.997399812257,"./Pass0p1_REPORTfiles/COIN/PRODUCTION/replay_coin_production_23866_-1.report",OK

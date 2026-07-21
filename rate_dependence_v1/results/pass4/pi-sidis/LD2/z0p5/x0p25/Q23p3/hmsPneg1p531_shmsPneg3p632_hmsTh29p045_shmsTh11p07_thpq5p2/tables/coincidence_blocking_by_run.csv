@@ -1,0 +1,3 @@
+category,run,ctime_raw_withstart,ctime_good_withstart,coinc_blocking_ratio,rootfile,status
+signal,23862,218444,175688,0.80427,"./Pass0p1_ROOTfiles/coin_replay_production_23862_-1.root",OK
+dummy,23866,53811,43496,0.808311,"./Pass0p1_ROOTfiles/coin_replay_production_23866_-1.root",OK

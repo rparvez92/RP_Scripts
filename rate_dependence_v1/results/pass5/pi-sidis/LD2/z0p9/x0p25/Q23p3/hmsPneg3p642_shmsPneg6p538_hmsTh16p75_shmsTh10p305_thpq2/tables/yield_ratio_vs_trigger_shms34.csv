@@ -1,0 +1,30 @@
+# YieldRatioVsTrigger
+# manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi-sidis/LD2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2/manifest.json
+# rel_under_settings: pass5/pi-sidis/LD2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2
+# inputs:
+#   /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LD2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2/tables/yield_vs_trigger_shms34.csv
+#   /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi-sidis/LD2/z0p9/x0p25/Q23p3/hmsPneg3p642_shmsPneg6p538_hmsTh16p75_shmsTh10p305_thpq2/tables/hms_elclean_chargeNorm_vs_current.csv
+# N_total: 3
+# N_valid_for_fit1: 3
+# N_valid_for_fit2: 3
+# fit1_model: raw_ratio = a + b*x   (x in kHz)
+# fit1_a: 9.1211733779e-05
+# fit1_a_err: 3.55421814623e-06
+# fit1_b_per_kHz: -7.27641923476e-08
+# fit1_b_err_per_kHz: 1.41115124876e-08
+# fit1_chi2: 1331.00034344
+# fit1_ndf: 1
+# fit1_prob: 2.07239727343e-291
+# fit2_model: y_norm = 1 + m*x   (x in kHz)
+# fit2_m_per_kHz: -0.000879078126751
+# fit2_m_err_per_kHz: 7.76266678802e-05
+# tau_ns: 879.078126751
+# tau_ns_err: 77.6266678802
+# fit2_chi2: 134.491023723
+# fit2_ndf: 2
+# fit2_prob: 6.24662256635e-30
+
+run,hms34_rate_kHz,shms34_rate_kHz,total34_rate_kHz,yield,yield_err,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,raw_ratio,raw_ratio_err,ynorm,ynorm_err,status_yield_csv,status_elclean_csv,join_flag,use_in_fit,reason
+25122,54.522,244.109,298.631,25.7607,0.31517,263790.9787,76.82549324,9.765572775e-05,1.195110177e-06,1.070648739,0.04372876514,OK,OK,OK,1,""
+25123,62.091,191.235,253.326,14.4606,0.200624,263742.9125,62.45339143,5.482839278e-05,7.60790946e-07,0.6011111785,0.02486407805,OK,OK,OK,1,""
+25124,32.274,141.878,174.152,25.9162,0.346616,264709.4201,86.67820049,9.790433597e-05,1.309813105e-06,1.073374356,0.04422232191,OK,OK,OK,1,""

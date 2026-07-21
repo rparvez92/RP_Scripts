@@ -1,0 +1,46 @@
+#ifndef RSIDIS_XS_V4_CUTSV4_H
+#define RSIDIS_XS_V4_CUTSV4_H
+
+#include "TCut.h"
+#include <string>
+
+namespace rsidis_xs_v4 {
+
+struct CutParams {
+  std::string cut_tag = "v3_like_pid";
+};
+
+inline TCut BuildCoinCut_V3Like_Underscore()
+{
+  // Your requested v3-like PID (dots->underscores)
+  TCut HmsPid =
+    "(H_gtr_dp>-8) && (H_gtr_dp<8) && "
+        "(H_cal_etottracknorm>0.7) && "
+    "(H_cer_npeSum>2.0)";
+
+  TCut ShmsBase =
+    "(P_gtr_dp>-10) && (P_gtr_dp<22) && "
+        "(P_cal_etottracknorm<0.8)";
+
+  TCut ShmsAero = "(P_gtr_p<2.7) && (P_aero_npeSum>2)";
+  TCut ShmsHGC  = "(P_gtr_p>=2.7) && (P_hgcer_npeSum>1) && (P_aero_npeSum>2)";
+
+  TCut ShmsPid = ShmsBase && (ShmsAero || ShmsHGC);
+
+  return (HmsPid && ShmsPid);
+}
+
+inline TCut BuildSimDeltaCuts(double simNormalizationFactor)
+{
+  TCut sim_delta = "((hsdelta>-8.0) && (hsdelta<8.0) && (ssdelta>-10.0) && (ssdelta<22.0))";
+  TCut sim_norm  = Form("Weight * %e", simNormalizationFactor);
+  return sim_delta * sim_norm; // cut * weight
+}
+
+inline TCut BuildRangeCut(const std::string& expr, double low, double high) {
+  return Form("(%s>=%g) && (%s<%g)", expr.c_str(), low, expr.c_str(), high);
+}
+
+} // namespace rsidis_xs_v4
+
+#endif

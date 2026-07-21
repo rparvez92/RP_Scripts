@@ -1,0 +1,575 @@
+=== TableCoinXsec v5 (GROUP overlay) ===
+groupFile: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi+sidis/LD2/x0p25/q23p3/thpq2/grp_pass5_piplus_LD2_zOv_x0p25_q23p3_thpq2.list
+resultsDir: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_pass5_piplus_LD2_zOv_x0p25_q23p3_thpq2
+settingsRoot: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/settings
+Group entries: 4
+CSV: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/results/grp_pass5_piplus_LD2_zOv_x0p25_q23p3_thpq2/tables/xsec_phipq_z_pt_overlayed_group.csv
+--- Curve: z0p36 settingId=pass5/pi+sidis/LD2/z0p36/x0p25/q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi+sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass5/pi+sidis/LD2/z0p36/x0p25/q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi+sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass5/pi+sidis/LD2/z0p36/x0p25/q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi+sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass5/pi+sidis/LD2/z0p36/x0p25/q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi+sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass5/pi+sidis/LD2/z0p36/x0p25/q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2/runs_positron_dummy.txt
+sigma_model=0.0163053
+SIM glob: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass5/pi+sidis/LD2/z0p36/x0p25/q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2/*.root added=1
+SIM root file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass5/pi+sidis/LD2/z0p36/x0p25/q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2/coin_pass5_piplus_LD2_hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2.root
+SIM hist file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass5/pi+sidis/LD2/z0p36/x0p25/q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2/coin_pass5_piplus_LD2_hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2.hist
+SIM normfac:  1.70277e+11
+SIM nGenSim:  1000000
+SIM scale:   1e-06  (1/nGenSim)
+SIM eff:     170277  (normfac/nGenSim)
+SANITY (run 25318): entries(all)=213753 entries(baseCuts)=90188 entries(fullCuts)=137
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+--- Curve: z0p50 settingId=pass5/pi+sidis/LD2/z0p5/x0p25/q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh10p305_thpq2
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi+sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass5/pi+sidis/LD2/z0p5/x0p25/q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh10p305_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi+sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass5/pi+sidis/LD2/z0p5/x0p25/q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh10p305_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi+sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass5/pi+sidis/LD2/z0p5/x0p25/q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh10p305_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi+sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass5/pi+sidis/LD2/z0p5/x0p25/q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh10p305_thpq2/runs_positron_dummy.txt
+sigma_model=0.0130416
+SIM glob: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass5/pi+sidis/LD2/z0p5/x0p25/q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh10p305_thpq2/*.root added=1
+SIM root file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass5/pi+sidis/LD2/z0p5/x0p25/q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh10p305_thpq2/coin_pass5_piplus_LD2_hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh10p305_thpq2.root
+SIM hist file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass5/pi+sidis/LD2/z0p5/x0p25/q23p3/hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh10p305_thpq2/coin_pass5_piplus_LD2_hmsPneg3p642_shmsP3p632_hmsTh16p75_shmsTh10p305_thpq2.hist
+SIM normfac:  1.75165e+11
+SIM nGenSim:  1000000
+SIM scale:   1e-06  (1/nGenSim)
+SIM eff:     175165  (normfac/nGenSim)
+SANITY (run 25280): entries(all)=455823 entries(baseCuts)=177979 entries(fullCuts)=287
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+--- Curve: z0p67 settingId=pass5/pi+sidis/LD2/z0p67/x0p25/q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi+sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass5/pi+sidis/LD2/z0p67/x0p25/q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi+sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass5/pi+sidis/LD2/z0p67/x0p25/q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi+sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass5/pi+sidis/LD2/z0p67/x0p25/q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi+sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass5/pi+sidis/LD2/z0p67/x0p25/q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/runs_positron_dummy.txt
+sigma_model=0.00901577
+SIM glob: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass5/pi+sidis/LD2/z0p67/x0p25/q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/*.root added=1
+SIM root file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass5/pi+sidis/LD2/z0p67/x0p25/q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/coin_pass5_piplus_LD2_hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2.root
+SIM hist file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass5/pi+sidis/LD2/z0p67/x0p25/q23p3/hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2/coin_pass5_piplus_LD2_hmsPneg3p642_shmsP4p868_hmsTh16p75_shmsTh10p305_thpq2.hist
+SIM normfac:  1.74804e+11
+SIM nGenSim:  1000000
+SIM scale:   1e-06  (1/nGenSim)
+SIM eff:     174804  (normfac/nGenSim)
+SANITY (run 25255): entries(all)=668277 entries(baseCuts)=238035 entries(fullCuts)=358
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+--- Curve: z0p90 settingId=pass5/pi+sidis/LD2/z0p9/x0p25/q23p3/hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh10p305_thpq2
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi+sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass5/pi+sidis/LD2/z0p9/x0p25/q23p3/hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh10p305_thpq2/runs_signal.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi+sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass5/pi+sidis/LD2/z0p9/x0p25/q23p3/hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh10p305_thpq2/runs_dummy.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi+sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass5/pi+sidis/LD2/z0p9/x0p25/q23p3/hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh10p305_thpq2/runs_positron.txt
+Reading runlist: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/groups/pass5/pi+sidis/LD2/x0p25/q23p3/thpq2/../../../../../../../settings/pass5/pi+sidis/LD2/z0p9/x0p25/q23p3/hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh10p305_thpq2/runs_positron_dummy.txt
+sigma_model=0.00335959
+SIM glob: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass5/pi+sidis/LD2/z0p9/x0p25/q23p3/hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh10p305_thpq2/*.root added=1
+SIM root file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass5/pi+sidis/LD2/z0p9/x0p25/q23p3/hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh10p305_thpq2/coin_pass5_piplus_LD2_hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh10p305_thpq2.root
+SIM hist file: /home/cdaq/users/rparvez/RP_Scripts/rsidis_xs_v5/simc_worksim/pass5/pi+sidis/LD2/z0p9/x0p25/q23p3/hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh10p305_thpq2/coin_pass5_piplus_LD2_hmsPneg3p642_shmsP6p538_hmsTh16p75_shmsTh10p305_thpq2.hist
+SIM normfac:  8.6298e+10
+SIM nGenSim:  1000000
+SIM scale:   1e-06  (1/nGenSim)
+SIM eff:     86298  (normfac/nGenSim)
+SANITY (run 25227): entries(all)=233319 entries(baseCuts)=74592 entries(fullCuts)=128
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+ERROR: opened 0 ROOT files for this category (yields will be zero).
+Done (GROUP table).

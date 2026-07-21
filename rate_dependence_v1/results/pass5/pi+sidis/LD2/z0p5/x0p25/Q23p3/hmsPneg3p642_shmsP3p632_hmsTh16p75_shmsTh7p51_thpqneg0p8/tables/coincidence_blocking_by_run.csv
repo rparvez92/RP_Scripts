@@ -1,0 +1,17 @@
+category,run,ctime_raw_withstart,ctime_good_withstart,coinc_blocking_ratio,rootfile,status
+signal,24960,62352,59781,0.958766,"./Pass0p1_ROOTfiles/coin_replay_production_24960_-1.root",OK
+signal,24961,359888,345776,0.960788,"./Pass0p1_ROOTfiles/coin_replay_production_24961_-1.root",OK
+signal,24962,332554,319010,0.959273,"./Pass0p1_ROOTfiles/coin_replay_production_24962_-1.root",OK
+signal,24964,354387,339821,0.958898,"./Pass0p1_ROOTfiles/coin_replay_production_24964_-1.root",OK
+signal,24965,129532,125458,0.968548,"./Pass0p1_ROOTfiles/coin_replay_production_24965_-1.root",OK
+signal,24966,105304,101943,0.968083,"./Pass0p1_ROOTfiles/coin_replay_production_24966_-1.root",OK
+signal,24998,379153,364539,0.961456,"./Pass0p1_ROOTfiles/coin_replay_production_24998_-1.root",OK
+signal,24999,375611,360526,0.959839,"./Pass0p1_ROOTfiles/coin_replay_production_24999_-1.root",OK
+signal,25000,110870,107295,0.967755,"./Pass0p1_ROOTfiles/coin_replay_production_25000_-1.root",OK
+signal,25001,101290,98126,0.968763,"./Pass0p1_ROOTfiles/coin_replay_production_25001_-1.root",OK
+signal,25007,356197,342008,0.960165,"./Pass0p1_ROOTfiles/coin_replay_production_25007_-1.root",OK
+signal,25008,46864,44934,0.958817,"./Pass0p1_ROOTfiles/coin_replay_production_25008_-1.root",OK
+dummy,24981,295693,282937,0.956861,"./Pass0p1_ROOTfiles/coin_replay_production_24981_-1.root",OK
+dummy,24982,301544,288703,0.957416,"./Pass0p1_ROOTfiles/coin_replay_production_24982_-1.root",OK
+dummy,25004,311543,298123,0.956924,"./Pass0p1_ROOTfiles/coin_replay_production_25004_-1.root",OK
+dummy,25005,280438,268408,0.957103,"./Pass0p1_ROOTfiles/coin_replay_production_25005_-1.root",OK

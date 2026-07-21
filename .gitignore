@@ -1,0 +1,36 @@
+# macOS metadata
+.DS_Store
+._*
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Transient analysis products and scratch copies
+*.log
+*.old
+*.root
+*.hist
+calibration_check_v1/macros/phase2_hodo_root_commands.txt
+
+# ROOT/ACLiC generated build artifacts
+*_C.d
+*_C.so
+*_C_ACLiC_dict_rdict.pcm
+
+# Locally compiled analysis executables
+**/macros/heepcheck
+**/macros/heepcheck_sign
+
+# Machine-specific data links and local link manifests
+.data-links.local.tsv
+**/*ROOTfiles*
+**/*REPORTfiles
+**/*REPORT_OUTPUT
+**/REPORT_OUTPUT
+**/ROOTfiles
+**/Rsidis_ROOTfiles
+**/Skimmed_ROOTfiles
+**/simc_worksim
+**/single_arm_worksim
+**/Legacy_simc_worksim

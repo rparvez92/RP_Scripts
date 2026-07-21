@@ -1,0 +1,9 @@
+dataset,method,init,parameter,value,formal_error,covariance_method
+radwan_input,scipy_least_squares,zero_init,dpe_C,97.310990,42.700788,inverse
+radwan_input,scipy_least_squares,zero_init,dpe_E,97.453207,42.706166,inverse
+radwan_input,scipy_least_squares,zero_init,dpe_D,97.428223,42.714804,inverse
+radwan_input,scipy_least_squares,zero_init,dtheta_e_C,-42.527040,18.619598,inverse
+radwan_input,scipy_least_squares,zero_init,dtheta_e_E,-42.672956,18.622838,inverse
+radwan_input,scipy_least_squares,zero_init,dtheta_e_D,-42.888884,18.626142,inverse
+radwan_input,scipy_least_squares,zero_init,dtheta_p_common,51.799083,23.606613,inverse
+radwan_input,scipy_least_squares,zero_init,dpp_common,-135.081429,60.543512,inverse

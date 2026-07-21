@@ -1,0 +1,33 @@
+# YieldRatioVsTrigger
+# manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/settings/pass5/pi+sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2/manifest.json
+# rel_under_settings: pass5/pi+sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2
+# inputs:
+#   /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2/tables/yield_vs_trigger_shms34.csv
+#   /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v1/results/pass5/pi+sidis/LH2/z0p36/x0p25/Q23p3/hmsPneg3p642_shmsP2p615_hmsTh16p75_shmsTh10p305_thpq2/tables/hms_elclean_chargeNorm_vs_current.csv
+# N_total: 6
+# N_valid_for_fit1: 6
+# N_valid_for_fit2: 6
+# fit1_model: raw_ratio = a + b*x   (x in kHz)
+# fit1_a: 0.000366412988595
+# fit1_a_err: 8.423607517e-06
+# fit1_b_per_kHz: -3.99717149144e-09
+# fit1_b_err_per_kHz: 1.05548024143e-08
+# fit1_chi2: 32.8603051061
+# fit1_ndf: 4
+# fit1_prob: 1.27578237358e-06
+# fit2_model: y_norm = 1 + m*x   (x in kHz)
+# fit2_m_per_kHz: -1.24207662289e-05
+# fit2_m_err_per_kHz: 1.37795921002e-05
+# tau_ns: 12.4207662289
+# tau_ns_err: 13.7795921002
+# fit2_chi2: 7.17783694985
+# fit2_ndf: 5
+# fit2_prob: 0.207746766811
+
+run,hms34_rate_kHz,shms34_rate_kHz,total34_rate_kHz,yield,yield_err,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,raw_ratio,raw_ratio_err,ynorm,ynorm_err,status_yield_csv,status_elclean_csv,join_flag,use_in_fit,reason
+25328,13.404,860.659,874.063,51.8349,0.636602,141558.4571,66.73653194,0.0003661731066,4.500408326e-06,0.9993453234,0.02605140416,OK,OK,OK,1,""
+25329,13.646,875.836,889.482,50.2848,0.592248,141670.7704,62.81752287,0.0003549412476,4.183414487e-06,0.9686917732,0.02502576359,OK,OK,OK,1,""
+25330,13.297,853.73,867.027,49.3204,0.646338,141656.7855,69.19630503,0.0003481682845,4.565872721e-06,0.9502072671,0.02514888526,OK,OK,OK,1,""
+25331,13.724,881.265,894.989,54.0202,0.630409,141464.7046,61.69018666,0.0003818634489,4.459409104e-06,1.042166792,0.02687270596,OK,OK,OK,1,""
+25333,6.973,458.725,465.698,51.8815,0.758335,142373.944,88.3734732,0.000364403054,5.331161386e-06,0.994514565,0.02710018547,OK,OK,OK,1,""
+25334,6.923,455.47,462.393,52.1565,0.780872,142488.9939,90.61307391,0.0003660387976,5.485168167e-06,0.9989787726,0.02741406196,OK,OK,OK,1,""

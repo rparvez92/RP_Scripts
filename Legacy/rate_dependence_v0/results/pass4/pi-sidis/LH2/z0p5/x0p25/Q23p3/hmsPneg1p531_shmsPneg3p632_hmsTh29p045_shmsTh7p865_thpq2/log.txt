@@ -1,0 +1,18 @@
+YieldVsCurrent (myCTime only)
+manifest: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/settings/pass4/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2/manifest.json
+setting_dir: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/settings/pass4/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2
+setting_id: hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2
+results_base: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/results/pass4/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2
+
+Loaded rows from run_metadata.csv: 28
+WARNING [run 24153]: boil_corr invalid (-999).
+WARNING [run 24155]: boil_corr invalid (-999).
+
+Wrote CSV: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/results/pass4/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2/tables/yield_vs_current_overlay.csv
+Plot points: category=dummy n=4
+Plot points: category=positron n=2
+Plot points: category=positron_dummy n=1
+Plot points: category=signal n=19
+Global ranges: X=[7.99104,34.833]  Y=[-0.347864,4.45397]
+Wrote PNG: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/results/pass4/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2/PNGs/yield_vs_current_overlay.png
+Wrote Root File: /home/cdaq/users/rparvez/RP_Scripts/rate_dependence_v0/results/pass4/pi-sidis/LH2/z0p5/x0p25/Q23p3/hmsPneg1p531_shmsPneg3p632_hmsTh29p045_shmsTh7p865_thpq2/canvases/yield_vs_current_overlay.root

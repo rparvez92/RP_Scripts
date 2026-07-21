@@ -1,0 +1,7 @@
+category,run,BCM2_I,Nnet,Nnet_err,norm_factor,yield,yield_err,BCM2_Q_mC,comp_livetime,h_esing_Eff,boil_corr,ps_choice,ps_factor,PeakCenterNs,CoinLoNs,CoinHiNs,RandomWindowListNs,rootfile,status,fit_included,fit_excluded_reason
+signal,24200,45.445,80.7,3.80362,0.0783507,6.32291,0.298016,12.98,1,0.9989,1.01587,"ps6",1,51.125,50.125,52.125,"42.125-44.125;58.125-60.125;38.125-40.125;62.125-64.125","./Skimmed_ROOTfiles/skimmed_coin_replay_production_24200_-1.root",OK,1,""
+signal,24201,46.67,326.25,7.65588,0.018872,6.15698,0.144481,53.928,1,0.9986,1.0163,"ps6",1,51.125,50.125,52.125,"42.125-44.125;58.125-60.125;38.125-40.125;62.125-64.125","./Skimmed_ROOTfiles/skimmed_coin_replay_production_24201_-1.root",OK,1,""
+signal,24203,44.024,497.25,9.472,0.0127363,6.33312,0.120638,79.851,1,0.9984,1.01538,"ps6",1,51.275,50.275,52.275,"42.275-44.275;58.275-60.275;38.275-40.275;62.275-64.275","./Skimmed_ROOTfiles/skimmed_coin_replay_production_24203_-1.root",OK,1,""
+signal,24204,22.463,228.787,6.1572,0.0276083,6.31644,0.16999,36.571,1,0.9982,1.00785,"ps6",1,51.275,50.275,52.275,"42.275-44.275;58.275-60.275;38.275-40.275;62.275-64.275","./Skimmed_ROOTfiles/skimmed_coin_replay_production_24204_-1.root",OK,1,""
+#FIT,fit_const,fit_const_err,chi2,ndf,chi2_ndf,prob,n_fit_points
+#FIT,6.27693,0.0784508,0.984043,3,0.328014,0.805113,4

@@ -1,0 +1,13 @@
+category,run,BCM2_I,BCM2_Q_mC,hms_elclean_counts,hms_elclean_counts_per_mC,hms_elclean_counts_per_mC_err,yield,yield_err,rootfile,status
+signal,25233,48.12,77.28,10761096,139248.1366,42.44838186,33.838,0.269191,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25233_-1.root",OK
+signal,25234,47.563,82.391,11469915,139213.2029,41.10553696,33.2673,0.258425,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25234_-1.root",OK
+signal,25235,49.201,83.291,11586256,139105.7377,40.86706831,35.4975,0.275556,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25235_-1.root",OK
+signal,25236,24.94,42.773,6033544,141059.6404,57.42705304,32.745,0.348969,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25236_-1.root",OK
+signal,25237,25.254,43.575,6149236,141118.4395,56.9079819,33.9323,0.351649,"./Skimmed_ROOTfiles/skimmed_coin_replay_production_25237_-1.root",OK
+# FIT_MODEL,pol0
+# FIT_c,139681.154563
+# FIT_cerr,20.5952206217
+# FIT_chi2,1645.99085581
+# FIT_ndf,4
+# FIT_chi2ndf,411.497713952
+# FIT_prob,0
