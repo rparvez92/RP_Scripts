@@ -473,13 +473,33 @@ void DrawMetadataPage(TCanvas* canvas, const std::string& inputPath,
 
 enum class PlotKind { kNormyield, kNormFactor, kRatio };
 
+void AddYExtent(std::vector<double>& extents, double value, double error = 0.0) {
+  if (!std::isfinite(value)) return;
+  const double safeError = std::isfinite(error) && error >= 0.0 ? error : 0.0;
+  extents.push_back(value - safeError);
+  extents.push_back(value + safeError);
+}
+
+std::pair<double, double> PaddedYRange(const std::vector<double>& extents) {
+  if (extents.empty()) return {0.0, 1.0};
+
+  const auto limits = std::minmax_element(extents.begin(), extents.end());
+  const double low = *limits.first;
+  const double high = *limits.second;
+  const double span = high - low;
+  const double scale = std::max(std::abs(low), std::abs(high));
+  double padding = std::max(0.15 * span, 0.05 * scale);
+  if (!(padding > 0.0)) padding = 0.1;
+  return {low - padding, high + padding};
+}
+
 void DrawDiagnosticPage(TCanvas* canvas, const std::vector<NormRow>& rows,
                         PlotKind kind, const std::string& pdfPath) {
   ConfigureCanvas(canvas);
   std::vector<double> allRuns, elecRun, elecValue, elecError;
   std::vector<double> posRun, posValue, posError;
   std::vector<double> replayRun, replayValue, replayError;
-  std::vector<double> values;
+  std::vector<double> yExtents;
   for (const auto& row : rows) {
     if (row.status != "OK") continue;
     double value = kNaN, error = 0.0;
@@ -491,7 +511,7 @@ void DrawDiagnosticPage(TCanvas* canvas, const std::vector<NormRow>& rows,
         replayValue.push_back(row.replayNormyield);
         replayError.push_back(ValidMeasured(row.replayNormyieldErr)
                               ? row.replayNormyieldErr : 0.0);
-        values.push_back(row.replayNormyield);
+        AddYExtent(yExtents, replayValue.back(), replayError.back());
       }
     } else if (kind == PlotKind::kNormFactor) {
       value = row.normFactor;
@@ -500,7 +520,7 @@ void DrawDiagnosticPage(TCanvas* canvas, const std::vector<NormRow>& rows,
     }
     if (!std::isfinite(value)) continue;
     allRuns.push_back(row.run);
-    values.push_back(value);
+    AddYExtent(yExtents, value, error);
     if (row.isPositron) {
       posRun.push_back(row.run); posValue.push_back(value); posError.push_back(error);
     } else {
@@ -510,16 +530,9 @@ void DrawDiagnosticPage(TCanvas* canvas, const std::vector<NormRow>& rows,
   if (kind == PlotKind::kNormyield)
     allRuns.insert(allRuns.end(), replayRun.begin(), replayRun.end());
   const AxisRange axis = RunAxis(allRuns);
-  double yLow = 0.0, yHigh = 1.0;
-  if (!values.empty()) {
-    const auto limits = std::minmax_element(values.begin(), values.end());
-    const double span = *limits.second - *limits.first;
-    const double pad = std::max(0.10 * std::max(std::abs(*limits.first),
-                                                std::abs(*limits.second)),
-                                0.15 * span);
-    yLow = *limits.first - (pad > 0.0 ? pad : 0.1);
-    yHigh = *limits.second + (pad > 0.0 ? pad : 0.1);
-  }
+  const auto yRange = PaddedYRange(yExtents);
+  const double yLow = yRange.first;
+  const double yHigh = yRange.second;
 
   std::string title, yTitle;
   if (kind == PlotKind::kNormyield) {
