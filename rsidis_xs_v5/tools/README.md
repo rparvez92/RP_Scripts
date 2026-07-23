@@ -149,3 +149,39 @@ After your macro writes an `xsec_phipq.csv`, you can verify it contains required
 ```bash
 python3 tools/validate_output_schema.py results/.../xsec_phipq.csv
 ```
+
+---
+
+## 7) Generate and run the RP SIMC input manifest
+
+From `rsidis_xs_v5/`, preview the inputs derived from the settings tree:
+
+```bash
+python3 tools/generate_simc_inputs.py --dry-run
+```
+
+Generate the `.inp` files and manifest in the macOS SIMC checkout:
+
+```bash
+python3 tools/generate_simc_inputs.py
+```
+
+Preview all manifest jobs with a short validation run size:
+
+```bash
+python3 tools/run_simc_batch.py --dry-run --ngen 100
+```
+
+Run pending jobs serially, skipping outputs already complete for the requested
+event count:
+
+```bash
+python3 tools/run_simc_batch.py --run --ngen 100
+```
+
+The batch runner writes outputs under
+`/Volumes/T7/RSIDIS/Phase<1|2>/Simulation/{outfiles,runout,ROOTfiles}/<run-type>/`
+and atomically updates `infiles/RP_Simc/simc_batch_status.csv`. Use filters such
+as `--phase`, `--reaction`, `--run-type`, `--target`, or `--limit` for a smaller
+batch. Use `--overwrite` only when intentionally replacing incomplete or
+mismatched output sets.
