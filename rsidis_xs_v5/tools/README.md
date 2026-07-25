@@ -185,3 +185,63 @@ and atomically updates `infiles/RP_Simc/simc_batch_status.csv`. Use filters such
 as `--phase`, `--reaction`, `--run-type`, `--target`, or `--limit` for a smaller
 batch. Use `--overwrite` only when intentionally replacing incomplete or
 mismatched output sets.
+
+---
+
+## 8) Extract SIMC metadata, normalization, and QA
+
+From `rsidis_xs_v5/`, inspect the full manifest inventory and the simulation
+products currently available on T7:
+
+```bash
+python3 tools/RP_extract_simc_info.py
+```
+
+The extractor writes the complete catalog, a warning/error-only table, and a
+multipage diagnostic PDF under:
+
+```text
+results/Tables/RP_extract_simc_info/
+results/PDFs/RP_extract_simc_info/
+```
+
+Limit a rerun when needed:
+
+```bash
+python3 tools/RP_extract_simc_info.py --phase 1 --reaction sidis
+```
+
+Use `--no-pdf` for a CSV-only validation. Missing future products remain
+`PENDING`, and intentionally unsupported manifest rows remain `SKIPPED`.
+Warnings do not fail the command; a structural `ERROR` produces exit status 2.
+
+For selected reconstructed events, the normalized simulation yield and its
+Monte Carlo uncertainty are:
+
+```text
+Y_SIMC = sum(fWeight)
+sigma_MC = sqrt(sum(fWeight^2))
+```
+
+`fWeight` already includes the SIMC normalization factor divided by the
+generated-event count and must not be normalized a second time.
+
+The catalog uses `nocut`, `delta`, and `full` acceptance tiers. File sizes are
+reported in decimal MB (`bytes / 1e6`). Reconstructed `Ngen` and `normfac` are
+reported as single values, while the extractor still rejects either branch
+when it is not constant across the reconstructed tree.
+
+Kinematic weighted means, RMS values, and recon-minus-SIMC residuals are saved
+with explicit `delta` and `full` tier names. The QA PDF groups target/charge
+points beneath one label per setting and compares Delta-only with Full-cut
+yield and MC-precision diagnostics.
+
+Kinematic availability distinguishes usable branches (`available`), branches
+containing only sentinel values such as `-999` (`sentinel_only`), and absent
+branches (`missing`). Sentinel-only and missing metrics remain blank, with the
+reason printed in the PDF panel. Entry-count diagnostics use at most six
+settings per page so Raw/Hist/Recon markers remain distinguishable.
+
+Exclusive PIMINUS production from LH2 is omitted entirely from the SIMC input
+manifest and therefore from batch-running and QA catalogs; exclusive PIMINUS
+from LD2 remains supported.

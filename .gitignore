@@ -47,3 +47,7 @@ rsidis_xs_v5/results/Tables/RP_get_good_coin_ev/
 # Generated RP_get_coin_normyield analysis products
 rsidis_xs_v5/results/PDFs/RP_get_coin_normyield/
 rsidis_xs_v5/results/Tables/RP_get_coin_normyield/
+
+# Generated RP_extract_simc_info analysis products
+rsidis_xs_v5/results/PDFs/RP_extract_simc_info/
+rsidis_xs_v5/results/Tables/RP_extract_simc_info/

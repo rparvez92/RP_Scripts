@@ -15,6 +15,11 @@ import run_simc_batch as batch  # noqa: E402
 
 
 class GeneratorTests(unittest.TestCase):
+    def test_production_event_counts(self):
+        self.assertEqual(generator.EVENT_COUNTS["sidis"], 100_000)
+        for reaction in ("rho", "delta", "exclusive"):
+            self.assertEqual(generator.EVENT_COUNTS[reaction], 10_000)
+
     def leaf(self, run_type: str = "PIMINUS", target: str = "LD2"):
         return generator.LeafResult(
             identity=generator.LeafIdentity("phase1", "pass4", run_type, target,
@@ -35,6 +40,39 @@ class GeneratorTests(unittest.TestCase):
         self.assertEqual(generator.reaction_flags("exclusive", "PIMINUS")["which_pion"], 1)
         self.assertEqual(generator.reaction_flags("delta", "PIPLUS")["which_pion"], 2)
         self.assertEqual(generator.reaction_flags("delta", "PIMINUS")["which_pion"], 3)
+
+    def test_charge_specific_template_selection(self):
+        pip = generator.template_path(
+            generator.DEFAULT_SIMC_DIR, "sidis", "LH2", "PIPLUS"
+        )
+        pim = generator.template_path(
+            generator.DEFAULT_SIMC_DIR, "sidis", "LH2", "PIMINUS"
+        )
+        self.assertIn("_pip_", pip.name)
+        self.assertIn("_pim_", pim.name)
+
+        expected_pim = {
+            generator.template_path(
+                generator.DEFAULT_SIMC_DIR, reaction, target, "PIMINUS"
+            )
+            for reaction in ("sidis", "rho", "delta")
+            for target in ("LH2", "LD2")
+        }
+        expected_pim.add(generator.template_path(
+            generator.DEFAULT_SIMC_DIR, "exclusive", "LD2", "PIMINUS"
+        ))
+        self.assertEqual(len(expected_pim), 7)
+        self.assertTrue(all(path.is_file() for path in expected_pim))
+        self.assertFalse(generator.template_path(
+            generator.DEFAULT_SIMC_DIR, "exclusive", "LH2", "PIMINUS"
+        ).exists())
+
+    def test_exclusive_piminus_lh2_is_excluded(self):
+        excluded = self.leaf(run_type="PIMINUS", target="LH2").identity
+        retained = self.leaf(run_type="PIMINUS", target="LD2").identity
+        self.assertTrue(generator.excluded_combination(excluded, "exclusive"))
+        self.assertFalse(generator.excluded_combination(retained, "exclusive"))
+        self.assertFalse(generator.excluded_combination(excluded, "sidis"))
 
     def test_rendered_input_validation(self):
         leaf = self.leaf()

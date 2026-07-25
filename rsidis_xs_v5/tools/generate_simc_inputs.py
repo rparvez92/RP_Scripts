@@ -43,9 +43,9 @@ BEAM_GEV = {
 }
 EVENT_COUNTS = {
     "sidis": 100_000,
-    "rho": 30_000,
-    "delta": 30_000,
-    "exclusive": 30_000,
+    "rho": 10_000,
+    "delta": 10_000,
+    "exclusive": 10_000,
 }
 TEMPLATE_REACTION_NAMES = {
     "sidis": "sidis",
@@ -62,7 +62,6 @@ STATUS_GENERATED = "GENERATED"
 STATUS_WOULD_GENERATE = "WOULD_GENERATE"
 STATUS_INVALID = "SKIPPED_INVALID_KINEMATICS"
 STATUS_CONFLICT = "SKIPPED_SETTING_CONFLICT"
-STATUS_UNSUPPORTED = "SKIPPED_UNSUPPORTED_REACTION_EXCLUSIVE_PIMINUS_FROM_LH2"
 STATUS_EXISTS = "EXISTING_FILE_NOT_OVERWRITTEN"
 STATUS_TEMPLATE_ERROR = "ERROR_TEMPLATE_VALIDATION"
 
@@ -301,6 +300,14 @@ def reaction_flags(reaction: str, run_type: str) -> Dict[str, int]:
     raise ValueError(f"Unknown reaction: {reaction}")
 
 
+def excluded_combination(identity: LeafIdentity, reaction: str) -> bool:
+    return (
+        reaction == "exclusive"
+        and identity.run_type == "PIMINUS"
+        and identity.target == "LH2"
+    )
+
+
 def replace_assignment(text: str, name: str, value: str) -> str:
     pattern = re.compile(
         rf"^(?P<prefix>\s*{re.escape(name)}\s*=\s*)(?P<value>[^;\r\n]+)",
@@ -379,13 +386,19 @@ def render_input(template_text: str, leaf: LeafResult, reaction: str) -> Tuple[s
     return rendered, flags
 
 
-def template_path(simc_dir: Path, reaction: str, target: str) -> Path:
+def template_path(
+    simc_dir: Path, reaction: str, target: str, run_type: str
+) -> Path:
     template_reaction = TEMPLATE_REACTION_NAMES[reaction]
+    charge = "pip" if run_type == "PIPLUS" else "pim"
     return (
         simc_dir
         / "infiles"
         / "pdbforce"
-        / f"mc_{template_reaction}_{target}_pip_e10p7_x0p25_q23p3_z0p36_thpq2p0.inp"
+        / (
+            f"mc_{template_reaction}_{target}_{charge}_"
+            "e10p7_x0p25_q23p3_z0p36_thpq2p0.inp"
+        )
     )
 
 
@@ -484,8 +497,12 @@ def generate(
     for identity, source in leaves:
         leaf = validate_leaf(identity, source, leaf_root)
         for reaction in REACTIONS:
+            if excluded_combination(identity, reaction):
+                continue
             flags = reaction_flags(reaction, identity.run_type)
-            template = template_path(simc_dir, reaction, identity.target)
+            template = template_path(
+                simc_dir, reaction, identity.target, identity.run_type
+            )
             relative_template = template.relative_to(simc_dir).as_posix()
             output = output_dir / output_name(identity, reaction)
             relative_output = output.relative_to(simc_dir).as_posix()
@@ -493,9 +510,6 @@ def generate(
             if leaf.status != "VALID":
                 status = leaf.status
                 reason = leaf.reason
-            elif reaction == "exclusive" and identity.run_type == "PIMINUS" and identity.target == "LH2":
-                status = STATUS_UNSUPPORTED
-                reason = "SIMC rejects exclusive pi- production from a hydrogen target"
             elif not template.is_file():
                 status = STATUS_TEMPLATE_ERROR
                 reason = f"missing template: {template}"
@@ -530,7 +544,7 @@ def generate(
                     leaf,
                     reaction,
                     relative_template,
-                    relative_output if status not in {STATUS_INVALID, STATUS_CONFLICT, STATUS_UNSUPPORTED} else "",
+                    relative_output if status not in {STATUS_INVALID, STATUS_CONFLICT} else "",
                     flags,
                     status,
                     reason,
