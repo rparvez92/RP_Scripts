@@ -52,10 +52,18 @@ constexpr double kHistLow = 0.0;
 constexpr double kHistHigh = 100.0;
 constexpr const char* kCTBranch = "CTime_ePiCoinTime_ROC2";
 constexpr const char* kTreeName = "T";
-constexpr const char* kCoinCuts =
+constexpr const char* kDeltaCoinCuts =
   "(P_gtr_p<=2.7 || P_hgcer_npeSum>1) && P_aero_npeSum>2 && "
   "P_cal_etottracknorm<0.8 && P_gtr_dp>-10 && P_gtr_dp<22 && "
   "H_cer_npeSum>2 && H_cal_etottracknorm>0.8 && abs(H_gtr_dp)<8";
+constexpr const char* kFullCoinCuts =
+  "(P_gtr_p<=2.7 || P_hgcer_npeSum>1) && P_aero_npeSum>2 && "
+  "P_cal_etottracknorm<0.8 && P_gtr_dp>-10 && P_gtr_dp<22 && "
+  "H_cer_npeSum>2 && H_cal_etottracknorm>0.8 && abs(H_gtr_dp)<8 && "
+  "H_gtr_th>-0.060 && H_gtr_th<0.060 && "
+  "H_gtr_ph>-0.022 && H_gtr_ph<0.022 && "
+  "P_gtr_th>-0.045 && P_gtr_th<0.045 && "
+  "P_gtr_ph>-0.024 && P_gtr_ph<0.024";
 
 const double kNaN = std::numeric_limits<double>::quiet_NaN();
 const std::vector<int> kRandomOffsets = {-4, -3, -2, 2, 3, 4};
@@ -92,6 +100,16 @@ struct FitInfo {
   std::unique_ptr<TF1> function;
 };
 
+struct TierCounts {
+  Long64_t selectedEntries = 0;
+  double nCoin = kNaN;
+  int nRandomPeaks = 0;
+  double nRandomTotal = kNaN;
+  double randomMean = kNaN;
+  double goodCoin = kNaN;
+  double goodCoinErr = kNaN;
+};
+
 struct OutputRow {
   InputRow input;
   std::string ctMethod = "NOT_ASSIGNED";
@@ -101,20 +119,16 @@ struct OutputRow {
   double ctPosRefCtmeanRange = kNaN;
   double rfPeriod = kNaN;
   Long64_t rootEntries = 0;
-  Long64_t coinCutsEntries = 0;
+  TierCounts delta;
+  TierCounts full;
   FitInfo fit;
   double ctLow = kNaN;
   double ctHigh = kNaN;
-  double nCoin = kNaN;
-  int nRandomPeaks = 0;
-  double nRandomTotal = kNaN;
   double leftLow = kNaN;
   double leftHigh = kNaN;
   double rightLow = kNaN;
   double rightHigh = kNaN;
-  double randomMean = kNaN;
-  double goodCoin = kNaN;
-  double goodCoinErr = kNaN;
+  double fullByDelta = kNaN;
   double ctmeanResidual = kNaN;
   double ransubcoinByRPGoodcoin = kNaN;
   std::vector<std::pair<double, double>> randomWindows;
@@ -541,36 +555,46 @@ double IntegralHalfOpen(TH1D* hist, double low, double high, double& error) {
   return hist->IntegralAndError(lowBin, highBin, error);
 }
 
-void CountWindows(TH1D* hist, OutputRow& row) {
+void CountWindows(TH1D* hist, OutputRow& row, TierCounts& counts,
+                  bool saveWindows) {
   const double halfWidth = row.rfPeriod / 2.0;
   row.ctLow = row.fit.mean - halfWidth;
   row.ctHigh = row.fit.mean + halfWidth;
 
   double coinError = 0.0;
-  row.nCoin = IntegralHalfOpen(hist, row.ctLow, row.ctHigh, coinError);
+  counts.nCoin = IntegralHalfOpen(hist, row.ctLow, row.ctHigh, coinError);
 
   double randomVariance = 0.0;
-  row.nRandomTotal = 0.0;
+  counts.nRandomTotal = 0.0;
   for (int offset : kRandomOffsets) {
     const double center = row.fit.mean + offset * row.rfPeriod;
     const double low = center - halfWidth;
     const double high = center + halfWidth;
     double error = 0.0;
     const double count = IntegralHalfOpen(hist, low, high, error);
-    row.nRandomTotal += count;
+    counts.nRandomTotal += count;
     randomVariance += error * error;
-    row.randomWindows.emplace_back(low, high);
+    if (saveWindows) row.randomWindows.emplace_back(low, high);
   }
 
-  row.nRandomPeaks = static_cast<int>(row.randomWindows.size());
-  row.leftLow = row.randomWindows[0].first;
-  row.leftHigh = row.randomWindows[2].second;
-  row.rightLow = row.randomWindows[3].first;
-  row.rightHigh = row.randomWindows[5].second;
-  row.randomMean = row.nRandomTotal / row.nRandomPeaks;
-  const double randomMeanError = std::sqrt(randomVariance) / row.nRandomPeaks;
-  row.goodCoin = row.nCoin - row.randomMean;
-  row.goodCoinErr = std::hypot(coinError, randomMeanError);
+  counts.nRandomPeaks = static_cast<int>(kRandomOffsets.size());
+  if (saveWindows) {
+    row.leftLow = row.randomWindows[0].first;
+    row.leftHigh = row.randomWindows[2].second;
+    row.rightLow = row.randomWindows[3].first;
+    row.rightHigh = row.randomWindows[5].second;
+  }
+  counts.randomMean = counts.nRandomTotal / counts.nRandomPeaks;
+  const double randomMeanError =
+    std::sqrt(randomVariance) / counts.nRandomPeaks;
+  counts.goodCoin = counts.nCoin - counts.randomMean;
+  counts.goodCoinErr = std::hypot(coinError, randomMeanError);
+}
+
+void FinalizeCounts(OutputRow& row) {
+  if (std::isfinite(row.delta.goodCoin) && row.delta.goodCoin != 0.0 &&
+      std::isfinite(row.full.goodCoin))
+    row.fullByDelta = row.full.goodCoin / row.delta.goodCoin;
   if (row.ctMethod != "PRIOR_ELEC_AVERAGE" &&
       row.input.replayCtmean != -999.0 &&
       std::isfinite(row.input.replayCtmean) && std::isfinite(row.fit.mean)) {
@@ -578,8 +602,9 @@ void CountWindows(TH1D* hist, OutputRow& row) {
   }
   if (row.ctMethod != "PRIOR_ELEC_AVERAGE" &&
       row.input.ransubcoin != -999.0 && std::isfinite(row.input.ransubcoin) &&
-      std::isfinite(row.goodCoin) && row.goodCoin != 0.0) {
-    row.ransubcoinByRPGoodcoin = row.input.ransubcoin / row.goodCoin;
+      std::isfinite(row.delta.goodCoin) && row.delta.goodCoin != 0.0) {
+    row.ransubcoinByRPGoodcoin =
+      row.input.ransubcoin / row.delta.goodCoin;
   }
 }
 
@@ -664,13 +689,19 @@ void DrawMetadataPage1(TCanvas* canvas, const DatasetMetadata& meta,
                             kNBins, kHistLow, kHistHigh,
                             (kHistHigh - kHistLow) / kNBins));
   AddMetadataLine(box, " ");
-  AddMetadataLine(box, "CoinCuts", 0.029, kBlack, 62);
+  AddMetadataLine(box, "Baseline PID + Delta-only acceptance", 0.029, kBlack, 62);
   AddMetadataLine(box, "  (P_gtr_p <= 2.7 || P_hgcer_npeSum > 1)", 0.022);
   AddMetadataLine(box, "  && P_aero_npeSum > 2 && P_cal_etottracknorm < 0.8", 0.022);
   AddMetadataLine(box, "  && P_gtr_dp > -10 && P_gtr_dp < 22", 0.022);
   AddMetadataLine(box, "  && H_cer_npeSum > 2", 0.022);
   AddMetadataLine(box, "  && H_cal_etottracknorm > 0.8", 0.022);
   AddMetadataLine(box, "  && abs(H_gtr_dp) < 8", 0.022);
+  AddMetadataLine(box, "Full-cut adds target-angle acceptance:", 0.024,
+                  kBlack, 62);
+  AddMetadataLine(box, "  -0.060 < H_gtr_th < 0.060; "
+                       "-0.022 < H_gtr_ph < 0.022", 0.021);
+  AddMetadataLine(box, "  -0.045 < P_gtr_th < 0.045; "
+                       "-0.024 < P_gtr_ph < 0.024", 0.021);
 
   box.Draw();
   canvas->Print(pdfPath.c_str());
@@ -737,18 +768,25 @@ void DrawMetadataPage3(TCanvas* canvas, const std::string& pdfPath) {
   AddMetadataLine(box, "  k = {-4, -3, -2, +2, +3, +4}.");
   AddMetadataLine(box, "Each random window has half-width RFperiodNs/2.");
   AddMetadataLine(box, "All integration windows are half-open: [low, high).");
+  AddMetadataLine(box, "CTmean, CTsigma, and all RF-window positions are "
+                       "calibrated from Delta-only.");
+  AddMetadataLine(box, "The same fixed windows are integrated separately for "
+                       "Delta-only and Full-cut.");
   AddMetadataLine(box, " ");
   AddMetadataLine(box, "Random subtraction", 0.029, kBlack, 62);
   AddMetadataLine(box, "N_rndm_peak = 6");
   AddMetadataLine(box, "Rndm_mean = N_rndm_total / N_rndm_peak");
-  AddMetadataLine(box, "RP_Goodcoin = N_coin - Rndm_mean");
+  AddMetadataLine(box, "RP_Goodcoin_<tier> = N_coin_<tier> - "
+                       "Rndm_mean_<tier>");
   AddMetadataLine(box, "Goodcoin_err = sqrt(N_coin + "
                        "N_rndm_total / N_rndm_peak^{2})");
   AddMetadataLine(box, " ");
   AddMetadataLine(box, "Initial-replay comparison", 0.029, kBlack, 62);
   AddMetadataLine(box, "ransubcoin = initial replay-script good-coin result.");
-  AddMetadataLine(box, "Comparison ratio = ransubcoin / RP_Goodcoin.");
-  AddMetadataLine(box, "Ratio is nan when ransubcoin = -999 or RP_Goodcoin = 0.");
+  AddMetadataLine(box, "Replay comparison = ransubcoin / "
+                       "RP_Goodcoin_delta.");
+  AddMetadataLine(box, "Ratio is nan when ransubcoin = -999 or "
+                       "RP_Goodcoin_delta = 0.");
   AddMetadataLine(box, "ctmean = initial replay-script fitted coincidence mean.");
   AddMetadataLine(box, "CTmean_residual = ctmean - CTmean (this macro).");
   AddMetadataLine(box, "Positron residual and replay ratio are nan/not applicable.");
@@ -845,8 +883,9 @@ void DrawRunPage(TCanvas* canvas, TH1D* hist, const OutputRow& row,
       info.AddText(Form("Ref ctmean stddev/range: %.4f / %.4f ns",
                         row.ctPosRefCtmeanStddev, row.ctPosRefCtmeanRange));
   }
-  info.AddText(Form("Tree / CoinCuts entries: %lld / %lld",
-                    row.rootEntries, row.coinCutsEntries));
+  info.AddText(Form("Tree / Delta / Full entries: %lld / %lld / %lld",
+                    row.rootEntries, row.delta.selectedEntries,
+                    row.full.selectedEntries));
   if (row.fit.ok) {
     info.AddText(Form("CTmean = %.4f #pm %.4f ns", row.fit.mean, row.fit.meanErr));
     info.AddText(Form("CTsigma = %.4f #pm %.4f ns", row.fit.sigma, row.fit.sigmaErr));
@@ -861,19 +900,25 @@ void DrawRunPage(TCanvas* canvas, TH1D* hist, const OutputRow& row,
         info.AddText("ctmean - CTmean = nan");
     }
     info.AddText(Form("Central: [%.4f, %.4f) ns", row.ctLow, row.ctHigh));
-    info.AddText(Form("N_{coin} = %.0f, N_{rndm,total} = %.0f", row.nCoin, row.nRandomTotal));
-    info.AddText(Form("Rndm mean = %.4f", row.randomMean));
-    info.AddText(Form("RP_Goodcoin = %.4f #pm %.4f",
-                      row.goodCoin, row.goodCoinErr));
+    info.AddText(Form("Delta: N_{coin}=%.0f, N_{rndm,total}=%.0f",
+                      row.delta.nCoin, row.delta.nRandomTotal));
+    info.AddText(Form("Delta RP_Goodcoin = %.4f #pm %.4f",
+                      row.delta.goodCoin, row.delta.goodCoinErr));
+    info.AddText(Form("Full: N_{coin}=%.0f, N_{rndm,total}=%.0f",
+                      row.full.nCoin, row.full.nRandomTotal));
+    info.AddText(Form("Full RP_Goodcoin = %.4f #pm %.4f",
+                      row.full.goodCoin, row.full.goodCoinErr));
+    if (std::isfinite(row.fullByDelta))
+      info.AddText(Form("Full / Delta Goodcoin = %.4f", row.fullByDelta));
   }
   info.AddText(Form("ransubcoin = %.4f", row.input.ransubcoin));
   if (row.ctMethod == "PRIOR_ELEC_AVERAGE")
-    info.AddText("ransubcoin / RP_Goodcoin = not applicable");
+    info.AddText("ransubcoin / Delta RP_Goodcoin = not applicable");
   else if (std::isfinite(row.ransubcoinByRPGoodcoin))
-    info.AddText(Form("ransubcoin / RP_Goodcoin = %.4f",
+    info.AddText(Form("ransubcoin / Delta RP_Goodcoin = %.4f",
                       row.ransubcoinByRPGoodcoin));
   else
-    info.AddText("ransubcoin / RP_Goodcoin = nan");
+    info.AddText("ransubcoin / Delta RP_Goodcoin = nan");
   info.Draw();
 
   TLegend legend(0.61, 0.58, 0.95, 0.70);
@@ -1010,10 +1055,14 @@ void WriteOutputCSV(const std::string& path, const std::vector<OutputRow>& rows)
          "CT_POS_ref_count,CT_POS_ref_runs,CT_POS_ref_ctmean_stddev,"
          "CT_POS_ref_ctmean_range,hms_p,hms_th,shms_p,shms_th,x,Q2,z,thpq,"
          "RFperiodNs,CTmean,CTmean_err,CTsigma,CTsigma_err,ctmean,"
-         "CTmean_residual,CT_low,CT_high,N_coin,N_rndm_peak,Left_rndm_low,"
-         "Left_rndm_high,Right_rndm_low,Right_rndm_high,N_rndm_total,"
-         "Rndm_mean,RP_Goodcoin,RP_Goodcoin_err,ransubcoin,ransubcoin_by_RP_Goodcoin,"
-         "Fit_status,Root_entries,CoinCuts_entries\n";
+         "CTmean_residual,CT_low,CT_high,N_rndm_peak,Left_rndm_low,"
+         "Left_rndm_high,Right_rndm_low,Right_rndm_high,"
+         "N_coin_delta,N_rndm_total_delta,Rndm_mean_delta,"
+         "RP_Goodcoin_delta,RP_Goodcoin_err_delta,CoinCuts_entries_delta,"
+         "N_coin_full,N_rndm_total_full,Rndm_mean_full,"
+         "RP_Goodcoin_full,RP_Goodcoin_err_full,CoinCuts_entries_full,"
+         "RP_Goodcoin_full_by_delta,ransubcoin,"
+         "ransubcoin_by_RP_Goodcoin_delta,Fit_status,Root_entries\n";
   for (const auto& row : rows) {
     out << row.input.run << ',';
     WriteNumber(out, row.input.ebeam); out << ',' << row.input.target << ','
@@ -1039,18 +1088,27 @@ void WriteOutputCSV(const std::string& path, const std::vector<OutputRow>& rows)
     WriteNumber(out, row.ctmeanResidual); out << ',';
     WriteNumber(out, row.ctLow); out << ',';
     WriteNumber(out, row.ctHigh); out << ',';
-    WriteNumber(out, row.nCoin); out << ',' << row.nRandomPeaks << ',';
+    out << row.delta.nRandomPeaks << ',';
     WriteNumber(out, row.leftLow); out << ',';
     WriteNumber(out, row.leftHigh); out << ',';
     WriteNumber(out, row.rightLow); out << ',';
     WriteNumber(out, row.rightHigh); out << ',';
-    WriteNumber(out, row.nRandomTotal); out << ',';
-    WriteNumber(out, row.randomMean); out << ',';
-    WriteNumber(out, row.goodCoin); out << ',';
-    WriteNumber(out, row.goodCoinErr); out << ',';
+    WriteNumber(out, row.delta.nCoin); out << ',';
+    WriteNumber(out, row.delta.nRandomTotal); out << ',';
+    WriteNumber(out, row.delta.randomMean); out << ',';
+    WriteNumber(out, row.delta.goodCoin); out << ',';
+    WriteNumber(out, row.delta.goodCoinErr); out << ','
+        << row.delta.selectedEntries << ',';
+    WriteNumber(out, row.full.nCoin); out << ',';
+    WriteNumber(out, row.full.nRandomTotal); out << ',';
+    WriteNumber(out, row.full.randomMean); out << ',';
+    WriteNumber(out, row.full.goodCoin); out << ',';
+    WriteNumber(out, row.full.goodCoinErr); out << ','
+        << row.full.selectedEntries << ',';
+    WriteNumber(out, row.fullByDelta); out << ',';
     WriteNumber(out, row.input.ransubcoin); out << ',';
     WriteNumber(out, row.ransubcoinByRPGoodcoin); out << ',' << row.fit.status << ','
-        << row.rootEntries << ',' << row.coinCutsEntries << '\n';
+        << row.rootEntries << '\n';
   }
 }
 
@@ -1114,6 +1172,10 @@ int RP_get_good_coin_ev(const std::string& inputCSVArgument = "") {
     std::unique_ptr<TH1D> hist(new TH1D(Form("h_ct_%d", input.run), "",
                                         kNBins, kHistLow, kHistHigh));
     hist->Sumw2();
+    std::unique_ptr<TH1D> fullHist(
+      new TH1D(Form("h_ct_full_%d", input.run), "",
+               kNBins, kHistLow, kHistHigh));
+    fullHist->Sumw2();
 
     if (!std::isfinite(row.rfPeriod)) {
       row.fit.ok = false;
@@ -1134,14 +1196,33 @@ int RP_get_good_coin_ev(const std::string& inputCSVArgument = "") {
         } else if (!tree->GetBranch(kCTBranch)) {
           row.fit.ok = false;
           row.fit.status = "CTIME_BRANCH_MISSING";
+        } else if (!tree->GetBranch("H_gtr_th") ||
+                   !tree->GetBranch("H_gtr_ph") ||
+                   !tree->GetBranch("P_gtr_th") ||
+                   !tree->GetBranch("P_gtr_ph")) {
+          row.fit.ok = false;
+          row.fit.status = "FULL_CUT_BRANCH_MISSING";
         } else {
           row.rootEntries = tree->GetEntries();
           gROOT->cd();
           hist->SetDirectory(gROOT);
-          row.coinCutsEntries = tree->Project(hist->GetName(), kCTBranch, kCoinCuts);
-          if (!IsPositron(input))
-            row.fit = FitPeakTwice(hist.get(), input.run);
-          if (row.fit.ok) CountWindows(hist.get(), row);
+          fullHist->SetDirectory(gROOT);
+          row.delta.selectedEntries =
+            tree->Project(hist->GetName(), kCTBranch, kDeltaCoinCuts);
+          row.full.selectedEntries =
+            tree->Project(fullHist->GetName(), kCTBranch, kFullCoinCuts);
+          if (row.delta.selectedEntries < 0 || row.full.selectedEntries < 0) {
+            row.fit.ok = false;
+            row.fit.status = "CUT_PROJECTION_FAILED";
+          } else {
+            if (!IsPositron(input))
+              row.fit = FitPeakTwice(hist.get(), input.run);
+            if (row.fit.ok) {
+              CountWindows(hist.get(), row, row.delta, true);
+              CountWindows(fullHist.get(), row, row.full, false);
+              FinalizeCounts(row);
+            }
+          }
         }
       }
     }

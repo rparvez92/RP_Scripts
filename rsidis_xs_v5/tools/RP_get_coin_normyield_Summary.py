@@ -19,14 +19,19 @@ PROBLEMATIC_NAME = "RP_get_coin_normyield_Problematic.csv"
 REQUIRED_COLUMNS = {
     "Run",
     "Run_type",
-    "RP_Goodcoin",
-    "RP_Goodcoin_err",
+    "RP_Goodcoin_delta",
+    "RP_Goodcoin_err_delta",
+    "RP_Goodcoin_full",
+    "RP_Goodcoin_err_full",
     "Norm_factor",
-    "RP_Normyield",
-    "RP_Normyield_err",
+    "RP_Normyield_delta",
+    "RP_Normyield_err_delta",
+    "RP_Normyield_full",
+    "RP_Normyield_err_full",
+    "RP_Normyield_full_by_delta",
     "normyield",
     "normyield_err",
-    "normyield_by_RP_Normyield",
+    "normyield_by_RP_Normyield_delta",
     "Norm_status",
     "Norm_reason",
 }
@@ -55,19 +60,28 @@ def tf(value: bool) -> str:
 
 def flag_row(row: Dict[str, str]) -> Dict[str, str]:
     status = row.get("Norm_status", "").strip()
-    normyield = finite(row.get("RP_Normyield", ""))
-    normyield_err = finite(row.get("RP_Normyield_err", ""))
+    normyield_delta = finite(row.get("RP_Normyield_delta", ""))
+    normyield_err_delta = finite(row.get("RP_Normyield_err_delta", ""))
+    normyield_full = finite(row.get("RP_Normyield_full", ""))
+    normyield_err_full = finite(row.get("RP_Normyield_err_full", ""))
     normfactor = finite(row.get("Norm_factor", ""))
     replay_normyield = finite(row.get("normyield", ""))
-    ratio = finite(row.get("normyield_by_RP_Normyield", ""))
+    ratio = finite(row.get("normyield_by_RP_Normyield_delta", ""))
 
     normalization_flag = status != "OK"
-    yield_flag = normyield is None or normyield <= 0.0
+    yield_flag = (
+        normyield_delta is None
+        or normyield_delta <= 0.0
+        or normyield_full is None
+        or normyield_full <= 0.0
+    )
     numeric_flag = (
         normfactor is None
         or normfactor <= 0.0
-        or normyield_err is None
-        or normyield_err < 0.0
+        or normyield_err_delta is None
+        or normyield_err_delta < 0.0
+        or normyield_err_full is None
+        or normyield_err_full < 0.0
     )
 
     # A missing legacy replay result is not a failure of the new normalization.

@@ -152,7 +152,38 @@ python3 tools/validate_output_schema.py results/.../xsec_phipq.csv
 
 ---
 
-## 7) Generate and run the RP SIMC input manifest
+## 7) Extract Delta-only and Full-cut data yields
+
+`RP_get_good_coin_ev.C` uses the PID-selected Delta-only sample to determine
+CTmean, CTsigma, and the common central/random RF windows. It then integrates
+those same fixed windows for two matched acceptance tiers:
+
+```text
+Delta-only:
+  -8 < H_gtr_dp < 8
+  -10 < P_gtr_dp < 22
+
+Full-cut:
+  Delta-only plus
+  -0.060 < H_gtr_th < 0.060
+  -0.022 < H_gtr_ph < 0.022
+  -0.045 < P_gtr_th < 0.045
+  -0.024 < P_gtr_ph < 0.024
+```
+
+The output reports explicit `RP_Goodcoin_delta` and `RP_Goodcoin_full`
+counts and errors. `RP_get_coin_normyield.C` applies the same run
+normalization factor to both, producing explicit `_delta` and `_full`
+normalized yields. Replay `ransubcoin` and `normyield` comparisons remain
+against the Delta-only tier.
+
+Data PID cuts are a common data-only baseline because standard SIMC does not
+simulate calorimeter or Cherenkov detector response. The Delta-only and
+Full-cut labels refer to geometrical acceptance matched between data and SIMC.
+
+---
+
+## 8) Generate and run the RP SIMC input manifest
 
 From `rsidis_xs_v5/`, preview the inputs derived from the settings tree:
 
@@ -188,7 +219,7 @@ mismatched output sets.
 
 ---
 
-## 8) Extract SIMC metadata, normalization, and QA
+## 9) Extract SIMC metadata, normalization, and QA
 
 From `rsidis_xs_v5/`, inspect the full manifest inventory and the simulation
 products currently available on T7:

@@ -58,13 +58,18 @@ struct NormRow {
   double hmsEff = kNaN;
   double shmsEff = kNaN;
   double boilCorr = kNaN;
-  double goodcoin = kNaN;
-  double goodcoinErr = kNaN;
+  double goodcoinDelta = kNaN;
+  double goodcoinErrDelta = kNaN;
+  double goodcoinFull = kNaN;
+  double goodcoinErrFull = kNaN;
   double replayNormyield = kNaN;
   double replayNormyieldErr = kNaN;
   double normFactor = kNaN;
-  double rpNormyield = kNaN;
-  double rpNormyieldErr = kNaN;
+  double rpNormyieldDelta = kNaN;
+  double rpNormyieldErrDelta = kNaN;
+  double rpNormyieldFull = kNaN;
+  double rpNormyieldErrFull = kNaN;
+  double fullByDelta = kNaN;
   double replayByRP = kNaN;
   std::string status = "NOT_PROCESSED";
   std::string reason;
@@ -233,8 +238,10 @@ NormRow BuildNormRow(const CSVRow& good, const std::vector<const CSVRow*>& match
   NormRow out;
   out.good = good;
   out.run = ParseRun(Get(good, "Run"));
-  out.goodcoin = ParseDouble(Get(good, "RP_Goodcoin"));
-  out.goodcoinErr = ParseDouble(Get(good, "RP_Goodcoin_err"));
+  out.goodcoinDelta = ParseDouble(Get(good, "RP_Goodcoin_delta"));
+  out.goodcoinErrDelta = ParseDouble(Get(good, "RP_Goodcoin_err_delta"));
+  out.goodcoinFull = ParseDouble(Get(good, "RP_Goodcoin_full"));
+  out.goodcoinErrFull = ParseDouble(Get(good, "RP_Goodcoin_err_full"));
   out.isPositron = ParseDouble(Get(good, "hms_p")) > 0.0;
 
   if (matches.size() != 1) {
@@ -293,9 +300,14 @@ NormRow BuildNormRow(const CSVRow& good, const std::vector<const CSVRow*>& match
     AddReason(out, "INVALID_SHMS_TRACKING_EFF");
   if (!(ValidMeasured(out.boilCorr) && out.boilCorr > 0.0))
     AddReason(out, "INVALID_BOIL_CORR");
-  if (!(ValidMeasured(out.goodcoin))) AddReason(out, "INVALID_RP_GOODCOIN");
-  if (!(ValidMeasured(out.goodcoinErr) && out.goodcoinErr >= 0.0))
-    AddReason(out, "INVALID_RP_GOODCOIN_ERR");
+  if (!(ValidMeasured(out.goodcoinDelta)))
+    AddReason(out, "INVALID_RP_GOODCOIN_DELTA");
+  if (!(ValidMeasured(out.goodcoinErrDelta) && out.goodcoinErrDelta >= 0.0))
+    AddReason(out, "INVALID_RP_GOODCOIN_ERR_DELTA");
+  if (!(ValidMeasured(out.goodcoinFull)))
+    AddReason(out, "INVALID_RP_GOODCOIN_FULL");
+  if (!(ValidMeasured(out.goodcoinErrFull) && out.goodcoinErrFull >= 0.0))
+    AddReason(out, "INVALID_RP_GOODCOIN_ERR_FULL");
 
   if (!out.reason.empty()) {
     out.status = "FAILED";
@@ -305,10 +317,14 @@ NormRow BuildNormRow(const CSVRow& good, const std::vector<const CSVRow*>& match
   out.normFactor = out.psFactor * out.boilCorr /
     (out.charge * out.compLivetime * out.hmsEff * out.shmsEff *
      kTriggerEff * kPIDEff);
-  out.rpNormyield = out.goodcoin * out.normFactor;
-  out.rpNormyieldErr = out.goodcoinErr * out.normFactor;
-  if (ValidMeasured(out.replayNormyield) && out.rpNormyield != 0.0)
-    out.replayByRP = out.replayNormyield / out.rpNormyield;
+  out.rpNormyieldDelta = out.goodcoinDelta * out.normFactor;
+  out.rpNormyieldErrDelta = out.goodcoinErrDelta * out.normFactor;
+  out.rpNormyieldFull = out.goodcoinFull * out.normFactor;
+  out.rpNormyieldErrFull = out.goodcoinErrFull * out.normFactor;
+  if (out.rpNormyieldDelta != 0.0)
+    out.fullByDelta = out.rpNormyieldFull / out.rpNormyieldDelta;
+  if (ValidMeasured(out.replayNormyield) && out.rpNormyieldDelta != 0.0)
+    out.replayByRP = out.replayNormyield / out.rpNormyieldDelta;
   out.status = "OK";
   out.reason = "PROVISIONAL_COMP_LIVETIME_1P0";
   return out;
@@ -328,9 +344,11 @@ void WriteOutputCSV(const std::string& path, const CSVTable& input,
   }
   output << ",BCM2_Q,ps5,ps6,PS_trigger,PS_factor,bigtable_comp_livetime,"
             "comp_livetime,comp_livetime_source,h_esing_Eff,p_hadron_Eff,"
-            "Trigger_eff,PID_eff,boil_corr,Norm_factor,RP_Normyield,"
-            "RP_Normyield_err,normyield,normyield_err,"
-            "normyield_by_RP_Normyield,Norm_status,Norm_reason\n";
+            "Trigger_eff,PID_eff,boil_corr,Norm_factor,"
+            "RP_Normyield_delta,RP_Normyield_err_delta,"
+            "RP_Normyield_full,RP_Normyield_err_full,"
+            "RP_Normyield_full_by_delta,normyield,normyield_err,"
+            "normyield_by_RP_Normyield_delta,Norm_status,Norm_reason\n";
 
   for (const auto& row : rows) {
     for (size_t i = 0; i < input.header.size(); ++i) {
@@ -350,8 +368,11 @@ void WriteOutputCSV(const std::string& path, const CSVTable& input,
     WriteNumber(output, kPIDEff); output << ',';
     WriteNumber(output, row.boilCorr); output << ',';
     WriteNumber(output, row.normFactor); output << ',';
-    WriteNumber(output, row.rpNormyield); output << ',';
-    WriteNumber(output, row.rpNormyieldErr); output << ',';
+    WriteNumber(output, row.rpNormyieldDelta); output << ',';
+    WriteNumber(output, row.rpNormyieldErrDelta); output << ',';
+    WriteNumber(output, row.rpNormyieldFull); output << ',';
+    WriteNumber(output, row.rpNormyieldErrFull); output << ',';
+    WriteNumber(output, row.fullByDelta); output << ',';
     WriteNumber(output, row.replayNormyield); output << ',';
     WriteNumber(output, row.replayNormyieldErr); output << ',';
     WriteNumber(output, row.replayByRP);
@@ -438,8 +459,10 @@ void DrawMetadataPage(TCanvas* canvas, const std::string& inputPath,
   text.SetTextFont(42);
   line("C_{norm} = PS #times boil_corr / (BCM2_Q #times comp_livetime #times #epsilon_{HMS} #times #epsilon_{SHMS}");
   line("                                      #times #epsilon_{trigger} #times #epsilon_{PID})");
-  line("RP_Normyield = RP_Goodcoin #times C_{norm}");
-  line("RP_Normyield_err = RP_Goodcoin_err #times C_{norm}", 0.042);
+  line("RP_Normyield_<tier> = RP_Goodcoin_<tier> #times C_{norm}");
+  line("RP_Normyield_err_<tier> = RP_Goodcoin_err_<tier> #times C_{norm}",
+       0.042);
+  line("Tiers: Delta-only and Full-cut; both use the same run normalization.");
   line("BCM2_Q is in mC; #epsilon_{HMS}=h_esing_Eff; #epsilon_{SHMS}=p_hadron_Eff.");
   line("Exactly one of ps5 and ps6 must be positive, and it must equal 1.0.");
   line("Trigger efficiency = 1.0 and PID efficiency = 1.0 (provisional constants).", 0.042);
@@ -449,9 +472,9 @@ void DrawMetadataPage(TCanvas* canvas, const std::string& inputPath,
   text.SetTextColor(kBlack);
   text.SetTextFont(42);
   line("The bigtable comp_livetime is retained in the CSV but is not used yet.");
-  line("RP_Normyield_err propagates RP_Goodcoin_err only.");
+  line("RP_Normyield errors propagate the corresponding RP_Goodcoin errors only.");
   line("Normalization systematic uncertainties are not included.", 0.042);
-  line("normyield / RP_Normyield compares replay with this analysis.");
+  line("normyield / RP_Normyield_delta compares replay with this analysis.");
   line("The ratio combines counting and normalization differences.");
   line("The same comparison rule is applied to electron and positron runs.");
 
@@ -498,14 +521,26 @@ void DrawDiagnosticPage(TCanvas* canvas, const std::vector<NormRow>& rows,
   ConfigureCanvas(canvas);
   std::vector<double> allRuns, elecRun, elecValue, elecError;
   std::vector<double> posRun, posValue, posError;
+  std::vector<double> elecFullRun, elecFullValue, elecFullError;
+  std::vector<double> posFullRun, posFullValue, posFullError;
   std::vector<double> replayRun, replayValue, replayError;
   std::vector<double> yExtents;
   for (const auto& row : rows) {
     if (row.status != "OK") continue;
     double value = kNaN, error = 0.0;
     if (kind == PlotKind::kNormyield) {
-      value = row.rpNormyield;
-      error = row.rpNormyieldErr;
+      value = row.rpNormyieldDelta;
+      error = row.rpNormyieldErrDelta;
+      AddYExtent(yExtents, row.rpNormyieldFull, row.rpNormyieldErrFull);
+      if (row.isPositron) {
+        posFullRun.push_back(row.run);
+        posFullValue.push_back(row.rpNormyieldFull);
+        posFullError.push_back(row.rpNormyieldErrFull);
+      } else {
+        elecFullRun.push_back(row.run);
+        elecFullValue.push_back(row.rpNormyieldFull);
+        elecFullError.push_back(row.rpNormyieldErrFull);
+      }
       if (ValidMeasured(row.replayNormyield)) {
         replayRun.push_back(row.run);
         replayValue.push_back(row.replayNormyield);
@@ -540,7 +575,8 @@ void DrawDiagnosticPage(TCanvas* canvas, const std::vector<NormRow>& rows,
   } else if (kind == PlotKind::kNormFactor) {
     title = "Normalization Factor VS Run"; yTitle = "Normalization factor (mC^{-1})";
   } else {
-    title = "normyield / RP_Normyield VS Run"; yTitle = "normyield / RP_Normyield";
+    title = "normyield / RP_Normyield_delta VS Run";
+    yTitle = "normyield / RP_Normyield_delta";
   }
   TH1D frame("h_norm_diag_frame", (title + ";Run;" + yTitle).c_str(),
              1, axis.low, axis.high);
@@ -564,6 +600,18 @@ void DrawDiagnosticPage(TCanvas* canvas, const std::vector<NormRow>& rows,
   positron.SetMarkerStyle(20); positron.SetMarkerSize(1.3);
   positron.SetMarkerColor(kRed + 1); positron.SetLineColor(kBlue + 1);
   positron.SetLineWidth(2);
+  TGraphErrors electronFull(elecFullRun.size(), elecFullRun.data(),
+                            elecFullValue.data(), nullptr,
+                            elecFullError.data());
+  electronFull.SetMarkerStyle(24); electronFull.SetMarkerSize(1.3);
+  electronFull.SetMarkerColor(kBlue + 1);
+  electronFull.SetLineColor(kRed + 1); electronFull.SetLineWidth(2);
+  TGraphErrors positronFull(posFullRun.size(), posFullRun.data(),
+                            posFullValue.data(), nullptr,
+                            posFullError.data());
+  positronFull.SetMarkerStyle(24); positronFull.SetMarkerSize(1.3);
+  positronFull.SetMarkerColor(kRed + 1);
+  positronFull.SetLineColor(kBlue + 1); positronFull.SetLineWidth(2);
   TGraphErrors replay(replayRun.size(), replayRun.data(), replayValue.data(),
                       nullptr, replayError.data());
   replay.SetMarkerStyle(20); replay.SetMarkerSize(1.2);
@@ -572,16 +620,24 @@ void DrawDiagnosticPage(TCanvas* canvas, const std::vector<NormRow>& rows,
   gStyle->SetEndErrorSize(6);
   if (!elecRun.empty()) electron.Draw("P same");
   if (!posRun.empty()) positron.Draw("P same");
+  if (kind == PlotKind::kNormyield && !elecFullRun.empty())
+    electronFull.Draw("P same");
+  if (kind == PlotKind::kNormyield && !posFullRun.empty())
+    positronFull.Draw("P same");
   if (kind == PlotKind::kNormyield && !replayRun.empty()) replay.Draw("P same");
   if (kind == PlotKind::kNormyield) {
-    TLegend legend(0.57, 0.74, 0.91, 0.88);
+    TLegend legend(0.53, 0.68, 0.92, 0.89);
     legend.SetBorderSize(0);
     legend.SetFillStyle(0);
     legend.SetTextSize(0.025);
     if (!elecRun.empty())
-      legend.AddEntry(&electron, "RP_Normyield: electron", "lep");
+      legend.AddEntry(&electron, "Delta-only: electron", "lep");
     if (!posRun.empty())
-      legend.AddEntry(&positron, "RP_Normyield: positron", "lep");
+      legend.AddEntry(&positron, "Delta-only: positron", "lep");
+    if (!elecFullRun.empty())
+      legend.AddEntry(&electronFull, "Full-cut: electron", "lep");
+    if (!posFullRun.empty())
+      legend.AddEntry(&positronFull, "Full-cut: positron", "lep");
     if (!replayRun.empty())
       legend.AddEntry(&replay, "normyield: bigtable", "lep");
     legend.DrawClone("same");
@@ -617,7 +673,9 @@ int RP_get_coin_normyield(const std::string& inputCSVArgument = "") {
 
   CSVTable good;
   if (!ReadCSV(inputPath, good)) return 1;
-  if (!HasColumns(good, {"Run", "RP_Goodcoin", "RP_Goodcoin_err", "hms_p"},
+  if (!HasColumns(good, {"Run", "RP_Goodcoin_delta",
+                         "RP_Goodcoin_err_delta", "RP_Goodcoin_full",
+                         "RP_Goodcoin_err_full", "hms_p"},
                   "Goodcoin table")) return 1;
   const std::string phase = PhaseFromPathAndRows(inputPath, good);
   const std::string bigtablePath = LeafBigtablePath(inputPath);

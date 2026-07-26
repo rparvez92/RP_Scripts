@@ -30,9 +30,13 @@ REQUIRED_COLUMNS = {
     "CTsigma_err",
     "CTmean_residual",
     "N_rndm_peak",
-    "RP_Goodcoin",
+    "RP_Goodcoin_delta",
+    "RP_Goodcoin_err_delta",
+    "RP_Goodcoin_full",
+    "RP_Goodcoin_err_full",
+    "RP_Goodcoin_full_by_delta",
     "ransubcoin",
-    "ransubcoin_by_RP_Goodcoin",
+    "ransubcoin_by_RP_Goodcoin_delta",
     "Fit_status",
 }
 
@@ -65,8 +69,9 @@ def flag_row(row: Dict[str, str]) -> Dict[str, str]:
     method = row.get("CT_method", "").strip()
     is_positron_reference = method == "PRIOR_ELEC_AVERAGE"
     residual = parse_finite(row.get("CTmean_residual", ""))
-    ratio = parse_finite(row.get("ransubcoin_by_RP_Goodcoin", ""))
-    goodcoin = parse_finite(row.get("RP_Goodcoin", ""))
+    ratio = parse_finite(row.get("ransubcoin_by_RP_Goodcoin_delta", ""))
+    goodcoin_delta = parse_finite(row.get("RP_Goodcoin_delta", ""))
+    goodcoin_full = parse_finite(row.get("RP_Goodcoin_full", ""))
     sigma = parse_finite(row.get("CTsigma", ""))
 
     numerical_fields = [
@@ -108,7 +113,12 @@ def flag_row(row: Dict[str, str]) -> Dict[str, str]:
     except (TypeError, ValueError):
         random_window_flag = True
 
-    yield_flag = goodcoin is None or goodcoin <= 0.0
+    yield_flag = (
+        goodcoin_delta is None
+        or goodcoin_delta <= 0.0
+        or goodcoin_full is None
+        or goodcoin_full <= 0.0
+    )
 
     reasons: List[str] = []
     if residual_flag:
