@@ -51,3 +51,7 @@ rsidis_xs_v5/results/Tables/RP_get_coin_normyield/
 # Generated RP_extract_simc_info analysis products
 rsidis_xs_v5/results/PDFs/RP_extract_simc_info/
 rsidis_xs_v5/results/Tables/RP_extract_simc_info/
+
+# Generated RP_data_mc_compare analysis products
+rsidis_xs_v5/results/PDFs/RP_data_mc_compare/
+rsidis_xs_v5/results/Tables/RP_data_mc_compare/

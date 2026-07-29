@@ -17,14 +17,22 @@ import RP_extract_simc_info as extractor  # noqa: E402
 
 
 class ExtractorTests(unittest.TestCase):
-    def manifest_row(self, status="GENERATED"):
+    def test_full_cut_uses_common_wide_angle_acceptance(self):
+        for branch in ("hsxptar", "ssxptar"):
+            self.assertIn(f"{branch} > -0.15", extractor.FULL_CUT)
+            self.assertIn(f"{branch} < 0.15", extractor.FULL_CUT)
+        for branch in ("hsyptar", "ssyptar"):
+            self.assertIn(f"{branch} > -0.10", extractor.FULL_CUT)
+            self.assertIn(f"{branch} < 0.10", extractor.FULL_CUT)
+
+    def manifest_row(self, status="GENERATED", reaction="sidis"):
         return {
             "Phase": "phase1",
             "Pass": "pass4",
             "Run_type": "PIPLUS",
             "Target": "LH2",
             "Setting": "x0p25Q23p3z0p5thpq2p0",
-            "Reaction": "sidis",
+            "Reaction": reaction,
             "Ngen": "1001",
             "Output_file": (
                 "infiles/RP_Simc/coin/"
@@ -65,13 +73,14 @@ class ExtractorTests(unittest.TestCase):
 
         required_floats = (
             "Weight", "hsdelta", "hsxptar", "hsyptar",
-            "ssdelta", "ssxptar", "ssyptar",
+            "ssdelta", "ssxptar", "ssyptar", "nu", "phad",
         )
         kinematic_pairs = tuple(
             pair for pair in (
             ("xbj", "xbj_recon"), ("Q2", "Q2_recon"), ("W", "W_recon"),
             ("z", "z_recon"), ("thetapq", "thetapq_recon"),
             ("phipq", "phipq_recon"), ("pt2", "pt2_recon"),
+            ("missmass", "missmass_recon"),
             )
             if pair[0] not in omit_kinematics
         )
@@ -94,9 +103,12 @@ class ExtractorTests(unittest.TestCase):
         ngen_value = array("i", [recon_ngen])
         normfac_value = array("d", [normfac])
         fweight_value = array("f", [0.0])
+        nu_recon_value = array("f", [0.0])
         recon_tree.Branch("Ngen", ngen_value, "Ngen/I")
         recon_tree.Branch("normfac", normfac_value, "normfac/D")
         recon_tree.Branch("fWeight", fweight_value, "fWeight/F")
+        recon_values["nu_recon"] = nu_recon_value
+        recon_tree.Branch("nu_recon", nu_recon_value, "nu_recon/F")
         for original, reconstructed in kinematic_pairs:
             original_value = array("f", [0.0])
             recon_value = array("f", [0.0])
@@ -125,6 +137,9 @@ class ExtractorTests(unittest.TestCase):
                 values["ssdelta"][0] = 0.0
                 values["ssxptar"][0] = 0.0
                 values["ssyptar"][0] = 0.0
+                values["nu"][0] = 4.0
+                values["phad"][0] = 2.0
+            nu_recon_value[0] = 5.0
             for offset, (original, reconstructed) in enumerate(kinematic_pairs):
                 value = (
                     -999.0
@@ -230,6 +245,36 @@ class ExtractorTests(unittest.TestCase):
         recon_x = extractor.grouped_x(setting_a[0], setting_index, 2, 3)
         self.assertAlmostEqual(hist_x - raw_x, 0.060)
         self.assertAlmostEqual(recon_x - hist_x, 0.060)
+
+    def test_delta_uses_guarded_phad_derived_coordinates(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            paths = self.output_paths(root)
+            self.write_tree_pair(paths, entries=1001)
+            result = extractor.inspect_manifest_row(
+                self.manifest_row(reaction="delta"), root
+            )
+            self.assertIn(
+                "z:derived_common_kinematics",
+                result["Kinematic_value_provenance"],
+            )
+            # Q2 is the second synthetic kinematic pair; its weighted mean is
+            # 0.205 after the deterministic per-entry offset.
+            for tier in ("delta", "full"):
+                self.assertAlmostEqual(
+                    result[f"xbj_{tier}_simc_weighted_mean"],
+                    0.205 / (2 * 0.9382720813 * 4.0),
+                    places=6,
+                )
+                self.assertAlmostEqual(
+                    result[f"z_{tier}_simc_weighted_mean"], 0.5, places=6
+                )
+                self.assertAlmostEqual(
+                    result[f"z_{tier}_recon_weighted_mean"], 0.4, places=6
+                )
+                self.assertGreater(
+                    result[f"pt2_{tier}_simc_weighted_mean"], 0.0
+                )
 
     def test_setting_chunks_never_split_categories(self):
         for count, expected_chunks in ((1, 1), (6, 1), (7, 2), (10, 2)):

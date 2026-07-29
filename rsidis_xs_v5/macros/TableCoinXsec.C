@@ -853,13 +853,13 @@ static void TableCoinXsec_Single(const char* manifestPath,
   // DATA base cuts (same as PlotCoinXsec_Single)
   const TCut dataCuts =
     "(H_gtr_dp>-8) && (H_gtr_dp<8) && "
-    "(H_gtr_th>-0.060) && (H_gtr_th<0.060) && "
-    "(H_gtr_ph>-0.022) && (H_gtr_ph<0.022) && "
+    "(H_gtr_th>-0.15) && (H_gtr_th<0.15) && "
+    "(H_gtr_ph>-0.10) && (H_gtr_ph<0.10) && "
     "(H_cal_etottracknorm>0.7) && "
     "(H_cer_npeSum>2.0) && "
     "(P_gtr_dp>-10) && (P_gtr_dp<22) && "
-    "(P_gtr_th>-0.045) && (P_gtr_th<0.045) && "
-    "(P_gtr_ph>-0.024) && (P_gtr_ph<0.024) && "
+    "(P_gtr_th>-0.15) && (P_gtr_th<0.15) && "
+    "(P_gtr_ph>-0.10) && (P_gtr_ph<0.10) && "
     "(P_cal_etottracknorm<0.8)";
 
   const std::string data_pt  = "pt";
@@ -890,11 +890,11 @@ static void TableCoinXsec_Single(const char* manifestPath,
 
   const TCut simCutsBase =
     "(hsdelta>-8.0) && (hsdelta<8.0) && "
-    "(hsxptar>-0.060) && (hsxptar<0.060) && "
-    "(hsyptar>-0.022) && (hsyptar<0.022) && "
+    "(hsxptar>-0.15) && (hsxptar<0.15) && "
+    "(hsyptar>-0.10) && (hsyptar<0.10) && "
     "(ssdelta>-10.0) && (ssdelta<22.0) && "
-    "(ssxptar>-0.045) && (ssxptar<0.045) && "
-    "(ssyptar>-0.024) && (ssyptar<0.024)";
+    "(ssxptar>-0.15) && (ssxptar<0.15) && "
+    "(ssyptar>-0.10) && (ssyptar<0.10)";
 
   // --- SIM normalization: MUST come from the corresponding SIMC .hist file ---
   // Directory layout assumption (your case):

@@ -60,10 +60,10 @@ constexpr const char* kFullCoinCuts =
   "(P_gtr_p<=2.7 || P_hgcer_npeSum>1) && P_aero_npeSum>2 && "
   "P_cal_etottracknorm<0.8 && P_gtr_dp>-10 && P_gtr_dp<22 && "
   "H_cer_npeSum>2 && H_cal_etottracknorm>0.8 && abs(H_gtr_dp)<8 && "
-  "H_gtr_th>-0.060 && H_gtr_th<0.060 && "
-  "H_gtr_ph>-0.022 && H_gtr_ph<0.022 && "
-  "P_gtr_th>-0.045 && P_gtr_th<0.045 && "
-  "P_gtr_ph>-0.024 && P_gtr_ph<0.024";
+  "H_gtr_th>-0.15 && H_gtr_th<0.15 && "
+  "H_gtr_ph>-0.10 && H_gtr_ph<0.10 && "
+  "P_gtr_th>-0.15 && P_gtr_th<0.15 && "
+  "P_gtr_ph>-0.10 && P_gtr_ph<0.10";
 
 const double kNaN = std::numeric_limits<double>::quiet_NaN();
 const std::vector<int> kRandomOffsets = {-4, -3, -2, 2, 3, 4};
@@ -698,10 +698,10 @@ void DrawMetadataPage1(TCanvas* canvas, const DatasetMetadata& meta,
   AddMetadataLine(box, "  && abs(H_gtr_dp) < 8", 0.022);
   AddMetadataLine(box, "Full-cut adds target-angle acceptance:", 0.024,
                   kBlack, 62);
-  AddMetadataLine(box, "  -0.060 < H_gtr_th < 0.060; "
-                       "-0.022 < H_gtr_ph < 0.022", 0.021);
-  AddMetadataLine(box, "  -0.045 < P_gtr_th < 0.045; "
-                       "-0.024 < P_gtr_ph < 0.024", 0.021);
+  AddMetadataLine(box, "  -0.15 < H_gtr_th < 0.15; "
+                       "-0.10 < H_gtr_ph < 0.10", 0.021);
+  AddMetadataLine(box, "  -0.15 < P_gtr_th < 0.15; "
+                       "-0.10 < P_gtr_ph < 0.10", 0.021);
 
   box.Draw();
   canvas->Print(pdfPath.c_str());

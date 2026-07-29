@@ -290,7 +290,8 @@ SIM variables:
 - `phi = phipq` wrapped into \([0,2\pi)\)
 
 SIM base cuts differ by mode:
-- SINGLE: delta + xptar + yptar style acceptance cuts for both arms
+- SINGLE: delta cuts plus \(-0.15<xptar<0.15\) and
+  \(-0.10<yptar<0.10\) for both arms
 - GROUP: only delta windows (broader), matching the group plotting defaults
 
 ### 6.4 SIM yield error model (statistical)

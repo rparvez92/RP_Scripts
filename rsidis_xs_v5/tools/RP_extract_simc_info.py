@@ -34,10 +34,10 @@ DELTA_CUT = (
 )
 FULL_CUT = (
     DELTA_CUT
-    + " && hsxptar > -0.060 && hsxptar < 0.060"
-    + " && hsyptar > -0.022 && hsyptar < 0.022"
-    + " && ssxptar > -0.045 && ssxptar < 0.045"
-    + " && ssyptar > -0.024 && ssyptar < 0.024"
+    + " && hsxptar > -0.15 && hsxptar < 0.15"
+    + " && hsyptar > -0.10 && hsyptar < 0.10"
+    + " && ssxptar > -0.15 && ssxptar < 0.15"
+    + " && ssyptar > -0.10 && ssyptar < 0.10"
 )
 
 REQUIRED_RAW_BRANCHES = {
@@ -54,6 +54,7 @@ KINEMATICS = (
     ("thetapq", "thetapq", "thetapq_recon", False),
     ("phipq", "phipq", "phipq_recon", True),
     ("pt2", "pt2", "pt2_recon", False),
+    ("missmass", "missmass", "missmass_recon", False),
 )
 
 IDENTITY_COLUMNS = [
@@ -85,7 +86,9 @@ for _tier in ("nocut", "delta", "full"):
         f"SimYield_{_tier}", f"SimYield_err_{_tier}",
         f"SimYield_rel_err_{_tier}", f"Neff_{_tier}",
     ])
-KINEMATIC_COLUMNS: List[str] = ["Kinematic_branch_availability"]
+KINEMATIC_COLUMNS: List[str] = [
+    "Kinematic_branch_availability", "Kinematic_value_provenance"
+]
 for _label, _, _, _ in KINEMATICS:
     for _tier in ("delta", "full"):
         KINEMATIC_COLUMNS.extend([
@@ -247,7 +250,10 @@ def add_tier_metrics(
 
 
 def scan_recon_tree(
-    tree: ROOT.TTree, available: set[str], row: MutableMapping[str, object]
+    tree: ROOT.TTree,
+    available: set[str],
+    row: MutableMapping[str, object],
+    reaction: str,
 ) -> None:
     dataframe = (
         ROOT.RDataFrame(tree)
@@ -265,6 +271,72 @@ def scan_recon_tree(
             "std::abs(_fw - _fw_expected) / "
             "std::max({std::abs(_fw), std::abs(_fw_expected), 1e-30})",
         )
+    )
+    kinematics = list(KINEMATICS)
+    provenance = {label: "generator_native" for label, _, _, _ in kinematics}
+    if reaction.lower() in {"delta", "exclusive"}:
+        derived_dependencies = {
+            "xbj": {"Q2", "nu", "Q2_recon", "nu_recon"},
+            "z": {"phad", "nu", "nu_recon"},
+            "pt2": {"phad", "thetapq", "thetapq_recon"},
+        }
+        expressions = {
+            "xbj": (
+                "(std::isfinite(static_cast<double>(Q2)) && Q2>-998 && "
+                "std::isfinite(static_cast<double>(nu)) && nu>-998 && "
+                "std::abs(static_cast<double>(nu))>1e-12) ? "
+                "static_cast<double>(Q2)/(2.0*0.9382720813*static_cast<double>(nu)) : "
+                "std::numeric_limits<double>::quiet_NaN()",
+                "(std::isfinite(static_cast<double>(Q2_recon)) && Q2_recon>-998 && "
+                "std::isfinite(static_cast<double>(nu_recon)) && nu_recon>-998 && "
+                "std::abs(static_cast<double>(nu_recon))>1e-12) ? "
+                "static_cast<double>(Q2_recon)/(2.0*0.9382720813*static_cast<double>(nu_recon)) : "
+                "std::numeric_limits<double>::quiet_NaN()",
+            ),
+            "z": (
+                "(std::isfinite(static_cast<double>(phad)) && phad>-998 && "
+                "std::isfinite(static_cast<double>(nu)) && nu>-998 && "
+                "std::abs(static_cast<double>(nu))>1e-12) ? "
+                "static_cast<double>(phad)/static_cast<double>(nu) : "
+                "std::numeric_limits<double>::quiet_NaN()",
+                "(std::isfinite(static_cast<double>(phad)) && phad>-998 && "
+                "std::isfinite(static_cast<double>(nu_recon)) && nu_recon>-998 && "
+                "std::abs(static_cast<double>(nu_recon))>1e-12) ? "
+                "static_cast<double>(phad)/static_cast<double>(nu_recon) : "
+                "std::numeric_limits<double>::quiet_NaN()",
+            ),
+            "pt2": (
+                "(std::isfinite(static_cast<double>(phad)) && phad>-998 && "
+                "std::isfinite(static_cast<double>(thetapq)) && thetapq>-998) ? "
+                "std::pow(static_cast<double>(phad)*std::sin(static_cast<double>(thetapq)),2) : "
+                "std::numeric_limits<double>::quiet_NaN()",
+                "(std::isfinite(static_cast<double>(phad)) && phad>-998 && "
+                "std::isfinite(static_cast<double>(thetapq_recon)) && thetapq_recon>-998) ? "
+                "std::pow(static_cast<double>(phad)*std::sin(static_cast<double>(thetapq_recon)),2) : "
+                "std::numeric_limits<double>::quiet_NaN()",
+            ),
+        }
+        replaced = []
+        for label, original, recon, circular in kinematics:
+            if label not in expressions:
+                replaced.append((label, original, recon, circular))
+                continue
+            if not derived_dependencies[label].issubset(available):
+                replaced.append((label, "__missing_derived__", "__missing_derived__", circular))
+                provenance[label] = "derived_missing_dependencies"
+                continue
+            original_alias = f"_derived_{label}_simc"
+            recon_alias = f"_derived_{label}_recon"
+            dataframe = dataframe.Define(
+                original_alias, expressions[label][0]
+            ).Define(recon_alias, expressions[label][1])
+            available.update({original_alias, recon_alias})
+            replaced.append((label, original_alias, recon_alias, circular))
+            provenance[label] = "derived_common_kinematics"
+        kinematics = replaced
+
+    row["Kinematic_value_provenance"] = ";".join(
+        f"{label}:{provenance[label]}" for label, _, _, _ in kinematics
     )
     delta_frame = dataframe.Filter(DELTA_CUT)
     full_frame = dataframe.Filter(FULL_CUT)
@@ -293,7 +365,7 @@ def scan_recon_tree(
     kinematic_actions: Dict[Tuple[str, str], Tuple[str, ...]] = {}
     availability_actions: Dict[str, str] = {}
     availability_states: Dict[str, str] = {}
-    for index, (label, original, recon, circular) in enumerate(KINEMATICS):
+    for index, (label, original, recon, circular) in enumerate(kinematics):
         if original not in available or recon not in available:
             availability_states[label] = "missing"
             continue
@@ -378,7 +450,7 @@ def scan_recon_tree(
         )
     row["Kinematic_branch_availability"] = ";".join(
         f"{label}:{availability_states[label]}"
-        for label, _, _, _ in KINEMATICS
+        for label, _, _, _ in kinematics
     )
     for label, state in availability_states.items():
         row[f"_Kinematic_availability_{label}"] = state
@@ -495,7 +567,9 @@ def inspect_manifest_row(
 
     if not errors and recon_entries > 0:
         try:
-            scan_recon_tree(recon_tree, recon_branches, row)
+            scan_recon_tree(
+                recon_tree, recon_branches, row, str(source["Reaction"])
+            )
         except Exception as error:
             errors.append(f"RECON_SCAN_FAILED={type(error).__name__}:{error}")
     elif recon_entries <= 0:
@@ -1101,7 +1175,7 @@ def draw_kinematic_page(
                 graph.SetMarkerSize(0.9)
                 graph.Draw("P SAME")
                 keepalive.append(graph)
-    legend_pad = canvas.cd(8)
+    legend_pad = canvas.cd(9)
     legend_pad.SetGrid(0, 0)
     legend = ROOT.TLegend(0.08, 0.18, 0.92, 0.82)
     legend.SetBorderSize(0)
@@ -1116,17 +1190,16 @@ def draw_kinematic_page(
         keepalive.append(dummy)
     legend.Draw()
 
-    title_pad = canvas.cd(9)
-    title_pad.SetGrid(0, 0)
+    canvas.cd()
     latex = ROOT.TLatex()
     latex.SetNDC()
     latex.SetTextAlign(22)
     latex.SetTextFont(62)
-    latex.SetTextSize(0.075)
-    latex.DrawLatex(0.5, 0.62, f"{tier_label} kinematic residuals")
+    latex.SetTextSize(0.025)
+    latex.DrawLatex(0.5, 0.995, f"{tier_label} kinematic residuals")
     latex.SetTextFont(42)
-    latex.SetTextSize(0.050)
-    latex.DrawLatex(0.5, 0.43, context)
+    latex.SetTextSize(0.018)
+    latex.DrawLatex(0.5, 0.970, context)
     keepalive.append(latex)
     canvas.Print(pdf.as_posix())
 
@@ -1157,8 +1230,12 @@ def write_pdf(
         "",
         "Acceptance tiers: nocut, delta-only, and full matched acceptance.",
         "Delta cut: -8 < hsdelta < 8, -10 < ssdelta < 22.",
-        "Full-cut adds HMS xptar/yptar and SHMS xptar/yptar matching cuts.",
+        "Full-cut angle cuts: -0.15 < HMS/SHMS xptar < 0.15.",
+        "Full-cut angle cuts: -0.10 < HMS/SHMS yptar < 0.10.",
         "Kinematic summaries are saved separately for Delta-only and Full-cut.",
+        "Delta/exclusive xbj, z, pt2 use common derived original/recon coordinates.",
+        "Derived momentum uses physical phad; provenance is retained in the CSV.",
+        "Missing mass uses missmass and missmass_recon.",
         "Kinematic availability: available, sentinel_only, or missing.",
         "Sentinel-only branches (for example all -999) retain blank metrics.",
         "WARNING: negative fWeight, full relative error > 5%, or N_{eff} < 1000.",

@@ -165,11 +165,15 @@ Delta-only:
 
 Full-cut:
   Delta-only plus
-  -0.060 < H_gtr_th < 0.060
-  -0.022 < H_gtr_ph < 0.022
-  -0.045 < P_gtr_th < 0.045
-  -0.024 < P_gtr_ph < 0.024
+  -0.15 < H_gtr_th < 0.15
+  -0.10 < H_gtr_ph < 0.10
+  -0.15 < P_gtr_th < 0.15
+  -0.10 < P_gtr_ph < 0.10
 ```
+
+The corresponding SIMC branches use the same numerical limits:
+`hsxptar`/`ssxptar` are restricted to `[-0.15, 0.15]`, and
+`hsyptar`/`ssyptar` are restricted to `[-0.10, 0.10]`.
 
 The output reports explicit `RP_Goodcoin_delta` and `RP_Goodcoin_full`
 counts and errors. `RP_get_coin_normyield.C` applies the same run
@@ -276,3 +280,71 @@ settings per page so Raw/Hist/Recon markers remain distinguishable.
 Exclusive PIMINUS production from LH2 is omitted entirely from the SIMC input
 manifest and therefore from batch-running and QA catalogs; exclusive PIMINUS
 from LD2 remains supported.
+
+For delta and exclusive samples, the QA layer derives common original and
+reconstructed coordinates when their reaction-native `xbj`, `z`, or `pt2`
+branches are sentinel-only:
+
+```text
+xbj = Q2 / (2 Mp nu)
+z   = phad / nu
+pt2 = (phad sin(thetapq))^2
+```
+
+These coordinates support uniform reconstruction QA and do not imply that the
+variables have the same reaction interpretation as SIDIS. Missing mass is
+reported from `missmass` and `missmass_recon`.
+
+---
+
+## 10) Build setting-wise data-to-MC comparisons
+
+Process one setting from its target normalized-yield CSV:
+
+```bash
+python3 tools/RP_data_mc_compare.py \
+  results/Tables/RP_get_coin_normyield/<setting>.csv
+```
+
+Process every discovered LH2/LD2 setting:
+
+```bash
+python3 tools/RP_data_mc_compare.py --all
+python3 tools/RP_data_mc_compare_Summary.py
+```
+
+Use `--bigtable-dir <path>` when the setting-wise bigtable leaf hierarchy is
+not under `rsidis_xs_v5/bigtable`.  The comparison joins `BCM2_I` from the
+matching leaf by run number for the Signal normalized-yield-versus-current
+diagnostic.
+
+Outputs are written under:
+
+```text
+results/Tables/RP_data_mc_compare/
+results/PDFs/RP_data_mc_compare/
+```
+
+The data calculation rebuilds differential random subtraction from the saved
+run-specific CT windows, normalizes each run with its saved `Norm_factor`, and
+combines runs by beam-charge fraction. It then subtracts positrons and the
+phase/target-specific thickness-scaled dummy yield. `S_dummy` is retained in
+every binned output row.
+
+Each SIMC reaction uses `fWeight` directly. SIDIS, rho, delta, and exclusive
+are shown individually and summed without fitted scaling. Delta-only and
+Full-cut use identical data/SIMC acceptance definitions. Acceptance QA pages
+label cut-removed (N-1) distributions explicitly: every Full-cut requirement
+except the cut on the plotted variable is active.
+
+Results remain visibly provisional while computer live time, trigger
+efficiency, or PID efficiency are provisionally set to one. A sentinel setting
+identity is `SKIPPED`; a valid setting with missing data classes or MC
+components is `PENDING`.
+
+All per-setting comparison variables use 20 fixed bins with variable-specific
+ranges.  PDF pages use the same wide layout, place Delta-only and Full-cut
+comparisons side by side, and report `S_dummy` to four decimal places.  CSV
+outputs retain the full configured `S_dummy` precision.  SIMC effective-statistics
+warnings remain part of SIMC QA but are not propagated into the downstream
+Data-to-MC status.

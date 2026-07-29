@@ -16,6 +16,27 @@ import RP_get_good_coin_ev_Summary as good_summary  # noqa: E402
 
 
 class DataAcceptanceSummaryTests(unittest.TestCase):
+    def test_active_cpp_stages_use_matching_wide_angle_acceptance(self):
+        project = TOOLS_DIR.parent
+        goodcoin = (project / "macros" / "RP_get_good_coin_ev.C").read_text()
+        xsec = (project / "macros" / "TableCoinXsec.C").read_text()
+        for branch in ("H_gtr_th", "P_gtr_th"):
+            self.assertIn(f"{branch}>-0.15", goodcoin)
+            self.assertIn(f"{branch}<0.15", goodcoin)
+            self.assertIn(f"({branch}>-0.15)", xsec)
+            self.assertIn(f"({branch}<0.15)", xsec)
+        for branch in ("H_gtr_ph", "P_gtr_ph"):
+            self.assertIn(f"{branch}>-0.10", goodcoin)
+            self.assertIn(f"{branch}<0.10", goodcoin)
+            self.assertIn(f"({branch}>-0.10)", xsec)
+            self.assertIn(f"({branch}<0.10)", xsec)
+        for branch in ("hsxptar", "ssxptar"):
+            self.assertIn(f"({branch}>-0.15)", xsec)
+            self.assertIn(f"({branch}<0.15)", xsec)
+        for branch in ("hsyptar", "ssyptar"):
+            self.assertIn(f"({branch}>-0.10)", xsec)
+            self.assertIn(f"({branch}<0.10)", xsec)
+
     def test_goodcoin_dual_tier_row_is_valid(self):
         row = {
             "CT_method": "TWO_STAGE_GAUSSIAN_FIT",
