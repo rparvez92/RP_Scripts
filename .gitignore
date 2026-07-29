@@ -55,3 +55,7 @@ rsidis_xs_v5/results/Tables/RP_extract_simc_info/
 # Generated RP_data_mc_compare analysis products
 rsidis_xs_v5/results/PDFs/RP_data_mc_compare/
 rsidis_xs_v5/results/Tables/RP_data_mc_compare/
+
+# Generated isolated SIMC collimator A/B study products
+rsidis_xs_v5/results/PDFs/RP_simc_collimator_compare/
+rsidis_xs_v5/results/Tables/RP_simc_collimator_compare/

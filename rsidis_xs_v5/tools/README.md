@@ -348,3 +348,50 @@ comparisons side by side, and report `S_dummy` to four decimal places.  CSV
 outputs retain the full configured `S_dummy` precision.  SIMC effective-statistics
 warnings remain part of SIMC QA but are not propagated into the downstream
 Data-to-MC status.
+
+---
+
+## 11) Isolated SHMS collimator material-model study
+
+The `simc-collimator-study` branch contains a one-setting experiment for:
+
+```text
+phase1_pass4_PIMINUS_LD2_x0p25Q23p3z0p5thpq2p0
+```
+
+This is not a collimator-on versus collimator-off geometry test. SIMC applies
+the ordinary HMS/SHMS aperture checks in both cases. The experimental inputs
+enable the optional SHMS pion material model, which adds absorption, energy
+loss, multiple scattering, and possible punch-through:
+
+```text
+using_HMScoll = 0
+using_SHMScoll = 1
+```
+
+HMS is the electron arm for this setting, so the pion/muon-only HMS material
+routine is explicitly left disabled.
+
+Generate the four isolated inputs and manifest:
+
+```bash
+python3 tools/RP_generate_simc_collimator_study.py --dry-run
+python3 tools/RP_generate_simc_collimator_study.py --write
+```
+
+Inputs are written under `infiles/RP_Simc/collimator_on/`. The input parent
+name makes the runner store products under the separate T7
+`{outfiles,runout,ROOTfiles}/collimator_on/` directories; baseline `coin/`
+products cannot be overwritten.
+
+After producing the experimental QA catalog and setting-wise data-to-MC CSV,
+compare it directly with the baseline:
+
+```bash
+python3 tools/RP_compare_simc_collimator_variants.py
+```
+
+The A/B report uses absolute normalization without fitted scaling. It compares
+HMS/SHMS xptar and yptar under Delta-only selection and reports whole-range and
+edge-region chi-square values. Edge regions are `|xptar| >= 0.15` and
+`|yptar| >= 0.10`.

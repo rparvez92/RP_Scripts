@@ -59,6 +59,8 @@ KINEMATICS = (
 
 IDENTITY_COLUMNS = [
     "Phase", "Pass", "Reaction", "Run_type", "Target", "Setting",
+    "Simulation_variant", "using_HMScoll", "using_SHMScoll",
+    "Parent_input", "Random_initialization",
     "Manifest_Ngen", "Generation_status", "Generation_reason",
     "Source_input", "Source_leaf_csv", "Source_template",
 ]
@@ -159,14 +161,20 @@ def phase_directory(phase: str) -> str:
 def expected_paths(
     t7_root: Path, manifest_row: Mapping[str, str]
 ) -> Dict[str, Path]:
-    stem = Path(manifest_row["Output_file"]).stem
+    source_input = Path(manifest_row["Output_file"])
+    stem = source_input.stem
     simulation = t7_root / phase_directory(manifest_row["Phase"]) / "Simulation"
     run_type = manifest_row["Run_type"]
+    output_category = source_input.parent.name
 
     def choose(category: str, filename: str) -> Path:
-        candidates = (
-            simulation / category / "coin" / filename,
-            simulation / category / run_type / filename,
+        candidate_categories = []
+        for value in (output_category, "coin", run_type):
+            if value and value not in candidate_categories:
+                candidate_categories.append(value)
+        candidates = tuple(
+            simulation / category / value / filename
+            for value in candidate_categories
         )
         return next((candidate for candidate in candidates if candidate.is_file()), candidates[0])
 
@@ -182,6 +190,11 @@ def manifest_identity(source: Mapping[str, str]) -> Dict[str, object]:
     mappings = {
         "Phase": "Phase", "Pass": "Pass", "Reaction": "Reaction",
         "Run_type": "Run_type", "Target": "Target", "Setting": "Setting",
+        "Simulation_variant": "Simulation_variant",
+        "using_HMScoll": "using_HMScoll",
+        "using_SHMScoll": "using_SHMScoll",
+        "Parent_input": "Parent_input",
+        "Random_initialization": "Random_initialization",
         "Manifest_Ngen": "Ngen", "Generation_status": "Generation_status",
         "Generation_reason": "Diagnostic_reason", "Source_input": "Output_file",
         "Source_leaf_csv": "Source_leaf_csv", "Source_template": "Source_template",
@@ -1220,6 +1233,16 @@ def write_pdf(
     draw_text_page(canvas, path, "SIMC metadata, normalization, and QA", [
         f"Manifest: {manifest}",
         f"Simulation root: {t7_root}",
+        "Variants: " + ", ".join(sorted({
+            str(row.get("Simulation_variant") or "baseline") for row in rows
+        })),
+        "Collimator flags: " + ", ".join(sorted({
+            (
+                f"using_HMScoll={row.get('using_HMScoll') or 'default 0'}, "
+                f"using_SHMScoll={row.get('using_SHMScoll') or 'default 0'}"
+            )
+            for row in rows
+        })),
         f"Inventory rows: {len(rows)}",
         ", ".join(f"{status}: {count}" for status, count in sorted(counts.items())),
         "",
