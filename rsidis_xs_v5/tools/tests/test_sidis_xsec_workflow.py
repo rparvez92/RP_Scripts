@@ -92,6 +92,20 @@ class ExtractionTests(unittest.TestCase):
         self.assertNotIn("R", extract.FIELDS)
         self.assertFalse(any("full" in field.lower() for field in extract.FIELDS))
 
+    def test_model_skipped_precedes_missing_delta_rows(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "phase2_pass3_PIPLUS_LH2_xneg999Q2neg999zneg999thpqneg999.csv"
+            with source.open("w", newline="") as stream:
+                writer = csv.DictWriter(stream, fieldnames=[*extract.IDENTITY, "Status"])
+                writer.writeheader()
+                writer.writerow(dict(zip(extract.IDENTITY,
+                    ("phase2", "pass3", "PIPLUS", "LH2", "xneg999Q2neg999zneg999thpqneg999")),
+                    Status="PENDING"))
+            identity = ("phase2", "pass3", "PIPLUS", "LH2", "xneg999Q2neg999zneg999thpqneg999")
+            models = {identity: {"Model_status": "SKIPPED", "Model_reason": "sentinel"}}
+            row = extract.extract_one(source, models, {}, Path("model.csv"))
+            self.assertEqual(row["Extraction_status"], "SKIPPED")
+
 
 if __name__ == "__main__":
     unittest.main()

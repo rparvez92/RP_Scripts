@@ -110,6 +110,12 @@ def extract_one(data_path: Path, model_rows: dict[tuple[str, ...], dict[str, str
     reasons: list[str] = []
     status = "OK"
 
+    model = model_rows.get(identity)
+    if model is not None and model.get("Model_status") == "SKIPPED":
+        output.update({"Extraction_status": "SKIPPED",
+                       "Extraction_reason": f"MODEL_SKIPPED={model.get('Model_reason','')}"})
+        return output
+
     upstream_status = str(metadata.get("Status", ""))
     if not integrated.get("selected"):
         if upstream_status == "SKIPPED":
@@ -122,7 +128,6 @@ def extract_one(data_path: Path, model_rows: dict[tuple[str, ...], dict[str, str
         output.update({"Extraction_status": status, "Extraction_reason": ";".join(reasons)})
         return output
 
-    model = model_rows.get(identity)
     if model is None:
         output.update({"Extraction_status": "PENDING", "Extraction_reason": "MODEL_ROW_MISSING"})
         return output
