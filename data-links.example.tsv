@@ -1,7 +1,0 @@
-# Copy this file to .data-links.local.tsv and replace targets for each machine.
-# Fields are separated by one TAB: repository-relative link path<TAB>absolute target.
-
-heep_check_v3/Pass0p1_DataROOTfiles	/path/on/this/machine/heep_check_v3/Pass0p1_DataROOTfiles
-heep_check_v3/Pass0p1_SimROOTfiles	/path/on/this/machine/heep_check_v3/Pass0p1_SimROOTfiles
-heep_check_v3/Pass0p1_SimROOTfiles_WoOffsetsImplemented	/path/on/this/machine/heep_check_v3/Pass0p1_SimROOTfiles_WoOffsetsImplemented
-rsidis_xs_v5/Pass0_SkimmedDataROOTfiles	/path/on/this/machine/Pass0_SkimmedDataROOTfiles

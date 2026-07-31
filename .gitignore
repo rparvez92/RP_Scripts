@@ -34,3 +34,24 @@ calibration_check_v1/macros/phase2_hodo_root_commands.txt
 **/simc_worksim
 **/single_arm_worksim
 **/Legacy_simc_worksim
+
+# Generated setting-wise bigtable leaves and filter report
+rsidis_xs_v5/bigtable/phase1/
+rsidis_xs_v5/bigtable/phase2/
+rsidis_xs_v5/bigtable/filter_bigtable_summary.csv
+
+# Generated RP_get_good_coin_ev analysis products
+rsidis_xs_v5/results/PDFs/RP_get_good_coin_ev/
+rsidis_xs_v5/results/Tables/RP_get_good_coin_ev/
+
+# Generated RP_get_coin_normyield analysis products
+rsidis_xs_v5/results/PDFs/RP_get_coin_normyield/
+rsidis_xs_v5/results/Tables/RP_get_coin_normyield/
+
+# Generated RP_extract_simc_info analysis products
+rsidis_xs_v5/results/PDFs/RP_extract_simc_info/
+rsidis_xs_v5/results/Tables/RP_extract_simc_info/
+
+# Generated RP_data_mc_compare analysis products
+rsidis_xs_v5/results/PDFs/RP_data_mc_compare/
+rsidis_xs_v5/results/Tables/RP_data_mc_compare/
