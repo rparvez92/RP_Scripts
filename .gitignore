@@ -55,3 +55,8 @@ rsidis_xs_v5/results/Tables/RP_extract_simc_info/
 # Generated RP_data_mc_compare analysis products
 rsidis_xs_v5/results/PDFs/RP_data_mc_compare/
 rsidis_xs_v5/results/Tables/RP_data_mc_compare/
+
+# Generated SIDIS model and setting-integrated extraction products
+rsidis_xs_v5/results/Tables/RP_sidis_model/
+rsidis_xs_v5/results/PDFs/RP_extract_sidis_xsec/
+rsidis_xs_v5/results/Tables/RP_extract_sidis_xsec/

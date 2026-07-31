@@ -348,3 +348,45 @@ comparisons side by side, and report `S_dummy` to four decimal places.  CSV
 outputs retain the full configured `S_dummy` precision.  SIMC effective-statistics
 warnings remain part of SIMC QA but are not propagated into the downstream
 Data-to-MC status.
+
+---
+
+## 11) Build the central SIDIS model and integrated physics extraction
+
+Build the standalone calculator in the SIMC repository:
+
+```bash
+cd /Users/radwanparvez/Documents/JLab/simc_gfortran/util/sidisxsec
+make all
+```
+
+Build the setting catalog, run the Delta-acceptance extraction, and combine its
+reports:
+
+```bash
+cd /Users/radwanparvez/Documents/JLab/RP_Scripts/rsidis_xs_v5
+python3 tools/RP_build_sidis_model.py
+python3 tools/RP_extract_sidis_xsec.py --all
+python3 tools/RP_extract_sidis_xsec_Summary.py
+```
+
+The central calculator receives the derived transverse-momentum magnitude
+
+```text
+nu = Q2 / (2 Mp x)
+p_pion = sqrt((z nu)^2 - m_pion^2)
+pT = abs(p_pion sin(theta_pq))
+```
+
+and never receives `theta_pq` in place of `pT`.  This stage consumes only the
+Delta-only Data-to-MC rows.  It defines
+
+```text
+Y_MC,total = Y_SIDIS + Y_rho + Y_delta + Y_exclusive
+C_Y = Y_Data / Y_MC,total
+Sigma_SIDIS,data = C_Y Sigma_SIDIS,model
+Multiplicity_SIDIS,data = C_Y Sighad_model
+```
+
+`R` is reserved for the future longitudinal/transverse ratio.  No fitted MC
+scaling or reaction-background subtraction is applied in this stage.
