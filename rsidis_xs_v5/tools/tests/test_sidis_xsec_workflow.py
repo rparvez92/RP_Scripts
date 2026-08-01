@@ -91,6 +91,22 @@ class ExtractionTests(unittest.TestCase):
         self.assertIn("C_Y", extract.FIELDS)
         self.assertNotIn("R", extract.FIELDS)
         self.assertFalse(any("full" in field.lower() for field in extract.FIELDS))
+        forbidden = ("MC_total", "SIDIS", "Sigma_SIDIS", "Multiplicity_SIDIS")
+        for field in extract.FIELDS:
+            self.assertFalse(any(token in field for token in forbidden), field)
+        self.assertIn("Y_MC", extract.FIELDS)
+        self.assertIn("sigma_sidis_data", extract.FIELDS)
+        self.assertIn("M_sidis_data", extract.FIELDS)
+
+    def test_model_catalog_units_and_fields(self):
+        self.assertIn("M_sidis_model", model.FIELDS)
+        self.assertIn("sigma_sidis_model", model.FIELDS)
+        self.assertNotIn("Sighad_model", model.FIELDS)
+        self.assertNotIn("Sigma_SIDIS_model", model.FIELDS)
+        self.assertEqual(model.M_SIDIS_UNITS, "GeV^-2")
+        self.assertEqual(model.SIGMA_SIDIS_UNITS, "ub/GeV^2/sr^2")
+        self.assertEqual(extract.PDF_M_UNITS, "GeV^{-2}")
+        self.assertEqual(extract.PDF_SIGMA_UNITS, "#mub/GeV^{2}/sr^{2}")
 
     def test_model_skipped_precedes_missing_delta_rows(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -105,6 +121,37 @@ class ExtractionTests(unittest.TestCase):
             models = {identity: {"Model_status": "SKIPPED", "Model_reason": "sentinel"}}
             row = extract.extract_one(source, models, {}, Path("model.csv"))
             self.assertEqual(row["Extraction_status"], "SKIPPED")
+
+    def test_extraction_uses_new_yield_and_closure_schema(self):
+        identity = ("phase1", "pass4", "PIPLUS", "LH2", "x0p25Q23p3z0p5thpq2p0")
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / ("_".join(identity) + ".csv")
+            fields = [*extract.IDENTITY, "Tier", "Variable", "Bin_index",
+                      "Data_final", "Data_final_err", "MC_complete", "Data_closure_rel"]
+            for reaction in extract.REACTIONS:
+                fields.extend((f"MC_{reaction}", f"MC_{reaction}_err"))
+            with source.open("w", newline="") as stream:
+                writer = csv.DictWriter(stream, fieldnames=fields)
+                writer.writeheader()
+                row = dict(zip(extract.IDENTITY, identity))
+                row.update({"Tier": "delta", "Variable": "hdelta", "Bin_index": "1",
+                            "Data_final": "20", "Data_final_err": "2", "MC_complete": "1",
+                            "Data_closure_rel": "0.001"})
+                for reaction, value in zip(extract.REACTIONS, (10, 2, 3, 5)):
+                    row[f"MC_{reaction}"] = str(value)
+                    row[f"MC_{reaction}_err"] = "1"
+                writer.writerow(row)
+            models = {identity: {
+                "Model_status": "OK", "sigma_sidis_model": "4",
+                "sigma_sidis_units": "ub/GeV^2/sr^2", "M_sidis_model": "0.5",
+                "M_sidis_units": "GeV^-2",
+            }}
+            result = extract.extract_one(source, models, {}, Path("model.csv"))
+            self.assertEqual(result["Y_MC"], 20.0)
+            self.assertEqual(result["C_Y"], 1.0)
+            self.assertEqual(result["sigma_sidis_data"], 4.0)
+            self.assertEqual(result["M_sidis_data"], 0.5)
+            self.assertEqual(result["Y_Data_input_closure_rel_max"], 0.001)
 
 
 if __name__ == "__main__":

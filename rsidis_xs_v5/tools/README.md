@@ -382,11 +382,21 @@ and never receives `theta_pq` in place of `pT`.  This stage consumes only the
 Delta-only Data-to-MC rows.  It defines
 
 ```text
-Y_MC,total = Y_SIDIS + Y_rho + Y_delta + Y_exclusive
-C_Y = Y_Data / Y_MC,total
-Sigma_SIDIS,data = C_Y Sigma_SIDIS,model
-Multiplicity_SIDIS,data = C_Y Sighad_model
+Y_MC = Y_MC,sidis + Y_MC,rho + Y_MC,delta + Y_MC,exclusive
+C_Y = Y_Data / Y_MC
+sigma_sidis,data = C_Y sigma_sidis,model
+M_sidis,data = C_Y M_sidis,model
 ```
 
-`R` is reserved for the future longitudinal/transverse ratio.  No fitted MC
-scaling or reaction-background subtraction is applied in this stage.
+`M_sidis,model` is the calculator's `sighad` output and has units `GeV^-2`
+because it is differential in `pT^2` while `z` and `phi` are dimensionless.
+Cross-section units are stored as `ub/GeV^2/sr^2`. `R` is reserved for the
+future longitudinal/transverse ratio. No fitted MC scaling or
+reaction-background subtraction is applied in this stage.
+
+The extraction retains two closure diagnostics. `Y_Data_input_closure_rel_max`
+is the largest event-histogram versus saved normalized-yield relative
+difference among signal electron, signal positron, dummy electron, and dummy
+positron inputs. `Y_MC_<reaction>_QA_closure_rel` is the signed relative
+difference between the Data-to-MC histogram integral and the independently
+recorded SIMC-QA Delta-only yield for that reaction.

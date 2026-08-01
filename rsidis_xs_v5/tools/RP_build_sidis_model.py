@@ -15,13 +15,15 @@ from typing import Iterable
 
 MP_GEV = 0.9382720813
 MPI_GEV = 0.13957039
+M_SIDIS_UNITS = "GeV^-2"
+SIGMA_SIDIS_UNITS = "ub/GeV^2/sr^2"
 
 FIELDS = [
     "Phase", "Pass", "Run_type", "Target", "Setting", "Ebeam_GeV",
     "x", "Q2_GeV2", "z", "theta_pq_deg", "nu_GeV", "p_pion_GeV",
     "pT_GeV", "Target_A", "Target_Z", "Pion_charge", "Phi_model_rad",
-    "Sighad_model", "Sighad_model_units", "Sigma_SIDIS_model",
-    "Sigma_SIDIS_model_units", "Calculator", "Calculator_git_commit",
+    "M_sidis_model", "M_sidis_units", "sigma_sidis_model",
+    "sigma_sidis_units", "Calculator", "Calculator_git_commit",
     "Source_manifest", "Model_status", "Model_reason",
 ]
 
@@ -164,8 +166,8 @@ def build_catalog(manifest: Path, executable: Path) -> list[dict[str, object]]:
             "Calculator": str(executable.resolve()),
             "Calculator_git_commit": git_commit,
             "Source_manifest": str(manifest.resolve()),
-            "Sighad_model_units": "1/GeV2",
-            "Sigma_SIDIS_model_units": "ub/GeV2/sr2",
+            "M_sidis_units": M_SIDIS_UNITS,
+            "sigma_sidis_units": SIGMA_SIDIS_UNITS,
         })
         try:
             parsed = parse_setting(setting)
@@ -173,7 +175,7 @@ def build_catalog(manifest: Path, executable: Path) -> list[dict[str, object]]:
             if generation not in {"GENERATED", "OK"}:
                 model_status = "SKIPPED" if generation.startswith("SKIPPED") else "PENDING"
                 row.update({"Model_status": model_status,
-                            "Model_reason": f"SIDIS_INPUT_STATUS={generation or 'MISSING'}"})
+                            "Model_reason": f"sidis_input_status={generation or 'MISSING'}"})
                 rows.append(row)
                 continue
             ebeam = float(source["Ebeam_MeV"]) / 1000.0
@@ -198,8 +200,8 @@ def build_catalog(manifest: Path, executable: Path) -> list[dict[str, object]]:
                 )
                 if sighad <= 0 or sigma <= 0:
                     raise ValueError("calculator returned nonpositive model values")
-                row.update({"Phi_model_rad": phi, "Sighad_model": sighad,
-                            "Sigma_SIDIS_model": sigma, "Model_status": "OK"})
+                row.update({"Phi_model_rad": phi, "M_sidis_model": sighad,
+                            "sigma_sidis_model": sigma, "Model_status": "OK"})
         except ValueError as exc:
             text = str(exc)
             status = "SKIPPED" if "sentinel" in text or "setting name" in text else "ERROR"

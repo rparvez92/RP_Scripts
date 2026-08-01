@@ -12,18 +12,20 @@ import tempfile
 
 REACTIONS = ("sidis", "rho", "delta", "exclusive")
 IDENTITY = ("Phase", "Pass", "Run_type", "Target", "Setting")
+PDF_SIGMA_UNITS = "#mub/GeV^{2}/sr^{2}"
+PDF_M_UNITS = "GeV^{-2}"
 
 FIELDS = [
-    *IDENTITY, "Acceptance", "Data_normalized_yield", "Data_normalized_yield_err",
-    "MC_sidis", "MC_sidis_err", "MC_rho", "MC_rho_err", "MC_delta",
-    "MC_delta_err", "MC_exclusive", "MC_exclusive_err", "MC_total",
-    "MC_total_err", "MC_sidis_fraction", "MC_rho_fraction", "MC_delta_fraction",
-    "MC_exclusive_fraction", "C_Y", "C_Y_err", "Sigma_SIDIS_model",
-    "Sigma_SIDIS_model_units", "Sigma_SIDIS_data", "Sigma_SIDIS_data_err",
-    "Multiplicity_SIDIS_model", "Multiplicity_SIDIS_model_units",
-    "Multiplicity_SIDIS_data", "Multiplicity_SIDIS_data_err",
-    "Data_closure_rel", "MC_sidis_closure_rel", "MC_rho_closure_rel",
-    "MC_delta_closure_rel", "MC_exclusive_closure_rel", "MC_complete",
+    *IDENTITY, "Acceptance", "Y_Data", "Y_Data_err",
+    "Y_MC_sidis", "Y_MC_sidis_err", "Y_MC_rho", "Y_MC_rho_err",
+    "Y_MC_delta", "Y_MC_delta_err", "Y_MC_exclusive", "Y_MC_exclusive_err",
+    "Y_MC", "Y_MC_err", "Y_MC_sidis_fraction", "Y_MC_rho_fraction",
+    "Y_MC_delta_fraction", "Y_MC_exclusive_fraction", "C_Y", "C_Y_err",
+    "sigma_sidis_model", "sigma_sidis_data", "sigma_sidis_data_err",
+    "sigma_sidis_units", "M_sidis_model", "M_sidis_data", "M_sidis_data_err",
+    "M_sidis_units", "Y_Data_input_closure_rel_max",
+    "Y_MC_sidis_QA_closure_rel", "Y_MC_rho_QA_closure_rel",
+    "Y_MC_delta_QA_closure_rel", "Y_MC_exclusive_QA_closure_rel", "Y_MC_complete",
     "Source_data_mc_csv", "Source_model_catalog", "Extraction_status",
     "Extraction_reason",
 ]
@@ -144,21 +146,21 @@ def extract_one(data_path: Path, model_rows: dict[tuple[str, ...], dict[str, str
     mc_total = sum(component_values) if all(math.isfinite(v) for v in component_values) else math.nan
     mc_total_err = quadrature(component_errors) if all(math.isfinite(v) for v in component_errors) else math.nan
 
-    output.update({"Data_normalized_yield": data, "Data_normalized_yield_err": data_err,
-                   "MC_total": mc_total, "MC_total_err": mc_total_err,
-                   "Data_closure_rel": integrated["Data_closure_rel"],
-                   "MC_complete": int(bool(integrated["MC_complete"]))})
+    output.update({"Y_Data": data, "Y_Data_err": data_err,
+                   "Y_MC": mc_total, "Y_MC_err": mc_total_err,
+                   "Y_Data_input_closure_rel_max": integrated["Data_closure_rel"],
+                   "Y_MC_complete": int(bool(integrated["MC_complete"]))})
     for reaction, value, error in zip(REACTIONS, component_values, component_errors):
-        output[f"MC_{reaction}"] = value
-        output[f"MC_{reaction}_err"] = error
-        output[f"MC_{reaction}_fraction"] = value / mc_total if math.isfinite(mc_total) and mc_total != 0 else math.nan
+        output[f"Y_MC_{reaction}"] = value
+        output[f"Y_MC_{reaction}_err"] = error
+        output[f"Y_MC_{reaction}_fraction"] = value / mc_total if math.isfinite(mc_total) and mc_total != 0 else math.nan
         qa = qa_rows.get(identity + (reaction,))
         reference = number(qa.get("SimYield_delta")) if qa else math.nan
         closure = relative_difference(value, reference)
-        output[f"MC_{reaction}_closure_rel"] = closure
+        output[f"Y_MC_{reaction}_QA_closure_rel"] = closure
         if qa and qa.get("QA_status") == "ERROR":
             status = "ERROR"
-            reasons.append(f"MC_{reaction.upper()}_QA_ERROR")
+            reasons.append(f"Y_MC_{reaction}_QA_ERROR")
 
     if not integrated["MC_complete"]:
         status = "PENDING"
@@ -171,18 +173,18 @@ def extract_one(data_path: Path, model_rows: dict[tuple[str, ...], dict[str, str
         reasons.append("ZERO_MC_TOTAL")
     else:
         cy, cy_err = ratio_with_error(data, data_err, mc_total, mc_total_err)
-        sigma_model = number(model.get("Sigma_SIDIS_model"))
-        multiplicity_model = number(model.get("Sighad_model"))
+        sigma_model = number(model.get("sigma_sidis_model"))
+        multiplicity_model = number(model.get("M_sidis_model"))
         output.update({
             "C_Y": cy, "C_Y_err": cy_err,
-            "Sigma_SIDIS_model": sigma_model,
-            "Sigma_SIDIS_model_units": model.get("Sigma_SIDIS_model_units", ""),
-            "Sigma_SIDIS_data": cy * sigma_model,
-            "Sigma_SIDIS_data_err": abs(sigma_model) * cy_err,
-            "Multiplicity_SIDIS_model": multiplicity_model,
-            "Multiplicity_SIDIS_model_units": model.get("Sighad_model_units", ""),
-            "Multiplicity_SIDIS_data": cy * multiplicity_model,
-            "Multiplicity_SIDIS_data_err": abs(multiplicity_model) * cy_err,
+            "sigma_sidis_model": sigma_model,
+            "sigma_sidis_data": cy * sigma_model,
+            "sigma_sidis_data_err": abs(sigma_model) * cy_err,
+            "sigma_sidis_units": model.get("sigma_sidis_units", ""),
+            "M_sidis_model": multiplicity_model,
+            "M_sidis_data": cy * multiplicity_model,
+            "M_sidis_data_err": abs(multiplicity_model) * cy_err,
+            "M_sidis_units": model.get("M_sidis_units", ""),
         })
         if data < 0 or cy < 0:
             status = "WARNING"
@@ -192,10 +194,10 @@ def extract_one(data_path: Path, model_rows: dict[tuple[str, ...], dict[str, str
             status = "WARNING" if status == "OK" else status
             reasons.append(f"DATA_CLOSURE={data_closure:.6g}")
         for reaction in REACTIONS:
-            closure = number(output[f"MC_{reaction}_closure_rel"])
+            closure = number(output[f"Y_MC_{reaction}_QA_closure_rel"])
             if math.isfinite(closure) and abs(closure) > 1e-5:
                 status = "WARNING" if status == "OK" else status
-                reasons.append(f"MC_{reaction.upper()}_CLOSURE={closure:.6g}")
+                reasons.append(f"Y_MC_{reaction}_QA_CLOSURE={closure:.6g}")
 
     output.update({"Extraction_status": status, "Extraction_reason": ";".join(reasons)})
     return output
@@ -218,30 +220,32 @@ def atomic_csv(path: Path, rows: list[dict[str, object]]) -> None:
 def draw_pdf(path: Path, row: dict[str, object]) -> None:
     import ROOT  # type: ignore
     ROOT.gROOT.SetBatch(True)
+    ROOT.gStyle.SetOptStat(0)
     path.parent.mkdir(parents=True, exist_ok=True)
     object_suffix = str(abs(hash(str(path))))
-    canvas = ROOT.TCanvas(f"c_sidis_xsec_{object_suffix}", "SIDIS extraction", 1800, 1000)
+    canvas = ROOT.TCanvas(f"c_sidis_xsec_{object_suffix}", "sidis extraction", 1800, 1000)
     canvas.SetMargin(0.07, 0.04, 0.08, 0.06)
     text = ROOT.TLatex()
     text.SetNDC(True)
     text.SetTextFont(42)
     text.SetTextSize(0.031)
     lines = [
-        "Delta-Acceptance SIDIS Cross-Section and Multiplicity",
+        "Delta-Acceptance sidis Cross-Section and Multiplicity",
         f"{row['Phase']}, {row['Pass']}, {row['Run_type']}, {row['Target']}, {row['Setting']}",
         "Data cuts: PID + HMS/SHMS delta acceptance",
         "MC cuts: HMS/SHMS delta acceptance",
-        "Y_{MC,total} = Y_{SIDIS} + Y_{rho} + Y_{delta} + Y_{exclusive}",
-        "C_{Y} = Y_{Data} / Y_{MC,total}",
-        "sigma_{SIDIS,data} = C_{Y} sigma_{SIDIS,model}",
-        "M_{SIDIS,data} = C_{Y} M_{SIDIS,model}",
-        f"Data normalized yield = {number(row['Data_normalized_yield']):.6g} +/- {number(row['Data_normalized_yield_err']):.3g}",
-        f"Total MC normalized yield = {number(row['MC_total']):.6g} +/- {number(row['MC_total_err']):.3g}",
+        "Y_{MC} = Y_{MC,sidis} + Y_{MC,rho} + Y_{MC,delta} + Y_{MC,exclusive}",
+        "C_{Y} = Y_{Data} / Y_{MC}",
+        "Cross-section: #sigma_{sidis,data} = C_{Y} #sigma_{sidis,model}",
+        "Multiplicity: M_{sidis,data} = C_{Y} M_{sidis,model}",
+        "M_{sidis,model} is the calc_semi_xsec sighad output",
+        f"Data normalized yield = {number(row['Y_Data']):.6g} +/- {number(row['Y_Data_err']):.3g}",
+        f"MC normalized yield = {number(row['Y_MC']):.6g} +/- {number(row['Y_MC_err']):.3g}",
         f"C_Y = {number(row['C_Y']):.6g} +/- {number(row['C_Y_err']):.3g}",
-        f"sigma SIDIS model = {number(row['Sigma_SIDIS_model']):.6g} {row['Sigma_SIDIS_model_units']}",
-        f"sigma SIDIS data = {number(row['Sigma_SIDIS_data']):.6g} +/- {number(row['Sigma_SIDIS_data_err']):.3g} {row['Sigma_SIDIS_model_units']}",
-        f"Multiplicity model = {number(row['Multiplicity_SIDIS_model']):.6g} {row['Multiplicity_SIDIS_model_units']}",
-        f"Multiplicity data = {number(row['Multiplicity_SIDIS_data']):.6g} +/- {number(row['Multiplicity_SIDIS_data_err']):.3g} {row['Multiplicity_SIDIS_model_units']}",
+        f"#sigma_{{sidis,model}} = {number(row['sigma_sidis_model']):.6g} {PDF_SIGMA_UNITS}",
+        f"#sigma_{{sidis,data}} = {number(row['sigma_sidis_data']):.6g} +/- {number(row['sigma_sidis_data_err']):.3g} {PDF_SIGMA_UNITS}",
+        f"M_{{sidis,model}} = {number(row['M_sidis_model']):.6g} {PDF_M_UNITS}",
+        f"M_{{sidis,data}} = {number(row['M_sidis_data']):.6g} +/- {number(row['M_sidis_data_err']):.3g} {PDF_M_UNITS}",
         f"Status = {row['Extraction_status']}",
         f"Reason = {row['Extraction_reason'] or 'none'}",
     ]
@@ -261,11 +265,11 @@ def draw_pdf(path: Path, row: dict[str, object]) -> None:
     frame = ROOT.TH1D(f"h_components_{object_suffix}",
                       "Normalized Yield Composition;Component;Normalized Yield", 6, 0.5, 6.5)
     frame.SetStats(False)
-    labels = ("Data", "SIDIS", "rho", "delta", "exclusive", "MC total")
-    values = (row["Data_normalized_yield"], row["MC_sidis"], row["MC_rho"],
-              row["MC_delta"], row["MC_exclusive"], row["MC_total"])
-    errors = (row["Data_normalized_yield_err"], row["MC_sidis_err"], row["MC_rho_err"],
-              row["MC_delta_err"], row["MC_exclusive_err"], row["MC_total_err"])
+    labels = ("Data", "sidis", "rho", "delta", "exclusive", "MC")
+    values = (row["Y_Data"], row["Y_MC_sidis"], row["Y_MC_rho"],
+              row["Y_MC_delta"], row["Y_MC_exclusive"], row["Y_MC"])
+    errors = (row["Y_Data_err"], row["Y_MC_sidis_err"], row["Y_MC_rho_err"],
+              row["Y_MC_delta_err"], row["Y_MC_exclusive_err"], row["Y_MC_err"])
     for index, (label, value, error) in enumerate(zip(labels, values, errors), 1):
         frame.GetXaxis().SetBinLabel(index, label)
         if finite(value):
@@ -288,12 +292,16 @@ def draw_pdf(path: Path, row: dict[str, object]) -> None:
     text.SetTextSize(0.038)
     text.DrawLatex(0.08, 0.91, "Integrated Closure and Final Status")
     y = 0.82
-    closure_lines = [f"Data closure relative = {number(row['Data_closure_rel']):.6g}"]
+    closure_lines = [
+        "Data input closure: max_{class} |Y_{event histogram}-Y_{saved}|/|Y_{saved}|",
+        f"Data input closure relative max = {number(row['Y_Data_input_closure_rel_max']):.6g}",
+        "MC QA closure: (Y_{DMC,reaction}-Y_{QA,reaction})/Y_{QA,reaction}",
+    ]
     closure_lines.extend(
-        f"{reaction} MC closure relative = {number(row[f'MC_{reaction}_closure_rel']):.6g}"
+        f"{reaction} MC QA closure relative = {number(row[f'Y_MC_{reaction}_QA_closure_rel']):.6g}"
         for reaction in REACTIONS
     )
-    closure_lines.extend((f"MC complete = {row['MC_complete']}",
+    closure_lines.extend((f"MC complete = {row['Y_MC_complete']}",
                           f"Final status = {row['Extraction_status']}",
                           f"Reason = {row['Extraction_reason'] or 'none'}"))
     text.SetTextSize(0.033)
