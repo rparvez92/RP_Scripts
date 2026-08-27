@@ -400,3 +400,25 @@ difference among signal electron, signal positron, dummy electron, and dummy
 positron inputs. `Y_MC_<reaction>_QA_closure_rel` is the signed relative
 difference between the Data-to-MC histogram integral and the independently
 recorded SIMC-QA Delta-only yield for that reaction.
+
+## 12) Setting-integrated SIDIS physics overview
+
+The active overview uses one point per complete leaf setting and does not reopen
+event ROOT files. It joins the setting-integrated extraction with the model
+catalog, derives central `pT^2`, and creates controlled scans:
+
+- central `z`, holding `x`, `Q2`, and `theta_pq` fixed;
+- central `pT^2`, holding `x`, `Q2`, and `z` fixed.
+
+Each wide page shows cross-section on the left and multiplicity on the right,
+with extracted and model values together. Run:
+
+```bash
+cd /Users/radwanparvez/Documents/JLab/RP_Scripts/rsidis_xs_v5
+python3 tools/RP_plot_sidis_setting_overview.py
+```
+
+The former event-binned occupancy, migration, and one-dimensional projection
+tools are preserved under
+`Legacy/Legacy_rsidis_xs_v5/tools/differential_feasibility/` for future
+multidimensional work and are not part of the active run sequence.
