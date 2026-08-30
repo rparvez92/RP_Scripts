@@ -59,3 +59,10 @@ rsidis_xs_v5/results/Tables/RP_data_mc_compare/
 # Generated isolated SIMC collimator A/B study products
 rsidis_xs_v5/results/PDFs/RP_simc_collimator_compare/
 rsidis_xs_v5/results/Tables/RP_simc_collimator_compare/
+
+# Generated SIDIS cross-section and setting-summary products
+rsidis_xs_v5/results/PDFs/RP_extract_sidis_xsec/
+rsidis_xs_v5/results/Tables/RP_extract_sidis_xsec/
+rsidis_xs_v5/results/PDFs/RP_sidis_setting_overview/
+rsidis_xs_v5/results/Tables/RP_sidis_setting_overview/
+rsidis_xs_v5/results/Tables/RP_sidis_model/

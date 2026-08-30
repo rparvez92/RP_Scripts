@@ -1,6 +1,0 @@
-run,category,target_raw,run_type_raw,BCM2_I,BCM2_Q,h_esing_Eff,comp_livetime,boil_corr,ps5,ps6,ps_choice,ps_factor,normyield,normyield_err
-25200,signal,LD2,PI-SIDIS,28.704,49.19,0.9983,1.0,1.010026,-1.0,1.0,ps6,1.0,309.057,3.26534
-25201,signal,LD2,PI-SIDIS,30.221,55.721,0.9982,1.0,1.010556,-1.0,1.0,ps6,1.0,312.253,3.08299
-25202,signal,LD2,PI-SIDIS,15.038,26.708,0.9986,1.0,1.005253,-1.0,1.0,ps6,1.0,323.61,4.05068
-25189,dummy,Dummy,PI-SIDIS,39.572,69.589,0.9985,1.0,1.0,-1.0,1.0,ps6,1.0,98.7091,1.38705
-25190,dummy,Dummy,PI-SIDIS,39.793,67.754,0.9985,1.0,1.0,-1.0,1.0,ps6,1.0,97.3653,1.39907
