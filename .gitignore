@@ -1,0 +1,68 @@
+# macOS metadata
+.DS_Store
+._*
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Transient analysis products and scratch copies
+*.log
+*.old
+*.root
+*.hist
+calibration_check_v1/macros/phase2_hodo_root_commands.txt
+
+# ROOT/ACLiC generated build artifacts
+*_C.d
+*_C.so
+*_C_ACLiC_dict_rdict.pcm
+
+# Locally compiled analysis executables
+**/macros/heepcheck
+**/macros/heepcheck_sign
+
+# Machine-specific data links and local link manifests
+.data-links.local.tsv
+**/*ROOTfiles*
+**/*REPORTfiles
+**/*REPORT_OUTPUT
+**/REPORT_OUTPUT
+**/ROOTfiles
+**/Rsidis_ROOTfiles
+**/Skimmed_ROOTfiles
+**/simc_worksim
+**/single_arm_worksim
+**/Legacy_simc_worksim
+
+# Generated setting-wise bigtable leaves and filter report
+rsidis_xs_v5/bigtable/phase1/
+rsidis_xs_v5/bigtable/phase2/
+rsidis_xs_v5/bigtable/filter_bigtable_summary.csv
+
+# Generated RP_get_good_coin_ev analysis products
+rsidis_xs_v5/results/PDFs/RP_get_good_coin_ev/
+rsidis_xs_v5/results/Tables/RP_get_good_coin_ev/
+
+# Generated RP_get_coin_normyield analysis products
+rsidis_xs_v5/results/PDFs/RP_get_coin_normyield/
+rsidis_xs_v5/results/Tables/RP_get_coin_normyield/
+
+# Generated RP_extract_simc_info analysis products
+rsidis_xs_v5/results/PDFs/RP_extract_simc_info/
+rsidis_xs_v5/results/Tables/RP_extract_simc_info/
+
+# Generated RP_data_mc_compare analysis products
+rsidis_xs_v5/results/PDFs/RP_data_mc_compare/
+rsidis_xs_v5/results/Tables/RP_data_mc_compare/
+
+# Generated isolated SIMC collimator A/B study products
+rsidis_xs_v5/results/PDFs/RP_simc_collimator_compare/
+rsidis_xs_v5/results/Tables/RP_simc_collimator_compare/
+
+# Generated SIDIS cross-section and setting-summary products
+rsidis_xs_v5/results/PDFs/RP_extract_sidis_xsec/
+rsidis_xs_v5/results/Tables/RP_extract_sidis_xsec/
+rsidis_xs_v5/results/PDFs/RP_sidis_setting_overview/
+rsidis_xs_v5/results/Tables/RP_sidis_setting_overview/
+rsidis_xs_v5/results/Tables/RP_sidis_model/
