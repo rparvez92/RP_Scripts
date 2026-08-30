@@ -1,3 +1,0 @@
-run,category,target_raw,run_type_raw,BCM4A_Q,h_esing_Eff,comp_livetime,electr_deadtime,fan_mean,boil_corr,ps5,ps6,ps_choice,ps_factor
-23915,signal,LD2,SHMSDIS,6658.208,-999.0,1.0,95.2449,34.4708,1.003355,-1.0,-1.0,ps5,-1.0
-23933,dummy,Dummy,SHMSDIS,8973.154,-999.0,0.99874,98.0347,36.2846,1.0,-1.0,-1.0,ps5,-1.0

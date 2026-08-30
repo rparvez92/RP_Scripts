@@ -1,3 +1,0 @@
-0.003164048467
-# sigma_model (sigsemi) in ub/GeV^2/sr^2
-# ebeam=10.6716 Q2=3.3 x=0.25 z=0.5 thpq=5.2 A=1 Z=1 pion_charge=-1 nphibin=1
