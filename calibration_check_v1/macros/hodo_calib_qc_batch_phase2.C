@@ -16,19 +16,12 @@
 //   results/Phase2/tables/hodo_qc_<spec>_summary.csv
 //   results/Phase2/pdfs/hodo_qc_<spec>_by_run.pdf
 //
-// Optional PNG output:
-//   results/Phase2/<spec>PNGs/
-//
 // Compile only:
 //   root -l -b -q -e '.L macros/hodo_calib_qc_batch_phase2.C+'
 //
-// Standard compact output:
+// Process the complete Phase-2 bigtable (SHMSDIS, HMSDIS, then COIN):
 //   root -l -b -q \
-//     'macros/hodo_calib_qc_batch_phase2.C+("coin","/net/cdaq/cdaql3data/cdaq/hallc-online-rsidis2025/ROOTfiles","27122-27132")'
-//
-// Compact output plus PNGs:
-//   root -l -b -q \
-//     'macros/hodo_calib_qc_batch_phase2.C+("coin","/net/cdaq/cdaql3data/cdaq/hallc-online-rsidis2025/ROOTfiles","27122-27132","pdf,csv,png")'
+//     'macros/hodo_calib_qc_batch_phase2.C+()'
 
 #include <TCanvas.h>
 #include <TCut.h>
@@ -49,8 +42,11 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <map>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -60,25 +56,27 @@ namespace {
 const char *kDefaultRootDir =
     "/net/cdaq/cdaql3data/cdaq/hallc-online-rsidis2025/ROOTfiles";
 
-// These defaults are intentionally conservative. During live Phase-2 running,
-// prefer passing explicit run lists generated from rsidis_runlist_phaseII.dat.
-const std::vector<int> kPhase2HmsRuns;
-const std::vector<int> kPhase2ShmsElectronRuns;
-const std::vector<int> kPhase2CoinRuns = {
-    27122, 27123, 27124, 27125, 27126, 27127,
-    27128, 27129, 27130, 27131, 27132};
-
 const int kCanvasWidth = 1250;
 const int kCanvasHeight = 850;
 
-struct OutputOptions {
-  bool pdf = true;
-  bool csv = true;
-  bool png = false;
+struct RunMetadata {
+  int run = 0;
+  TString runType;
+  TString target;
+  double hmsP = std::nan("");
+  double shmsP = std::nan("");
+};
+
+struct RunGroups {
+  std::vector<RunMetadata> coin;
+  std::vector<RunMetadata> hms;
+  std::vector<RunMetadata> shmsElectron;
+  int excludedPolarity = 0;
+  int excludedRunType = 0;
 };
 
 struct RunSummary {
-  int run = 0;
+  RunMetadata metadata;
   TString spec;
   TString filePath;
   TString fitVariable;
@@ -90,17 +88,6 @@ struct RunSummary {
   TString status = "NOT_RUN";
 };
 
-TString NormalizeSpec(const TString &rawSpec) {
-  TString spec = rawSpec;
-  spec.ToLower();
-  spec.ReplaceAll("-", "_");
-  return spec;
-}
-
-bool IsValidSpec(const TString &spec) {
-  return spec == "hms" || spec == "shms_electron" || spec == "coin";
-}
-
 TString MakeFileName(const TString &spec, int run) {
   if (spec == "hms")
     return TString::Format("hms_coin_replay_production_%d_-1.root", run);
@@ -111,72 +98,150 @@ TString MakeFileName(const TString &spec, int run) {
   return "";
 }
 
-std::vector<int> ParseRunsList(const std::string &text) {
-  std::vector<int> runs;
-  if (text.empty())
-    return runs;
-
-  std::stringstream stream(text);
-  std::string token;
-  while (std::getline(stream, token, ',')) {
-    token.erase(std::remove_if(token.begin(), token.end(), ::isspace),
-                token.end());
-    if (token.empty())
-      continue;
-
-    const std::string::size_type dash = token.find('-');
-    if (dash == std::string::npos) {
-      runs.push_back(std::stoi(token));
-      continue;
-    }
-
-    int first = std::stoi(token.substr(0, dash));
-    int last = std::stoi(token.substr(dash + 1));
-    if (last < first)
-      std::swap(first, last);
-    for (int run = first; run <= last; ++run)
-      runs.push_back(run);
-  }
-  return runs;
+std::string Trim(const std::string &text) {
+  const std::string whitespace = " \t\r\n";
+  const auto first = text.find_first_not_of(whitespace);
+  if (first == std::string::npos)
+    return "";
+  return text.substr(first, text.find_last_not_of(whitespace) - first + 1);
 }
 
-OutputOptions ParseOutputOptions(const TString &modeText) {
-  OutputOptions options;
-  options.pdf = false;
-  options.csv = false;
-  options.png = false;
+std::vector<std::string> ParseCsvLine(const std::string &line, bool &valid) {
+  std::vector<std::string> fields;
+  std::string field;
+  bool quoted = false;
+  valid = true;
+  for (std::size_t i = 0; i < line.size(); ++i) {
+    const char ch = line[i];
+    if (ch == '"') {
+      if (quoted && i + 1 < line.size() && line[i + 1] == '"') {
+        field += '"';
+        ++i;
+      } else {
+        quoted = !quoted;
+      }
+    } else if (ch == ',' && !quoted) {
+      fields.push_back(Trim(field));
+      field.clear();
+    } else {
+      field += ch;
+    }
+  }
+  if (quoted)
+    valid = false;
+  fields.push_back(Trim(field));
+  return fields;
+}
 
-  TString text = modeText;
-  text.ToLower();
-  text.ReplaceAll(" ", "");
-  if (text.IsNull())
-    text = "pdf,csv";
+bool ParseIntStrict(const std::string &text, int &value) {
+  char *end = nullptr;
+  const long parsed = std::strtol(text.c_str(), &end, 10);
+  if (text.empty() || !end || *end != '\0')
+    return false;
+  value = static_cast<int>(parsed);
+  return true;
+}
 
-  std::stringstream stream(text.Data());
-  std::string token;
-  while (std::getline(stream, token, ',')) {
-    if (token == "pdf")
-      options.pdf = true;
-    else if (token == "csv")
-      options.csv = true;
-    else if (token == "png")
-      options.png = true;
-    else if (token == "all") {
-      options.pdf = true;
-      options.csv = true;
-      options.png = true;
-    } else if (!token.empty()) {
-      std::cerr << "[WARN] Unknown output token '" << token
-                << "' ignored. Valid tokens: pdf,csv,png,all\n";
+bool ParseDoubleStrict(const std::string &text, double &value) {
+  char *end = nullptr;
+  value = std::strtod(text.c_str(), &end);
+  return !text.empty() && end && *end == '\0' && std::isfinite(value);
+}
+
+bool ReadBigtable(const TString &path, RunGroups &groups) {
+  std::ifstream input(path.Data());
+  if (!input) {
+    std::cerr << "[ERROR] Cannot open bigtable: " << path << '\n';
+    return false;
+  }
+
+  std::string line;
+  if (!std::getline(input, line)) {
+    std::cerr << "[ERROR] Bigtable is empty: " << path << '\n';
+    return false;
+  }
+  bool valid = true;
+  const auto headers = ParseCsvLine(line, valid);
+  if (!valid) {
+    std::cerr << "[ERROR] Malformed quoted CSV header in " << path << '\n';
+    return false;
+  }
+  std::map<std::string, std::size_t> columns;
+  for (std::size_t i = 0; i < headers.size(); ++i)
+    columns[Trim(headers[i])] = i;
+  const std::vector<std::string> required = {
+      "run", "run_type", "target", "hms_p", "shms_p"};
+  for (const auto &name : required) {
+    if (!columns.count(name)) {
+      std::cerr << "[ERROR] Bigtable is missing required column '"
+                << name << "'.\n";
+      return false;
     }
   }
 
-  if (!options.pdf && !options.csv && !options.png) {
-    std::cerr << "[WARN] No valid output modes requested; using pdf,csv.\n";
-    options.pdf = true;
-    options.csv = true;
+  std::set<int> selectedRuns;
+  int lineNumber = 1;
+  while (std::getline(input, line)) {
+    ++lineNumber;
+    if (Trim(line).empty())
+      continue;
+    const auto fields = ParseCsvLine(line, valid);
+    if (!valid || fields.size() != headers.size()) {
+      std::cerr << "[ERROR] Malformed CSV row at line " << lineNumber
+                << ": expected " << headers.size() << " fields, got "
+                << fields.size() << ".\n";
+      return false;
+    }
+
+    RunMetadata row;
+    const std::string runText = fields[columns["run"]];
+    const std::string hmsText = fields[columns["hms_p"]];
+    const std::string shmsText = fields[columns["shms_p"]];
+    if (!ParseIntStrict(runText, row.run) ||
+        !ParseDoubleStrict(hmsText, row.hmsP) ||
+        !ParseDoubleStrict(shmsText, row.shmsP)) {
+      std::cerr << "[ERROR] Invalid run/hms_p/shms_p value at bigtable line "
+                << lineNumber << ".\n";
+      return false;
+    }
+    row.runType = fields[columns["run_type"]];
+    row.target = fields[columns["target"]];
+
+    TString spec;
+    if (row.runType == "PI+SIDIS" || row.runType == "PI-SIDIS")
+      spec = "coin";
+    else if (row.runType == "HMSDIS")
+      spec = "hms";
+    else if (row.runType == "SHMSDIS")
+      spec = "shms_electron";
+    else {
+      ++groups.excludedRunType;
+      continue;
+    }
+    if (row.hmsP >= 0.0) {
+      ++groups.excludedPolarity;
+      continue;
+    }
+    if (!selectedRuns.insert(row.run).second) {
+      std::cerr << "[ERROR] Duplicate selected run " << row.run
+                << " at bigtable line " << lineNumber << ".\n";
+      return false;
+    }
+    if (spec == "coin")
+      groups.coin.push_back(row);
+    else if (spec == "hms")
+      groups.hms.push_back(row);
+    else
+      groups.shmsElectron.push_back(row);
   }
-  return options;
+
+  const auto byRun = [](const RunMetadata &a, const RunMetadata &b) {
+    return a.run < b.run;
+  };
+  std::sort(groups.coin.begin(), groups.coin.end(), byRun);
+  std::sort(groups.hms.begin(), groups.hms.end(), byRun);
+  std::sort(groups.shmsElectron.begin(), groups.shmsElectron.end(), byRun);
+  return true;
 }
 
 TCut HmsElectronCuts() {
@@ -283,10 +348,6 @@ bool ValidateAndEnableBranches(TTree *tree, const TString &spec, int run) {
   return true;
 }
 
-TString PngDir(const TString &spec) {
-  return TString::Format("results/Phase2/%sPNGs", spec.Data());
-}
-
 TString PdfPath(const TString &spec) {
   return TString::Format("results/Phase2/pdfs/hodo_qc_%s_by_run.pdf",
                          spec.Data());
@@ -297,31 +358,23 @@ TString CsvPath(const TString &spec) {
                          spec.Data());
 }
 
-void SaveCanvas(TCanvas &canvas, const TString &pdfPath,
-                const TString &pngPath, const OutputOptions &options) {
-  if (options.pdf)
-    canvas.Print(pdfPath);
-  if (options.png)
-    canvas.SaveAs(pngPath);
+void SaveCanvas(TCanvas &canvas, const TString &pdfPath) {
+  canvas.Print(pdfPath);
 }
 
-void OpenPdf(const TString &pdfPath, const OutputOptions &options) {
-  if (options.pdf) {
-    TCanvas opener("c_pdf_open", "", 1, 1);
-    opener.Print(TString::Format("%s[", pdfPath.Data()));
-  }
+void OpenPdf(const TString &pdfPath) {
+  TCanvas opener("c_pdf_open", "", 1, 1);
+  opener.Print(TString::Format("%s[", pdfPath.Data()));
 }
 
-void ClosePdf(const TString &pdfPath, const OutputOptions &options) {
-  if (options.pdf) {
-    TCanvas closer("c_pdf_close", "", 1, 1);
-    closer.Print(TString::Format("%s]", pdfPath.Data()));
-  }
+void ClosePdf(const TString &pdfPath) {
+  TCanvas closer("c_pdf_close", "", 1, 1);
+  closer.Print(TString::Format("%s]", pdfPath.Data()));
 }
 
 void DrawBetaVsXfp(TTree *tree, const TString &selectionSpec,
                    const TString &viewSpec, int run,
-                   const TString &pdfPath, const OutputOptions &options) {
+                   const TString &pdfPath) {
   const bool hmsView = viewSpec == "hms";
   const TString expression =
       hmsView ? "H.gtr.beta:H.dc.x_fp" : "P.gtr.beta:P.dc.x_fp";
@@ -362,16 +415,7 @@ void DrawBetaVsXfp(TTree *tree, const TString &selectionSpec,
   low.Draw("SAME");
   high.Draw("SAME");
 
-  TString pngPath;
-  if (selectionSpec == "coin") {
-    pngPath = TString::Format("%s/coin_%s_run%d_beta_vs_xfp.png",
-                              PngDir("coin").Data(), viewSpec.Data(), run);
-  } else {
-    pngPath = TString::Format("%s/%s_run%d_beta_vs_xfp.png",
-                              PngDir(selectionSpec).Data(),
-                              selectionSpec.Data(), run);
-  }
-  SaveCanvas(canvas, pdfPath, pngPath, options);
+  SaveCanvas(canvas, pdfPath);
 }
 
 bool ComputeBetaMetrics(TTree *tree, const TString &spec, int run,
@@ -416,8 +460,7 @@ bool FitCoinTimePeak(TH1D &hist, TF1 &fit,
          sigma >= 0.05 && sigma <= 2.0;
 }
 
-void DrawCoinTime1D(TTree *tree, int run, const TString &pdfPath,
-                    const OutputOptions &options) {
+void DrawCoinTime1D(TTree *tree, int run, const TString &pdfPath) {
   const TString histName = TString::Format("h_ctime_%d", run);
   TH1D hist(histName,
             TString::Format(
@@ -455,9 +498,7 @@ void DrawCoinTime1D(TTree *tree, int run, const TString &pdfPath,
               << run << '\n';
   }
 
-  const TString pngPath = TString::Format(
-      "%s/coin_run%d_ctime1D_ROC2.png", PngDir("coin").Data(), run);
-  SaveCanvas(canvas, pdfPath, pngPath, options);
+  SaveCanvas(canvas, pdfPath);
 }
 
 bool ComputeCoinTimeMetrics(TTree *tree, int run, double &mean,
@@ -487,7 +528,7 @@ void DrawDualTrend(const std::vector<int> &runs,
                    const std::vector<double> &means,
                    const std::vector<double> &sigmas,
                    const TString &spec, bool coinTime,
-                   const TString &pdfPath, const OutputOptions &options) {
+                   const TString &pdfPath) {
   if (runs.empty())
     return;
 
@@ -513,7 +554,7 @@ void DrawDualTrend(const std::vector<int> &runs,
   canvas.SetBottomMargin(0.18);
   canvas.SetTopMargin(0.10);
   TH1F frame(frameName, title, count, 0.0, static_cast<double>(count));
-  const int labelStep = count > 20 ? 5 : 1;
+  const int labelStep = std::max(1, (count + 19) / 20);
   for (int index = 0; index < count; ++index) {
     if (index % labelStep == 0)
       frame.GetXaxis()->SetBinLabel(index + 1,
@@ -556,23 +597,17 @@ void DrawDualTrend(const std::vector<int> &runs,
   legend.AddEntry(&sigmaGraph, "sigma", "p");
   legend.Draw();
 
-  const TString pngPath =
-      coinTime
-          ? TString::Format("%s/coin_ctime_trends_ROC2.png",
-                            PngDir("coin").Data())
-          : TString::Format("%s/%s_beta_trends.png",
-                            PngDir(spec).Data(), spec.Data());
-  SaveCanvas(canvas, pdfPath, pngPath, options);
+  SaveCanvas(canvas, pdfPath);
 }
 
-RunSummary ProcessOneRun(const TString &spec, const TString &rootDir, int run,
-                         const TString &pdfPath,
-                         const OutputOptions &options,
+RunSummary ProcessOneRun(const TString &spec, const TString &rootDir,
+                         const RunMetadata &metadata, const TString &pdfPath,
                          std::vector<int> &trendRuns,
                          std::vector<double> &means,
                          std::vector<double> &sigmas) {
   RunSummary summary;
-  summary.run = run;
+  summary.metadata = metadata;
+  const int run = metadata.run;
   summary.spec = spec;
   summary.fitVariable =
       spec == "coin" ? "CTime.ePiCoinTime_ROC2"
@@ -620,7 +655,7 @@ RunSummary ProcessOneRun(const TString &spec, const TString &rootDir, int run,
 
   if (spec == "hms" || spec == "shms_electron") {
     const TString viewSpec = spec == "hms" ? "hms" : "shms";
-    DrawBetaVsXfp(tree, spec, viewSpec, run, pdfPath, options);
+    DrawBetaVsXfp(tree, spec, viewSpec, run, pdfPath);
     if (ComputeBetaMetrics(tree, spec, run, summary.fitMean,
                            summary.fitSigma, summary.fitEntries)) {
       summary.status = "OK";
@@ -637,9 +672,9 @@ RunSummary ProcessOneRun(const TString &spec, const TString &rootDir, int run,
                 << run << '\n';
     }
   } else {
-    DrawBetaVsXfp(tree, "coin", "hms", run, pdfPath, options);
-    DrawBetaVsXfp(tree, "coin", "shms", run, pdfPath, options);
-    DrawCoinTime1D(tree, run, pdfPath, options);
+    DrawBetaVsXfp(tree, "coin", "hms", run, pdfPath);
+    DrawBetaVsXfp(tree, "coin", "shms", run, pdfPath);
+    DrawCoinTime1D(tree, run, pdfPath);
 
     if (ComputeCoinTimeMetrics(tree, run, summary.fitMean,
                                summary.fitSigma, summary.fitEntries)) {
@@ -664,13 +699,35 @@ RunSummary ProcessOneRun(const TString &spec, const TString &rootDir, int run,
   return summary;
 }
 
-void WriteCsv(const TString &path, const std::vector<RunSummary> &summaries) {
+std::string CsvEscape(const TString &value) {
+  std::string text = value.Data();
+  if (text.find_first_of(",\"\r\n") == std::string::npos)
+    return text;
+  std::string escaped = "\"";
+  for (char ch : text) {
+    if (ch == '"')
+      escaped += '"';
+    escaped += ch;
+  }
+  return escaped + '"';
+}
+
+bool WriteCsv(const TString &path, const std::vector<RunSummary> &summaries) {
   std::ofstream out(path.Data());
-  out << "run,spec,fit_variable,all_events,selected_events,"
+  if (!out) {
+    std::cerr << "[ERROR] Cannot create CSV: " << path << '\n';
+    return false;
+  }
+  out << "run,spec,run_type,target,hms_p,shms_p,fit_variable,"
+      << "all_events,selected_events,"
       << "fit_mean,fit_sigma,fit_entries,status\n";
   for (const RunSummary &row : summaries) {
-    out << row.run << ','
+    out << row.metadata.run << ','
         << row.spec << ','
+        << CsvEscape(row.metadata.runType) << ','
+        << CsvEscape(row.metadata.target) << ','
+        << row.metadata.hmsP << ','
+        << row.metadata.shmsP << ','
         << row.fitVariable << ','
         << row.allEvents << ','
         << row.selectedEvents << ',';
@@ -685,68 +742,45 @@ void WriteCsv(const TString &path, const std::vector<RunSummary> &summaries) {
     out << ','
         << row.status << '\n';
   }
+  out.close();
+  if (!out) {
+    std::cerr << "[ERROR] Failed while writing CSV: " << path << '\n';
+    return false;
+  }
+  return true;
 }
 
-} // namespace
+TString TemporaryPath(const TString &path) {
+  const Ssiz_t dot = path.Last('.');
+  if (dot == kNPOS)
+    return path + ".tmp";
+  TString result = path;
+  result.Insert(dot, ".tmp");
+  return result;
+}
 
-void hodo_calib_qc_batch_phase2(const char *Spec = "",
-                                const char *RootDir = "",
-                                const char *RunsList = "",
-                                const char *OutputMode = "pdf,csv") {
-  gROOT->SetBatch(kTRUE);
-
-  const TString spec = NormalizeSpec(Spec ? Spec : "");
-  if (!IsValidSpec(spec)) {
-    std::cerr << "[ERROR] Spec must be 'hms', 'shms_electron', "
-              << "or 'coin'.\n";
-    return;
+bool PublishFile(const TString &temporary, const TString &finalPath) {
+  if (gSystem->Rename(temporary, finalPath) != 0) {
+    std::cerr << "[ERROR] Cannot publish " << temporary << " as "
+              << finalPath << ".\n";
+    return false;
   }
+  return true;
+}
 
-  TString rootDir = RootDir ? RootDir : "";
-  if (rootDir.IsNull())
-    rootDir = kDefaultRootDir;
+bool ProcessCategory(const TString &spec, const TString &rootDir,
+                     const std::vector<RunMetadata> &runs) {
+  const TString finalPdf = PdfPath(spec);
+  const TString finalCsv = CsvPath(spec);
+  const TString temporaryPdf = TemporaryPath(finalPdf);
+  const TString temporaryCsv = TemporaryPath(finalCsv);
+  gSystem->Unlink(temporaryPdf);
+  gSystem->Unlink(temporaryCsv);
 
-  const OutputOptions options =
-      ParseOutputOptions(OutputMode ? OutputMode : "pdf,csv");
-
-  std::vector<int> runs = ParseRunsList(RunsList ? RunsList : "");
-  if (runs.empty()) {
-    if (spec == "hms")
-      runs = kPhase2HmsRuns;
-    else if (spec == "shms_electron")
-      runs = kPhase2ShmsElectronRuns;
-    else
-      runs = kPhase2CoinRuns;
-  }
-  if (runs.empty()) {
-    std::cerr << "[ERROR] No Phase-2 " << spec
-              << " runs are configured. Supply RunsList explicitly.\n";
-    return;
-  }
-
-  PrintPhysicsLogic();
-  std::cout << "[INFO] Spec: " << spec << '\n'
-            << "[INFO] ROOT directory: " << rootDir << '\n'
-            << "[INFO] Requested runs: " << runs.size() << '\n'
-            << "[INFO] Output modes: "
-            << (options.pdf ? "pdf " : "")
-            << (options.csv ? "csv " : "")
-            << (options.png ? "png " : "") << '\n';
-
-  gSystem->mkdir("results/Phase2", true);
-  gSystem->mkdir("results/Phase2/pdfs", true);
-  gSystem->mkdir("results/Phase2/tables", true);
-  if (options.png)
-    gSystem->mkdir(PngDir(spec), true);
-
-  const TString pdfPath = PdfPath(spec);
-  const TString csvPath = CsvPath(spec);
-  if (options.pdf)
-    std::cout << "[INFO] PDF output: " << pdfPath << '\n';
-  if (options.csv)
-    std::cout << "[INFO] CSV output: " << csvPath << '\n';
-  if (options.png)
-    std::cout << "[INFO] PNG output directory: " << PngDir(spec) << '\n';
+  std::cout << "\n[INFO] Starting " << spec << " calibration check for "
+            << runs.size() << " runs.\n"
+            << "[INFO] PDF output: " << finalPdf << '\n'
+            << "[INFO] CSV output: " << finalCsv << '\n';
 
   std::vector<int> trendRuns;
   std::vector<double> means;
@@ -757,11 +791,11 @@ void hodo_calib_qc_batch_phase2(const char *Spec = "",
   sigmas.reserve(runs.size());
   summaries.reserve(runs.size());
 
-  OpenPdf(pdfPath, options);
+  OpenPdf(temporaryPdf);
   int processed = 0;
   int ok = 0;
-  for (int run : runs) {
-    RunSummary summary = ProcessOneRun(spec, rootDir, run, pdfPath, options,
+  for (const RunMetadata &run : runs) {
+    RunSummary summary = ProcessOneRun(spec, rootDir, run, temporaryPdf,
                                        trendRuns, means, sigmas);
     if (summary.status != "MISSING_FILE" &&
         summary.status != "ZOMBIE_FILE" &&
@@ -773,17 +807,69 @@ void hodo_calib_qc_batch_phase2(const char *Spec = "",
     summaries.push_back(summary);
   }
 
-  if (spec == "coin")
-    DrawDualTrend(trendRuns, means, sigmas, spec, true, pdfPath, options);
-  else
-    DrawDualTrend(trendRuns, means, sigmas, spec, false, pdfPath, options);
-  ClosePdf(pdfPath, options);
+  DrawDualTrend(trendRuns, means, sigmas, spec, spec == "coin", temporaryPdf);
+  ClosePdf(temporaryPdf);
+  if (!WriteCsv(temporaryCsv, summaries))
+    return false;
+  if (!PublishFile(temporaryPdf, finalPdf) ||
+      !PublishFile(temporaryCsv, finalCsv))
+    return false;
 
-  if (options.csv)
-    WriteCsv(csvPath, summaries);
+  std::cout << "[SUMMARY] " << spec << ": successfully opened/processed "
+            << processed << " of " << runs.size() << " requested runs.\n"
+            << "[SUMMARY] " << spec << ": OK fits " << ok << " of "
+            << runs.size() << " requested runs.\n";
+  return true;
+}
 
-  std::cout << "[SUMMARY] Successfully opened/processed " << processed
-            << " of " << runs.size() << " requested runs.\n"
-            << "[SUMMARY] OK fits: " << ok << " of " << runs.size()
-            << " requested runs.\n";
+} // namespace
+
+void hodo_calib_qc_batch_phase2(
+    const char *BigtablePath = "bigtable/rsidis_bigtable_phase2.csv",
+    const char *RootDir =
+        "/net/cdaq/cdaql3data/cdaq/hallc-online-rsidis2025/ROOTfiles") {
+  gROOT->SetBatch(kTRUE);
+
+  const TString bigtablePath = BigtablePath ? BigtablePath : "";
+  if (bigtablePath.IsNull()) {
+    std::cerr << "[ERROR] BigtablePath must not be empty.\n";
+    return;
+  }
+  TString rootDir = RootDir ? RootDir : "";
+  if (rootDir.IsNull())
+    rootDir = kDefaultRootDir;
+
+  RunGroups groups;
+  if (!ReadBigtable(bigtablePath, groups))
+    return;
+  if (groups.coin.empty() || groups.hms.empty() || groups.shmsElectron.empty()) {
+    std::cerr << "[ERROR] Bigtable selection produced an empty required "
+              << "category; no outputs were changed.\n";
+    return;
+  }
+
+  std::cout << "[INFO] Bigtable: " << bigtablePath << '\n'
+            << "[INFO] ROOT directory: " << rootDir << '\n'
+            << "[SELECTION] COIN (PI+SIDIS/PI-SIDIS, hms_p < 0): "
+            << groups.coin.size() << '\n'
+            << "[SELECTION] HMS (HMSDIS, hms_p < 0): "
+            << groups.hms.size() << '\n'
+            << "[SELECTION] SHMS electron (SHMSDIS, hms_p < 0): "
+            << groups.shmsElectron.size() << '\n'
+            << "[SELECTION] Excluded selected-type rows with hms_p >= 0: "
+            << groups.excludedPolarity << '\n'
+            << "[SELECTION] Excluded other run types: "
+            << groups.excludedRunType << '\n';
+
+  gSystem->mkdir("results/Phase2", true);
+  gSystem->mkdir("results/Phase2/pdfs", true);
+  gSystem->mkdir("results/Phase2/tables", true);
+  PrintPhysicsLogic();
+
+  if (!ProcessCategory("shms_electron", rootDir, groups.shmsElectron))
+    return;
+  if (!ProcessCategory("hms", rootDir, groups.hms))
+    return;
+  if (!ProcessCategory("coin", rootDir, groups.coin))
+    return;
 }
