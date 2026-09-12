@@ -4,8 +4,7 @@
 //
 // Supported modes:
 //   hms           : HMS electron selection, fit H.gtr.beta
-//   shms          : SHMS electron selection, fit P.gtr.beta;
-//                   also diagnose HMS pion beta
+//   shms          : SHMS electron selection, fit P.gtr.beta
 //   coin          : HMS electron + SHMS pion selection, fit CTime.ePiCoinTime_ROC2
 //
 // Input filename conventions:
@@ -28,6 +27,8 @@
 #include <TCut.h>
 #include <TF1.h>
 #include <TFile.h>
+#include <TFitResult.h>
+#include <TFitResultPtr.h>
 #include <TGaxis.h>
 #include <TGraph.h>
 #include <TH1D.h>
@@ -76,6 +77,22 @@ struct RunGroups {
   int excludedRunType = 0;
 };
 
+struct FitDiagnostics {
+  bool fitAttempted = false;
+  int minimizerStatus = -1;
+  int fitValid = -1;
+  int covarianceStatus = -1;
+  double chi2 = std::nan("");
+  double ndf = std::nan("");
+  double chi2Ndf = std::nan("");
+  double edm = std::nan("");
+  double candidateMean = std::nan("");
+  double candidateSigma = std::nan("");
+  double fitLow = std::nan("");
+  double fitHigh = std::nan("");
+  TString failureReason;
+};
+
 struct RunSummary {
   RunMetadata metadata;
   TString spec;
@@ -86,6 +103,7 @@ struct RunSummary {
   double fitMean = std::nan("");
   double fitSigma = std::nan("");
   double fitEntries = std::nan("");
+  FitDiagnostics fitDiagnostics;
   TString status = "NOT_RUN";
 };
 
@@ -308,8 +326,7 @@ std::vector<const char *> RequiredBranches(const TString &spec) {
       "H.gtr.dp", "H.gtr.beta", "H.cal.etottracknorm",
       "H.cer.npeSum", "H.dc.x_fp"};
   const std::vector<const char *> shms = {
-      "P.gtr.dp", "P.gtr.beta", "P.cal.etottracknorm", "P.dc.x_fp",
-      "H.gtr.beta", "H.dc.x_fp"};
+      "P.gtr.dp", "P.gtr.beta", "P.cal.etottracknorm", "P.dc.x_fp"};
   const std::vector<const char *> shmsPion = {
       "P.gtr.dp", "P.gtr.beta", "P.cal.etottracknorm",
       "P.hgcer.npeSum", "P.aero.npeSum", "P.gtr.p", "P.dc.x_fp"};
@@ -370,19 +387,18 @@ void ClosePdf(const TString &pdfPath) {
 
 void DrawBetaVsXfp(TTree *tree, const TString &selectionSpec,
                    const TString &viewSpec, int run,
-                   const TString &pdfPath,
-                   const TString &diagnosticLabel = "") {
+                   const TString &pdfPath) {
   const bool hmsView = viewSpec == "hms";
   const TString expression =
       hmsView ? "H.gtr.beta:H.dc.x_fp" : "P.gtr.beta:P.dc.x_fp";
   const TString histName =
       TString::Format("h_beta_xfp_%s_%d", viewSpec.Data(), run);
-  TString label = diagnosticLabel;
-  if (label.IsNull())
-    label = hmsView ? "HMS" : "SHMS";
+  const TString arm = hmsView ? "HMS" : "SHMS";
+  const TString xVariable = hmsView ? "H.dc.x_fp" : "P.dc.x_fp";
+  const TString betaVariable = hmsView ? "H.gtr.beta" : "P.gtr.beta";
   const TString title = TString::Format(
-      "Phase 2 run %d: %s beta vs xfp;xfp (cm);beta",
-      run, label.Data());
+      "Phase 2 run %d: %s beta vs %s xfp;%s [cm];%s",
+      run, arm.Data(), arm.Data(), xVariable.Data(), betaVariable.Data());
 
   TH2D hist(histName, title, 80, -45, 45, 120, 0.2, 1.2);
   hist.Sumw2();
@@ -424,7 +440,7 @@ void DrawCoinTimeVsHmsXfp(TTree *tree, int run, const TString &pdfPath) {
       histName,
       TString::Format(
           "Phase 2 run %d: CTime (ROC2) vs HMS xfp;"
-          "HMS xfp (cm);CTime.ePiCoinTime_ROC2 (ns)",
+          "H.dc.x_fp [cm];CTime.ePiCoinTime_ROC2 [ns]",
           run),
       80, -45, 45, 400, 0, 100);
   hist.Sumw2();
@@ -448,46 +464,112 @@ void DrawCoinTimeVsHmsXfp(TTree *tree, int run, const TString &pdfPath) {
   SaveCanvas(canvas, pdfPath);
 }
 
+bool CaptureFitDiagnostics(const TFitResultPtr &result, const TF1 &fit,
+                           bool enforceBounds, FitDiagnostics &diagnostics) {
+  diagnostics.fitAttempted = true;
+  diagnostics.minimizerStatus = static_cast<int>(result);
+  diagnostics.candidateMean = fit.GetParameter(1);
+  diagnostics.candidateSigma = std::abs(fit.GetParameter(2));
+  diagnostics.chi2 = fit.GetChisquare();
+  diagnostics.ndf = fit.GetNDF();
+  if (diagnostics.ndf > 0.0)
+    diagnostics.chi2Ndf = diagnostics.chi2 / diagnostics.ndf;
+
+  if (result.Get()) {
+    diagnostics.fitValid = result->IsValid() ? 1 : 0;
+    diagnostics.covarianceStatus = result->CovMatrixStatus();
+    diagnostics.edm = result->Edm();
+  } else {
+    diagnostics.fitValid = 0;
+  }
+
+  if (diagnostics.minimizerStatus != 0) {
+    diagnostics.failureReason = TString::Format(
+        "MINIMIZER_STATUS_%d", diagnostics.minimizerStatus);
+  } else if (diagnostics.fitValid != 1) {
+    diagnostics.failureReason = "INVALID_FIT_RESULT";
+  } else if (!std::isfinite(diagnostics.candidateMean) ||
+             !std::isfinite(diagnostics.candidateSigma)) {
+    diagnostics.failureReason = "NONFINITE_PARAMETERS";
+  } else if (enforceBounds &&
+             (diagnostics.candidateMean < diagnostics.fitLow ||
+              diagnostics.candidateMean > diagnostics.fitHigh)) {
+    diagnostics.failureReason = "MEAN_OUT_OF_RANGE";
+  } else if (enforceBounds &&
+             (diagnostics.candidateSigma < 0.05 ||
+              diagnostics.candidateSigma > 2.0)) {
+    diagnostics.failureReason = "SIGMA_OUT_OF_RANGE";
+  } else {
+    diagnostics.failureReason = "";
+  }
+  return diagnostics.failureReason.IsNull();
+}
+
+void PrintFitFailure(int run, const TString &variable, double entries,
+                     const FitDiagnostics &diagnostics) {
+  std::cerr << "[WARN] Fit rejected: run=" << run
+            << ", variable=" << variable
+            << ", entries=" << entries
+            << ", window=[" << diagnostics.fitLow << ','
+            << diagnostics.fitHigh << ']'
+            << ", attempted=" << (diagnostics.fitAttempted ? 1 : 0)
+            << ", status=" << diagnostics.minimizerStatus
+            << ", valid=" << diagnostics.fitValid
+            << ", covariance_status=" << diagnostics.covarianceStatus
+            << ", candidate_mean=" << diagnostics.candidateMean
+            << ", candidate_sigma=" << diagnostics.candidateSigma
+            << ", chi2/ndf=" << diagnostics.chi2Ndf
+            << ", edm=" << diagnostics.edm
+            << ", reason=" << diagnostics.failureReason << '\n';
+}
+
 bool ComputeBetaMetrics(TTree *tree, const TString &spec, int run,
-                        double &mean, double &sigma, double &entries) {
+                        double &mean, double &sigma, double &entries,
+                        FitDiagnostics &diagnostics) {
   mean = sigma = entries = std::nan("");
   const TString variable = spec == "hms" ? "H.gtr.beta" : "P.gtr.beta";
   const TString histName = TString::Format("h_beta_fit_%s_%d", spec.Data(), run);
-  TH1D hist(histName, ";beta;Counts", 200, 0.2, 1.2);
+  TH1D hist(histName, TString::Format(";%s;Counts", variable.Data()),
+            200, 0.2, 1.2);
   hist.Sumw2();
   tree->Project(histName, variable, BuildCuts(spec));
   entries = hist.GetEntries();
-  if (entries < 50)
-    return false;
-
   const double peak = hist.GetBinCenter(hist.GetMaximumBin());
-  const double fitLow = std::max(0.9, peak - 0.03);
-  const double fitHigh = std::min(1.1, peak + 0.03);
-  TF1 fit(TString::Format("f_beta_%s_%d", spec.Data(), run),
-          "gaus", fitLow, fitHigh);
-  if (hist.Fit(&fit, "QNR") != 0)
+  diagnostics.fitLow = std::max(0.9, peak - 0.03);
+  diagnostics.fitHigh = std::min(1.1, peak + 0.03);
+  if (entries < 50) {
+    diagnostics.failureReason = "LOW_STATISTICS";
     return false;
-  mean = fit.GetParameter(1);
-  sigma = std::abs(fit.GetParameter(2));
-  return std::isfinite(mean) && std::isfinite(sigma);
+  }
+  if (diagnostics.fitHigh <= diagnostics.fitLow) {
+    diagnostics.fitValid = 0;
+    diagnostics.failureReason = "INVALID_FIT_WINDOW";
+    return false;
+  }
+
+  TF1 fit(TString::Format("f_beta_%s_%d", spec.Data(), run),
+          "gaus", diagnostics.fitLow, diagnostics.fitHigh);
+  const TFitResultPtr result = hist.Fit(&fit, "QNRS");
+  if (!CaptureFitDiagnostics(result, fit, false, diagnostics))
+    return false;
+  mean = diagnostics.candidateMean;
+  sigma = diagnostics.candidateSigma;
+  return true;
 }
 
 bool FitCoinTimePeak(TH1D &hist, TF1 &fit,
-                     double fitLow, double peak, double fitHigh) {
+                     double fitLow, double peak, double fitHigh,
+                     FitDiagnostics &diagnostics) {
+  diagnostics.fitLow = fitLow;
+  diagnostics.fitHigh = fitHigh;
   const double maximum = hist.GetMaximum();
   fit.SetParameters(maximum, peak, 0.5);
   fit.SetParLimits(0, 0.0, std::max(1.0, maximum * 10.0));
   fit.SetParLimits(1, fitLow, fitHigh);
   fit.SetParLimits(2, 0.05, 2.0);
 
-  if (hist.Fit(&fit, "QNR") != 0)
-    return false;
-
-  const double mean = fit.GetParameter(1);
-  const double sigma = std::abs(fit.GetParameter(2));
-  return std::isfinite(mean) && std::isfinite(sigma) &&
-         mean >= fitLow && mean <= fitHigh &&
-         sigma >= 0.05 && sigma <= 2.0;
+  const TFitResultPtr result = hist.Fit(&fit, "QNRS");
+  return CaptureFitDiagnostics(result, fit, true, diagnostics);
 }
 
 void DrawCoinTime1D(TTree *tree, int run, const TString &pdfPath) {
@@ -495,7 +577,7 @@ void DrawCoinTime1D(TTree *tree, int run, const TString &pdfPath) {
   TH1D hist(histName,
             TString::Format(
                 "Phase 2 run %d: Coincidence Time (ROC2);"
-                "CTime.ePiCoinTime_ROC2 (ns);Counts",
+                "CTime.ePiCoinTime_ROC2 [ns];Counts",
                 run),
             400, 0, 100);
   hist.Sumw2();
@@ -505,7 +587,9 @@ void DrawCoinTime1D(TTree *tree, int run, const TString &pdfPath) {
   const double fitLow = std::max(0.0, peak - 2.0);
   const double fitHigh = std::min(100.0, peak + 2.0);
   TF1 fit(TString::Format("f_ctime_%d", run), "gaus", fitLow, fitHigh);
-  const bool fitValid = FitCoinTimePeak(hist, fit, fitLow, peak, fitHigh);
+  FitDiagnostics displayDiagnostics;
+  const bool fitValid = FitCoinTimePeak(
+      hist, fit, fitLow, peak, fitHigh, displayDiagnostics);
 
   TCanvas canvas(TString::Format("c_ctime_%d", run), "", kCanvasWidth,
                  kCanvasHeight);
@@ -532,25 +616,30 @@ void DrawCoinTime1D(TTree *tree, int run, const TString &pdfPath) {
 }
 
 bool ComputeCoinTimeMetrics(TTree *tree, int run, double &mean,
-                            double &sigma, double &entries) {
+                            double &sigma, double &entries,
+                            FitDiagnostics &diagnostics) {
   mean = sigma = entries = std::nan("");
   const TString histName = TString::Format("h_ctime_fit_%d", run);
-  TH1D hist(histName, ";CTime.ePiCoinTime_ROC2 (ns);Counts", 400, 0, 100);
+  TH1D hist(histName, ";CTime.ePiCoinTime_ROC2 [ns];Counts", 400, 0, 100);
   hist.Sumw2();
   tree->Project(histName, "CTime.ePiCoinTime_ROC2", BuildCuts("coin"));
   entries = hist.GetEntries();
-  if (entries < 50)
-    return false;
-
   const double peak = hist.GetBinCenter(hist.GetMaximumBin());
   const double fitLow = std::max(0.0, peak - 2.0);
   const double fitHigh = std::min(100.0, peak + 2.0);
+  diagnostics.fitLow = fitLow;
+  diagnostics.fitHigh = fitHigh;
+  if (entries < 50) {
+    diagnostics.failureReason = "LOW_STATISTICS";
+    return false;
+  }
+
   TF1 fit(TString::Format("f_ctime_metric_%d", run),
           "gaus", fitLow, fitHigh);
-  if (!FitCoinTimePeak(hist, fit, fitLow, peak, fitHigh))
+  if (!FitCoinTimePeak(hist, fit, fitLow, peak, fitHigh, diagnostics))
     return false;
-  mean = fit.GetParameter(1);
-  sigma = std::abs(fit.GetParameter(2));
+  mean = diagnostics.candidateMean;
+  sigma = diagnostics.candidateSigma;
   return true;
 }
 
@@ -572,10 +661,11 @@ void DrawDualTrend(const std::vector<int> &runs,
   const TString title =
       coinTime
           ? "Phase 2 COIN: CTime (ROC2) mean / sigma vs run;Run;"
-            "CTime mean (ns)"
+            "CTime.ePiCoinTime_ROC2 mean [ns]"
           : TString::Format(
-                "Phase 2 %s: beta mean / sigma vs run;Run;beta mean",
-                spec.Data());
+                "Phase 2 %s: beta mean / sigma vs run;Run;%s mean",
+                spec.Data(),
+                spec == "hms" ? "H.gtr.beta" : "P.gtr.beta");
 
   TCanvas canvas(TString::Format("c_trend_%s", spec.Data()), "",
                  kCanvasWidth, kCanvasHeight);
@@ -610,23 +700,26 @@ void DrawDualTrend(const std::vector<int> &runs,
   TGraph sigmaGraph(count, x.data(), scaledSigma.data());
   meanGraph.SetMarkerStyle(20);
   meanGraph.SetMarkerSize(1.1);
-  sigmaGraph.SetMarkerStyle(coinTime ? 22 : 3);
+  meanGraph.SetMarkerColor(kBlack);
+  sigmaGraph.SetMarkerStyle(22);
   sigmaGraph.SetMarkerSize(1.1);
-  if (coinTime)
-    sigmaGraph.SetMarkerColor(kBlue + 1);
+  sigmaGraph.SetMarkerColor(kBlue + 1);
   meanGraph.Draw("P SAME");
   sigmaGraph.Draw("P SAME");
 
   TGaxis rightAxis(count, meanLow, count, meanHigh,
                    sigmaLow, sigmaHigh, 510, "+L");
-  rightAxis.SetTitle(coinTime ? "CTime sigma (ns)" : "beta sigma");
+  rightAxis.SetTitle(
+      coinTime ? "CTime.ePiCoinTime_ROC2 sigma [ns]"
+               : (spec == "hms" ? "H.gtr.beta sigma"
+                                 : "P.gtr.beta sigma"));
   rightAxis.SetTitleOffset(1.20);
   rightAxis.SetLabelSize(0.035);
   rightAxis.Draw();
 
   TLegend legend(0.12, 0.84, 0.24, 0.92);
-  legend.AddEntry(&meanGraph, coinTime ? "CTime mean" : "mean", "p");
-  legend.AddEntry(&sigmaGraph, coinTime ? "CTime sigma" : "sigma", "p");
+  legend.AddEntry(&meanGraph, coinTime ? "CTime mean" : "beta mean", "p");
+  legend.AddEntry(&sigmaGraph, coinTime ? "CTime sigma" : "beta sigma", "p");
   legend.Draw();
 
   SaveCanvas(canvas, pdfPath);
@@ -687,12 +780,10 @@ RunSummary ProcessOneRun(const TString &spec, const TString &rootDir,
 
   if (spec == "hms" || spec == "shms") {
     const TString viewSpec = spec == "hms" ? "hms" : "shms";
-    DrawBetaVsXfp(tree, spec, viewSpec, run, pdfPath,
-                   spec == "shms" ? "SHMS electron" : "HMS electron");
-    if (spec == "shms")
-      DrawBetaVsXfp(tree, spec, "hms", run, pdfPath, "HMS pion");
+    DrawBetaVsXfp(tree, spec, viewSpec, run, pdfPath);
     if (ComputeBetaMetrics(tree, spec, run, summary.fitMean,
-                           summary.fitSigma, summary.fitEntries)) {
+                           summary.fitSigma, summary.fitEntries,
+                           summary.fitDiagnostics)) {
       summary.status = "OK";
       trendRuns.push_back(run);
       means.push_back(summary.fitMean);
@@ -703,8 +794,8 @@ RunSummary ProcessOneRun(const TString &spec, const TString &rootDir,
     } else {
       summary.status = summary.selectedEvents < 50 ? "LOW_STATISTICS"
                                                    : "FIT_FAILED";
-      std::cerr << "[WARN] Beta fit failed or had fewer than 50 entries for run "
-                << run << '\n';
+      PrintFitFailure(run, summary.fitVariable, summary.fitEntries,
+                      summary.fitDiagnostics);
     }
   } else {
     DrawBetaVsXfp(tree, "coin", "hms", run, pdfPath);
@@ -713,7 +804,8 @@ RunSummary ProcessOneRun(const TString &spec, const TString &rootDir,
     DrawCoinTime1D(tree, run, pdfPath);
 
     if (ComputeCoinTimeMetrics(tree, run, summary.fitMean,
-                               summary.fitSigma, summary.fitEntries)) {
+                               summary.fitSigma, summary.fitEntries,
+                               summary.fitDiagnostics)) {
       summary.status = "OK";
       trendRuns.push_back(run);
       means.push_back(summary.fitMean);
@@ -724,9 +816,8 @@ RunSummary ProcessOneRun(const TString &spec, const TString &rootDir,
     } else {
       summary.status = summary.selectedEvents < 50 ? "LOW_STATISTICS"
                                                    : "FIT_FAILED";
-      std::cerr
-          << "[WARN] Coin-time fit failed or had fewer than 50 entries for run "
-          << run << '\n';
+      PrintFitFailure(run, summary.fitVariable, summary.fitEntries,
+                      summary.fitDiagnostics);
     }
   }
 
@@ -756,7 +847,9 @@ bool WriteCsv(const TString &path, const std::vector<RunSummary> &summaries) {
   }
   out << "run,spec,run_type,target,hms_p,shms_p,fit_variable,"
       << "all_events,selected_events,"
-      << "fit_mean,fit_sigma,fit_entries,status\n";
+      << "fit_mean,fit_sigma,fit_entries,fit_attempted,fit_status,fit_valid,"
+      << "covariance_status,fit_chi2,fit_ndf,fit_chi2_ndf,fit_edm,"
+      << "candidate_mean,candidate_sigma,failure_reason,status\n";
   for (const RunSummary &row : summaries) {
     out << row.metadata.run << ','
         << row.spec << ','
@@ -775,8 +868,36 @@ bool WriteCsv(const TString &path, const std::vector<RunSummary> &summaries) {
     out << ',';
     if (std::isfinite(row.fitEntries))
       out << row.fitEntries;
-    out << ','
-        << row.status << '\n';
+    out << ',';
+    out << (row.fitDiagnostics.fitAttempted ? 1 : 0) << ',';
+    if (row.fitDiagnostics.fitAttempted)
+      out << row.fitDiagnostics.minimizerStatus;
+    out << ',';
+    if (row.fitDiagnostics.fitAttempted || row.fitDiagnostics.fitValid >= 0)
+      out << row.fitDiagnostics.fitValid;
+    out << ',';
+    if (row.fitDiagnostics.fitAttempted)
+      out << row.fitDiagnostics.covarianceStatus;
+    out << ',';
+    if (std::isfinite(row.fitDiagnostics.chi2))
+      out << row.fitDiagnostics.chi2;
+    out << ',';
+    if (std::isfinite(row.fitDiagnostics.ndf))
+      out << row.fitDiagnostics.ndf;
+    out << ',';
+    if (std::isfinite(row.fitDiagnostics.chi2Ndf))
+      out << row.fitDiagnostics.chi2Ndf;
+    out << ',';
+    if (std::isfinite(row.fitDiagnostics.edm))
+      out << row.fitDiagnostics.edm;
+    out << ',';
+    if (std::isfinite(row.fitDiagnostics.candidateMean))
+      out << row.fitDiagnostics.candidateMean;
+    out << ',';
+    if (std::isfinite(row.fitDiagnostics.candidateSigma))
+      out << row.fitDiagnostics.candidateSigma;
+    out << ',' << CsvEscape(row.fitDiagnostics.failureReason)
+        << ',' << row.status << '\n';
   }
   out.close();
   if (!out) {
