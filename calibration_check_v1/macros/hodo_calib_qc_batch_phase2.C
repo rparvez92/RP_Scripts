@@ -315,7 +315,8 @@ void PrintPhysicsLogic() {
       << "COIN selection: HMS electron AND SHMS pion selections above.\n"
       << "No coincidence-time gate is applied.\n"
       << "Beta Gaussian fit: +/-0.03 around peak, bounded to [0.9,1.1].\n"
-      << "Coin-time Gaussian fit: +/-2 ns around peak, bounded to [0,100].\n"
+      << "Coin-time Gaussian + constant-background fit: +/-0.75 ns around "
+         "peak, bounded to [0,100].\n"
       << "Fits require at least 50 selected entries.\n"
       << "Beta lines at 0.95 and 1.05 are visual guides only.\n"
       << "================================================\n\n";
@@ -499,6 +500,14 @@ bool CaptureFitDiagnostics(const TFitResultPtr &result, const TF1 &fit,
              (diagnostics.candidateSigma < 0.05 ||
               diagnostics.candidateSigma > 2.0)) {
     diagnostics.failureReason = "SIGMA_OUT_OF_RANGE";
+  } else if (enforceBounds &&
+             (std::abs(diagnostics.candidateMean - diagnostics.fitLow) < 1e-4 ||
+              std::abs(diagnostics.candidateMean - diagnostics.fitHigh) < 1e-4)) {
+    diagnostics.failureReason = "MEAN_AT_LIMIT";
+  } else if (enforceBounds &&
+             (std::abs(diagnostics.candidateSigma - 0.05) < 1e-4 ||
+              std::abs(diagnostics.candidateSigma - 2.0) < 1e-4)) {
+    diagnostics.failureReason = "SIGMA_AT_LIMIT";
   } else {
     diagnostics.failureReason = "";
   }
@@ -563,12 +572,20 @@ bool FitCoinTimePeak(TH1D &hist, TF1 &fit,
   diagnostics.fitLow = fitLow;
   diagnostics.fitHigh = fitHigh;
   const double maximum = hist.GetMaximum();
-  fit.SetParameters(maximum, peak, 0.5);
+  double background = maximum;
+  const int firstBin = hist.GetXaxis()->FindFixBin(fitLow);
+  const int lastBin = hist.GetXaxis()->FindFixBin(fitHigh);
+  for (int bin = firstBin; bin <= lastBin; ++bin)
+    background = std::min(background, hist.GetBinContent(bin));
+  background = std::max(0.0, background);
+  fit.SetParameters(std::max(1.0, maximum - background), peak, 0.35,
+                    background);
   fit.SetParLimits(0, 0.0, std::max(1.0, maximum * 10.0));
   fit.SetParLimits(1, fitLow, fitHigh);
   fit.SetParLimits(2, 0.05, 2.0);
+  fit.SetParLimits(3, 0.0, std::max(1.0, maximum * 2.0));
 
-  const TFitResultPtr result = hist.Fit(&fit, "QNRS");
+  const TFitResultPtr result = hist.Fit(&fit, "QNRSB");
   return CaptureFitDiagnostics(result, fit, true, diagnostics);
 }
 
@@ -584,9 +601,10 @@ void DrawCoinTime1D(TTree *tree, int run, const TString &pdfPath) {
   tree->Project(histName, "CTime.ePiCoinTime_ROC2", BuildCuts("coin"));
 
   const double peak = hist.GetBinCenter(hist.GetMaximumBin());
-  const double fitLow = std::max(0.0, peak - 2.0);
-  const double fitHigh = std::min(100.0, peak + 2.0);
-  TF1 fit(TString::Format("f_ctime_%d", run), "gaus", fitLow, fitHigh);
+  const double fitLow = std::max(0.0, peak - 0.75);
+  const double fitHigh = std::min(100.0, peak + 0.75);
+  TF1 fit(TString::Format("f_ctime_%d", run), "gaus(0)+pol0(3)",
+          fitLow, fitHigh);
   FitDiagnostics displayDiagnostics;
   const bool fitValid = FitCoinTimePeak(
       hist, fit, fitLow, peak, fitHigh, displayDiagnostics);
@@ -625,8 +643,8 @@ bool ComputeCoinTimeMetrics(TTree *tree, int run, double &mean,
   tree->Project(histName, "CTime.ePiCoinTime_ROC2", BuildCuts("coin"));
   entries = hist.GetEntries();
   const double peak = hist.GetBinCenter(hist.GetMaximumBin());
-  const double fitLow = std::max(0.0, peak - 2.0);
-  const double fitHigh = std::min(100.0, peak + 2.0);
+  const double fitLow = std::max(0.0, peak - 0.75);
+  const double fitHigh = std::min(100.0, peak + 0.75);
   diagnostics.fitLow = fitLow;
   diagnostics.fitHigh = fitHigh;
   if (entries < 50) {
@@ -635,7 +653,7 @@ bool ComputeCoinTimeMetrics(TTree *tree, int run, double &mean,
   }
 
   TF1 fit(TString::Format("f_ctime_metric_%d", run),
-          "gaus", fitLow, fitHigh);
+          "gaus(0)+pol0(3)", fitLow, fitHigh);
   if (!FitCoinTimePeak(hist, fit, fitLow, peak, fitHigh, diagnostics))
     return false;
   mean = diagnostics.candidateMean;
