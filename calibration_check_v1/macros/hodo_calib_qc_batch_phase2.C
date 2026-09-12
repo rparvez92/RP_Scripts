@@ -4,7 +4,8 @@
 //
 // Supported modes:
 //   hms           : HMS electron selection, fit H.gtr.beta
-//   shms_electron : SHMS electron selection, fit P.gtr.beta
+//   shms          : SHMS electron selection, fit P.gtr.beta;
+//                   also diagnose HMS pion beta
 //   coin          : HMS electron + SHMS pion selection, fit CTime.ePiCoinTime_ROC2
 //
 // Input filename conventions:
@@ -70,7 +71,7 @@ struct RunMetadata {
 struct RunGroups {
   std::vector<RunMetadata> coin;
   std::vector<RunMetadata> hms;
-  std::vector<RunMetadata> shmsElectron;
+  std::vector<RunMetadata> shms;
   int excludedPolarity = 0;
   int excludedRunType = 0;
 };
@@ -91,7 +92,7 @@ struct RunSummary {
 TString MakeFileName(const TString &spec, int run) {
   if (spec == "hms")
     return TString::Format("hms_coin_replay_production_%d_-1.root", run);
-  if (spec == "shms_electron")
+  if (spec == "shms")
     return TString::Format("shms_coin_replay_production_%d_-1.root", run);
   if (spec == "coin")
     return TString::Format("coin_replay_production_%d_-1.root", run);
@@ -213,7 +214,7 @@ bool ReadBigtable(const TString &path, RunGroups &groups) {
     else if (row.runType == "HMSDIS")
       spec = "hms";
     else if (row.runType == "SHMSDIS")
-      spec = "shms_electron";
+      spec = "shms";
     else {
       ++groups.excludedRunType;
       continue;
@@ -232,7 +233,7 @@ bool ReadBigtable(const TString &path, RunGroups &groups) {
     else if (spec == "hms")
       groups.hms.push_back(row);
     else
-      groups.shmsElectron.push_back(row);
+      groups.shms.push_back(row);
   }
 
   const auto byRun = [](const RunMetadata &a, const RunMetadata &b) {
@@ -240,27 +241,24 @@ bool ReadBigtable(const TString &path, RunGroups &groups) {
   };
   std::sort(groups.coin.begin(), groups.coin.end(), byRun);
   std::sort(groups.hms.begin(), groups.hms.end(), byRun);
-  std::sort(groups.shmsElectron.begin(), groups.shmsElectron.end(), byRun);
+  std::sort(groups.shms.begin(), groups.shms.end(), byRun);
   return true;
 }
 
 TCut HmsElectronCuts() {
   return TCut("(H.gtr.dp>-8) && (H.gtr.dp<8)"
-              " && (H.gtr.beta>0) && (H.gtr.beta<1.2)"
               " && (H.cal.etottracknorm>0.7)"
               " && (H.cer.npeSum>2.0)");
 }
 
 TCut ShmsElectronCuts() {
   return TCut("(P.gtr.dp>-10) && (P.gtr.dp<22)"
-              " && (P.gtr.beta>0) && (P.gtr.beta<1.2)"
               " && (P.cal.etottracknorm>0.7)");
 }
 
 TCut ShmsPionCuts() {
   const TCut shmsBase =
       "(P.gtr.dp>-10) && (P.gtr.dp<22)"
-      " && (P.gtr.beta>0) && (P.gtr.beta<1.2)"
       " && (P.cal.etottracknorm<0.8)";
   const TCut shmsAero = "(P.gtr.p<2.7) && (P.aero.npeSum>2)";
   const TCut shmsHgc =
@@ -272,7 +270,7 @@ TCut ShmsPionCuts() {
 TCut BuildCuts(const TString &spec) {
   if (spec == "hms")
     return HmsElectronCuts();
-  if (spec == "shms_electron")
+  if (spec == "shms")
     return ShmsElectronCuts();
   if (spec == "coin")
     return HmsElectronCuts() && ShmsPionCuts();
@@ -284,17 +282,14 @@ void PrintPhysicsLogic() {
       << "\n===== PHASE-2 HODOSCOPE QC PHYSICS LOGIC =====\n"
       << "HMS electron selection:\n"
       << "  -8 < H.gtr.dp < 8\n"
-      << "  0 < H.gtr.beta < 1.2\n"
       << "  H.cal.etottracknorm > 0.7\n"
       << "  H.cer.npeSum > 2.0\n\n"
       << "SHMS electron selection:\n"
       << "  -10 < P.gtr.dp < 22\n"
-      << "  0 < P.gtr.beta < 1.2\n"
       << "  P.cal.etottracknorm > 0.7\n"
       << "  No P.ngcer/P.hgcer electron cuts are applied.\n\n"
       << "SHMS pion selection:\n"
       << "  -10 < P.gtr.dp < 22\n"
-      << "  0 < P.gtr.beta < 1.2\n"
       << "  P.cal.etottracknorm < 0.8\n"
       << "  P.gtr.p < 2.7: P.aero.npeSum > 2\n"
       << "  P.gtr.p >= 2.7: P.hgcer.npeSum > 1 AND "
@@ -312,16 +307,17 @@ std::vector<const char *> RequiredBranches(const TString &spec) {
   const std::vector<const char *> hms = {
       "H.gtr.dp", "H.gtr.beta", "H.cal.etottracknorm",
       "H.cer.npeSum", "H.dc.x_fp"};
-  const std::vector<const char *> shmsElectron = {
-      "P.gtr.dp", "P.gtr.beta", "P.cal.etottracknorm", "P.dc.x_fp"};
+  const std::vector<const char *> shms = {
+      "P.gtr.dp", "P.gtr.beta", "P.cal.etottracknorm", "P.dc.x_fp",
+      "H.gtr.beta", "H.dc.x_fp"};
   const std::vector<const char *> shmsPion = {
       "P.gtr.dp", "P.gtr.beta", "P.cal.etottracknorm",
       "P.hgcer.npeSum", "P.aero.npeSum", "P.gtr.p", "P.dc.x_fp"};
 
   if (spec == "hms")
     return hms;
-  if (spec == "shms_electron")
-    return shmsElectron;
+  if (spec == "shms")
+    return shms;
 
   std::vector<const char *> coin = hms;
   coin.insert(coin.end(), shmsPion.begin(), shmsPion.end());
@@ -374,15 +370,19 @@ void ClosePdf(const TString &pdfPath) {
 
 void DrawBetaVsXfp(TTree *tree, const TString &selectionSpec,
                    const TString &viewSpec, int run,
-                   const TString &pdfPath) {
+                   const TString &pdfPath,
+                   const TString &diagnosticLabel = "") {
   const bool hmsView = viewSpec == "hms";
   const TString expression =
       hmsView ? "H.gtr.beta:H.dc.x_fp" : "P.gtr.beta:P.dc.x_fp";
   const TString histName =
       TString::Format("h_beta_xfp_%s_%d", viewSpec.Data(), run);
+  TString label = diagnosticLabel;
+  if (label.IsNull())
+    label = hmsView ? "HMS" : "SHMS";
   const TString title = TString::Format(
-      "Phase 2 run %d: beta vs xfp (%s);xfp (cm);beta",
-      run, hmsView ? "HMS" : "SHMS");
+      "Phase 2 run %d: %s beta vs xfp;xfp (cm);beta",
+      run, label.Data());
 
   TH2D hist(histName, title, 80, -45, 45, 120, 0.2, 1.2);
   hist.Sumw2();
@@ -415,6 +415,36 @@ void DrawBetaVsXfp(TTree *tree, const TString &selectionSpec,
   low.Draw("SAME");
   high.Draw("SAME");
 
+  SaveCanvas(canvas, pdfPath);
+}
+
+void DrawCoinTimeVsHmsXfp(TTree *tree, int run, const TString &pdfPath) {
+  const TString histName = TString::Format("h_ctime_hms_xfp_%d", run);
+  TH2D hist(
+      histName,
+      TString::Format(
+          "Phase 2 run %d: CTime (ROC2) vs HMS xfp;"
+          "HMS xfp (cm);CTime.ePiCoinTime_ROC2 (ns)",
+          run),
+      80, -45, 45, 400, 0, 100);
+  hist.Sumw2();
+  tree->Project(histName, "CTime.ePiCoinTime_ROC2:H.dc.x_fp",
+                BuildCuts("coin"));
+
+  TCanvas canvas(TString::Format("c_ctime_hms_xfp_%d", run), "",
+                 kCanvasWidth, kCanvasHeight);
+  canvas.SetLeftMargin(0.12);
+  canvas.SetRightMargin(0.18);
+  canvas.SetBottomMargin(0.13);
+  canvas.SetTopMargin(0.10);
+  gStyle->SetOptStat(0);
+  hist.GetXaxis()->SetTitleOffset(1.15);
+  hist.GetYaxis()->SetTitleOffset(1.15);
+  hist.GetXaxis()->SetLabelSize(0.035);
+  hist.GetYaxis()->SetLabelSize(0.035);
+  hist.GetZaxis()->SetLabelSize(0.035);
+  hist.GetZaxis()->SetTitleOffset(1.25);
+  hist.Draw("COLZ");
   SaveCanvas(canvas, pdfPath);
 }
 
@@ -580,8 +610,10 @@ void DrawDualTrend(const std::vector<int> &runs,
   TGraph sigmaGraph(count, x.data(), scaledSigma.data());
   meanGraph.SetMarkerStyle(20);
   meanGraph.SetMarkerSize(1.1);
-  sigmaGraph.SetMarkerStyle(3);
+  sigmaGraph.SetMarkerStyle(coinTime ? 22 : 3);
   sigmaGraph.SetMarkerSize(1.1);
+  if (coinTime)
+    sigmaGraph.SetMarkerColor(kBlue + 1);
   meanGraph.Draw("P SAME");
   sigmaGraph.Draw("P SAME");
 
@@ -593,8 +625,8 @@ void DrawDualTrend(const std::vector<int> &runs,
   rightAxis.Draw();
 
   TLegend legend(0.12, 0.84, 0.24, 0.92);
-  legend.AddEntry(&meanGraph, "mean", "p");
-  legend.AddEntry(&sigmaGraph, "sigma", "p");
+  legend.AddEntry(&meanGraph, coinTime ? "CTime mean" : "mean", "p");
+  legend.AddEntry(&sigmaGraph, coinTime ? "CTime sigma" : "sigma", "p");
   legend.Draw();
 
   SaveCanvas(canvas, pdfPath);
@@ -653,9 +685,12 @@ RunSummary ProcessOneRun(const TString &spec, const TString &rootDir,
   std::cout << "[RUN " << run << "] all=" << summary.allEvents
             << ", selected=" << summary.selectedEvents << '\n';
 
-  if (spec == "hms" || spec == "shms_electron") {
+  if (spec == "hms" || spec == "shms") {
     const TString viewSpec = spec == "hms" ? "hms" : "shms";
-    DrawBetaVsXfp(tree, spec, viewSpec, run, pdfPath);
+    DrawBetaVsXfp(tree, spec, viewSpec, run, pdfPath,
+                   spec == "shms" ? "SHMS electron" : "HMS electron");
+    if (spec == "shms")
+      DrawBetaVsXfp(tree, spec, "hms", run, pdfPath, "HMS pion");
     if (ComputeBetaMetrics(tree, spec, run, summary.fitMean,
                            summary.fitSigma, summary.fitEntries)) {
       summary.status = "OK";
@@ -674,6 +709,7 @@ RunSummary ProcessOneRun(const TString &spec, const TString &rootDir,
   } else {
     DrawBetaVsXfp(tree, "coin", "hms", run, pdfPath);
     DrawBetaVsXfp(tree, "coin", "shms", run, pdfPath);
+    DrawCoinTimeVsHmsXfp(tree, run, pdfPath);
     DrawCoinTime1D(tree, run, pdfPath);
 
     if (ComputeCoinTimeMetrics(tree, run, summary.fitMean,
@@ -822,6 +858,23 @@ bool ProcessCategory(const TString &spec, const TString &rootDir,
   return true;
 }
 
+void RemoveLegacyShmsOutputs() {
+  if (gSystem->AccessPathName(PdfPath("shms")) ||
+      gSystem->AccessPathName(CsvPath("shms"))) {
+    std::cerr << "[WARN] New SHMS outputs are incomplete; legacy "
+              << "shms_electron outputs were not removed.\n";
+    return;
+  }
+
+  const std::vector<TString> legacyPaths = {
+      "results/Phase2/pdfs/hodo_qc_shms_electron_by_run.pdf",
+      "results/Phase2/tables/hodo_qc_shms_electron_summary.csv"};
+  for (const TString &path : legacyPaths) {
+    if (!gSystem->AccessPathName(path) && gSystem->Unlink(path) != 0)
+      std::cerr << "[WARN] Could not remove obsolete output: " << path << '\n';
+  }
+}
+
 } // namespace
 
 void hodo_calib_qc_batch_phase2(
@@ -842,7 +895,7 @@ void hodo_calib_qc_batch_phase2(
   RunGroups groups;
   if (!ReadBigtable(bigtablePath, groups))
     return;
-  if (groups.coin.empty() || groups.hms.empty() || groups.shmsElectron.empty()) {
+  if (groups.coin.empty() || groups.hms.empty() || groups.shms.empty()) {
     std::cerr << "[ERROR] Bigtable selection produced an empty required "
               << "category; no outputs were changed.\n";
     return;
@@ -854,8 +907,8 @@ void hodo_calib_qc_batch_phase2(
             << groups.coin.size() << '\n'
             << "[SELECTION] HMS (HMSDIS, hms_p < 0): "
             << groups.hms.size() << '\n'
-            << "[SELECTION] SHMS electron (SHMSDIS, hms_p < 0): "
-            << groups.shmsElectron.size() << '\n'
+            << "[SELECTION] SHMS (SHMSDIS, hms_p < 0): "
+            << groups.shms.size() << '\n'
             << "[SELECTION] Excluded selected-type rows with hms_p >= 0: "
             << groups.excludedPolarity << '\n'
             << "[SELECTION] Excluded other run types: "
@@ -866,8 +919,9 @@ void hodo_calib_qc_batch_phase2(
   gSystem->mkdir("results/Phase2/tables", true);
   PrintPhysicsLogic();
 
-  if (!ProcessCategory("shms_electron", rootDir, groups.shmsElectron))
+  if (!ProcessCategory("shms", rootDir, groups.shms))
     return;
+  RemoveLegacyShmsOutputs();
   if (!ProcessCategory("hms", rootDir, groups.hms))
     return;
   if (!ProcessCategory("coin", rootDir, groups.coin))
