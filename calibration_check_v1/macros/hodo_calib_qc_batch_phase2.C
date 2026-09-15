@@ -15,6 +15,7 @@
 // Standard output:
 //   results/Phase2/tables/hodo_qc_<spec>_summary.csv
 //   results/Phase2/pdfs/hodo_qc_<spec>_by_run.pdf
+// Optional OutputSuffix is inserted before the extension (for example, _QA).
 //
 // Compile only:
 //   root -l -b -q -e '.L macros/hodo_calib_qc_batch_phase2.C+'
@@ -22,6 +23,11 @@
 // Process the complete Phase-2 bigtable (SHMSDIS, HMSDIS, then COIN):
 //   root -l -b -q \
 //     'macros/hodo_calib_qc_batch_phase2.C+()'
+//
+// Process only files available in an alternate ROOT directory, writing _QA
+// outputs (set the final argument true first for a selection-only preflight):
+//   root -l -b -q \
+//     'macros/hodo_calib_qc_batch_phase2.C+("bigtable/rsidis_bigtable_phase2.csv", "/path/to/ROOTfiles", "_QA", true, false)'
 
 #include <TCanvas.h>
 #include <TCut.h>
@@ -43,6 +49,7 @@
 #include <TTree.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
@@ -115,6 +122,33 @@ TString MakeFileName(const TString &spec, int run) {
   if (spec == "coin")
     return TString::Format("coin_replay_production_%d_-1.root", run);
   return "";
+}
+
+bool ValidateOutputSuffix(const TString &suffix) {
+  for (Ssiz_t index = 0; index < suffix.Length(); ++index) {
+    const unsigned char ch =
+        static_cast<unsigned char>(suffix[index]);
+    if (!std::isalnum(ch) && ch != '_' && ch != '-') {
+      std::cerr << "[ERROR] Unsafe OutputSuffix '" << suffix
+                << "'. Use only letters, digits, '_' or '-'.\n";
+      return false;
+    }
+  }
+  return true;
+}
+
+std::vector<RunMetadata> KeepAvailableRuns(
+    const TString &spec, const TString &rootDir,
+    const std::vector<RunMetadata> &runs) {
+  std::vector<RunMetadata> available;
+  available.reserve(runs.size());
+  for (const RunMetadata &run : runs) {
+    const TString path = TString::Format(
+        "%s/%s", rootDir.Data(), MakeFileName(spec, run.run).Data());
+    if (!gSystem->AccessPathName(path))
+      available.push_back(run);
+  }
+  return available;
 }
 
 std::string Trim(const std::string &text) {
@@ -362,14 +396,14 @@ bool ValidateAndEnableBranches(TTree *tree, const TString &spec, int run) {
   return true;
 }
 
-TString PdfPath(const TString &spec) {
-  return TString::Format("results/Phase2/pdfs/hodo_qc_%s_by_run.pdf",
-                         spec.Data());
+TString PdfPath(const TString &spec, const TString &suffix = "") {
+  return TString::Format("results/Phase2/pdfs/hodo_qc_%s_by_run%s.pdf",
+                         spec.Data(), suffix.Data());
 }
 
-TString CsvPath(const TString &spec) {
-  return TString::Format("results/Phase2/tables/hodo_qc_%s_summary.csv",
-                         spec.Data());
+TString CsvPath(const TString &spec, const TString &suffix = "") {
+  return TString::Format("results/Phase2/tables/hodo_qc_%s_summary%s.csv",
+                         spec.Data(), suffix.Data());
 }
 
 void SaveCanvas(TCanvas &canvas, const TString &pdfPath) {
@@ -944,9 +978,10 @@ bool PublishFile(const TString &temporary, const TString &finalPath) {
 }
 
 bool ProcessCategory(const TString &spec, const TString &rootDir,
+                     const TString &outputSuffix,
                      const std::vector<RunMetadata> &runs) {
-  const TString finalPdf = PdfPath(spec);
-  const TString finalCsv = CsvPath(spec);
+  const TString finalPdf = PdfPath(spec, outputSuffix);
+  const TString finalCsv = CsvPath(spec, outputSuffix);
   const TString temporaryPdf = TemporaryPath(finalPdf);
   const TString temporaryCsv = TemporaryPath(finalCsv);
   gSystem->Unlink(temporaryPdf);
@@ -1019,7 +1054,9 @@ void RemoveLegacyShmsOutputs() {
 void hodo_calib_qc_batch_phase2(
     const char *BigtablePath = "bigtable/rsidis_bigtable_phase2.csv",
     const char *RootDir =
-        "/net/cdaq/cdaql3data/cdaq/hallc-online-rsidis2025/ROOTfiles") {
+        "/net/cdaq/cdaql3data/cdaq/hallc-online-rsidis2025/ROOTfiles",
+    const char *OutputSuffix = "", bool AvailableFilesOnly = false,
+    bool SelectionOnly = false) {
   gROOT->SetBatch(kTRUE);
 
   const TString bigtablePath = BigtablePath ? BigtablePath : "";
@@ -1030,6 +1067,9 @@ void hodo_calib_qc_batch_phase2(
   TString rootDir = RootDir ? RootDir : "";
   if (rootDir.IsNull())
     rootDir = kDefaultRootDir;
+  const TString outputSuffix = OutputSuffix ? OutputSuffix : "";
+  if (!ValidateOutputSuffix(outputSuffix))
+    return;
 
   RunGroups groups;
   if (!ReadBigtable(bigtablePath, groups))
@@ -1040,29 +1080,58 @@ void hodo_calib_qc_batch_phase2(
     return;
   }
 
+  const std::size_t bigtableCoin = groups.coin.size();
+  const std::size_t bigtableHms = groups.hms.size();
+  const std::size_t bigtableShms = groups.shms.size();
+
   std::cout << "[INFO] Bigtable: " << bigtablePath << '\n'
             << "[INFO] ROOT directory: " << rootDir << '\n'
-            << "[SELECTION] COIN (PI+SIDIS/PI-SIDIS, hms_p < 0): "
-            << groups.coin.size() << '\n'
-            << "[SELECTION] HMS (HMSDIS, hms_p < 0): "
-            << groups.hms.size() << '\n'
-            << "[SELECTION] SHMS (SHMSDIS, hms_p < 0): "
-            << groups.shms.size() << '\n'
+            << "[INFO] Output suffix: '" << outputSuffix << "'\n"
+            << "[SELECTION] Bigtable COIN (PI+SIDIS/PI-SIDIS, hms_p < 0): "
+            << bigtableCoin << '\n'
+            << "[SELECTION] Bigtable HMS (HMSDIS, hms_p < 0): "
+            << bigtableHms << '\n'
+            << "[SELECTION] Bigtable SHMS (SHMSDIS, hms_p < 0): "
+            << bigtableShms << '\n'
             << "[SELECTION] Excluded selected-type rows with hms_p >= 0: "
             << groups.excludedPolarity << '\n'
             << "[SELECTION] Excluded other run types: "
             << groups.excludedRunType << '\n';
+
+  if (AvailableFilesOnly) {
+    groups.coin = KeepAvailableRuns("coin", rootDir, groups.coin);
+    groups.hms = KeepAvailableRuns("hms", rootDir, groups.hms);
+    groups.shms = KeepAvailableRuns("shms", rootDir, groups.shms);
+    std::cout << "[SELECTION] Available-file COIN: " << groups.coin.size()
+              << " (omitted " << bigtableCoin - groups.coin.size() << ")\n"
+              << "[SELECTION] Available-file HMS: " << groups.hms.size()
+              << " (omitted " << bigtableHms - groups.hms.size() << ")\n"
+              << "[SELECTION] Available-file SHMS: " << groups.shms.size()
+              << " (omitted " << bigtableShms - groups.shms.size() << ")\n";
+    if (groups.coin.empty() || groups.hms.empty() || groups.shms.empty()) {
+      std::cerr << "[ERROR] Available-file selection produced an empty "
+                << "required category; no outputs were changed.\n";
+      return;
+    }
+  }
+
+  if (SelectionOnly) {
+    std::cout << "[INFO] Selection-only mode complete; no outputs were "
+              << "changed.\n";
+    return;
+  }
 
   gSystem->mkdir("results/Phase2", true);
   gSystem->mkdir("results/Phase2/pdfs", true);
   gSystem->mkdir("results/Phase2/tables", true);
   PrintPhysicsLogic();
 
-  if (!ProcessCategory("shms", rootDir, groups.shms))
+  if (!ProcessCategory("shms", rootDir, outputSuffix, groups.shms))
     return;
-  RemoveLegacyShmsOutputs();
-  if (!ProcessCategory("hms", rootDir, groups.hms))
+  if (outputSuffix.IsNull())
+    RemoveLegacyShmsOutputs();
+  if (!ProcessCategory("hms", rootDir, outputSuffix, groups.hms))
     return;
-  if (!ProcessCategory("coin", rootDir, groups.coin))
+  if (!ProcessCategory("coin", rootDir, outputSuffix, groups.coin))
     return;
 }
