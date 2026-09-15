@@ -1,0 +1,2 @@
+run,spec,run_type,target,hms_p,shms_p,fit_variable,all_events,selected_events,fit_mean,fit_sigma,fit_entries,fit_attempted,fit_status,fit_valid,covariance_status,fit_chi2,fit_ndf,fit_chi2_ndf,fit_edm,candidate_mean,candidate_sigma,failure_reason,status
+27121,shms,SHMSDIS,LH2,-1.165,-2.766,P.gtr.beta,2770100,1206280,0.996184,0.047603,1.20628e+06,1,0,1,3,10.0529,10,1.00529,7.53855e-07,0.996184,0.047603,,OK
