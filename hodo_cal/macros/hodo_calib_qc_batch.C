@@ -27,6 +27,9 @@
 // Process an explicit sample while keeping the standard output names:
 //   root -l -b -q \
 //     'macros/hodo_calib_qc_batch.C+(1, "", "", "", false, false, "23853,23856,23861")'
+// Process a QA selection CSV separately for each phase:
+//   root -l -b -q \
+//     'macros/hodo_calib_qc_batch.C+(2, "", "/path/to/ROOTfiles", "_QA", true, false, "", "bigtable/final_qa_runlist.csv")'
 //
 // Process only files available in an alternate ROOT directory, writing _QA
 // outputs (set the final argument true first for a selection-only preflight):
@@ -379,6 +382,92 @@ bool ApplyRunFilter(const TString &text, RunGroups &groups) {
     std::cerr << "\n";
     return false;
   }
+  return true;
+}
+
+bool ApplySelectionCsv(const TString &path, RunGroups &groups) {
+  std::ifstream input(path.Data());
+  if (!input) {
+    std::cerr << "[ERROR] Cannot open run-selection CSV: " << path << '\n';
+    return false;
+  }
+
+  std::string line;
+  if (!std::getline(input, line)) {
+    std::cerr << "[ERROR] Run-selection CSV is empty: " << path << '\n';
+    return false;
+  }
+  bool valid = true;
+  const auto headers = ParseCsvLine(line, valid);
+  std::map<std::string, std::size_t> columns;
+  for (std::size_t index = 0; index < headers.size(); ++index)
+    columns[Trim(headers[index])] = index;
+  if (!valid || !columns.count("run") || !columns.count("run_type")) {
+    std::cerr << "[ERROR] Run-selection CSV must contain valid 'run' and "
+                 "'run_type' columns: "
+              << path << '\n';
+    return false;
+  }
+
+  std::map<int, std::string> selected;
+  int lineNumber = 1;
+  while (std::getline(input, line)) {
+    ++lineNumber;
+    if (Trim(line).empty())
+      continue;
+    const auto fields = ParseCsvLine(line, valid);
+    if (!valid || fields.size() != headers.size()) {
+      std::cerr << "[ERROR] Malformed run-selection CSV row at line "
+                << lineNumber << ".\n";
+      return false;
+    }
+    int run = 0;
+    if (!ParseIntStrict(fields[columns["run"]], run) || run <= 0) {
+      std::cerr << "[ERROR] Invalid run at run-selection CSV line "
+                << lineNumber << ".\n";
+      return false;
+    }
+    const std::string runType = fields[columns["run_type"]];
+    if (runType.empty() || !selected.emplace(run, runType).second) {
+      std::cerr << "[ERROR] Empty run_type or duplicate run " << run
+                << " at run-selection CSV line " << lineNumber << ".\n";
+      return false;
+    }
+  }
+
+  std::size_t matched = 0;
+  bool consistent = true;
+  const auto filter = [&](std::vector<RunMetadata> &runs) {
+    runs.erase(
+        std::remove_if(runs.begin(), runs.end(), [&](const RunMetadata &row) {
+          const auto found = selected.find(row.run);
+          if (found == selected.end())
+            return true;
+          if (found->second != row.runType.Data()) {
+            std::cerr << "[ERROR] Run-type mismatch for run " << row.run
+                      << ": selection CSV has '" << found->second
+                      << "', bigtable has '" << row.runType << "'.\n";
+            consistent = false;
+            return true;
+          }
+          ++matched;
+          return false;
+        }),
+        runs.end());
+  };
+  filter(groups.coin);
+  filter(groups.hms);
+  filter(groups.shms);
+  if (!consistent)
+    return false;
+  if (matched == 0) {
+    std::cerr << "[ERROR] Run-selection CSV has no eligible runs in the "
+                 "selected phase bigtable.\n";
+    return false;
+  }
+  std::cout << "[SELECTION] Selection CSV rows: " << selected.size() << '\n'
+            << "[SELECTION] Eligible rows matched in this phase: "
+            << matched << '\n';
   return true;
 }
 
@@ -1168,7 +1257,8 @@ bool ProcessCategory(const TString &spec, const TString &rootDir,
 void hodo_calib_qc_batch(
     int Phase = 2, const char *BigtablePath = "", const char *RootDir = "",
     const char *OutputSuffix = "", bool AvailableFilesOnly = false,
-    bool SelectionOnly = false, const char *RunsList = "") {
+    bool SelectionOnly = false, const char *RunsList = "",
+    const char *RunSelectionCsv = "") {
   gROOT->SetBatch(kTRUE);
 
   if (Phase != 1 && Phase != 2) {
@@ -1195,7 +1285,17 @@ void hodo_calib_qc_batch(
   const TString runsList = RunsList ? RunsList : "";
   if (!runsList.IsNull() && !ApplyRunFilter(runsList, groups))
     return;
-  if (groups.coin.empty() || groups.hms.empty() || groups.shms.empty()) {
+  const TString runSelectionCsv = RunSelectionCsv ? RunSelectionCsv : "";
+  if (!runSelectionCsv.IsNull() &&
+      !ApplySelectionCsv(runSelectionCsv, groups))
+    return;
+  const bool explicitCsvSelection = !runSelectionCsv.IsNull();
+  const bool allCategoriesPresent =
+      !groups.coin.empty() && !groups.hms.empty() && !groups.shms.empty();
+  const bool anyCategoryPresent =
+      !groups.coin.empty() || !groups.hms.empty() || !groups.shms.empty();
+  if ((!explicitCsvSelection && !allCategoriesPresent) ||
+      (explicitCsvSelection && !anyCategoryPresent)) {
     std::cerr << "[ERROR] Run selection produced an empty required "
               << "category; no outputs were changed.\n";
     return;
@@ -1208,6 +1308,7 @@ void hodo_calib_qc_batch(
   std::cout << "[INFO] Bigtable: " << bigtablePath << '\n'
             << "[INFO] ROOT directory: " << rootDir << '\n'
             << "[INFO] Output suffix: '" << outputSuffix << "'\n"
+            << "[INFO] Run-selection CSV: '" << runSelectionCsv << "'\n"
             << "[SELECTION] Full bigtable COIN (PI+SIDIS/PI-SIDIS, hms_p < 0): "
             << fullCoin << '\n'
             << "[SELECTION] Full bigtable HMS (HMSDIS, hms_p < 0): "
@@ -1225,6 +1326,13 @@ void hodo_calib_qc_batch(
               << '\n'
               << "[SELECTION] Explicit sample SHMS: " << groups.shms.size()
               << '\n';
+  if (explicitCsvSelection)
+    std::cout << "[SELECTION] CSV-filtered COIN: " << groups.coin.size()
+              << '\n'
+              << "[SELECTION] CSV-filtered HMS: " << groups.hms.size()
+              << '\n'
+              << "[SELECTION] CSV-filtered SHMS: " << groups.shms.size()
+              << '\n';
 
   if (AvailableFilesOnly) {
     groups.coin = KeepAvailableRuns("coin", rootDir, groups.coin);
@@ -1236,7 +1344,12 @@ void hodo_calib_qc_batch(
               << " (omitted " << bigtableHms - groups.hms.size() << ")\n"
               << "[SELECTION] Available-file SHMS: " << groups.shms.size()
               << " (omitted " << bigtableShms - groups.shms.size() << ")\n";
-    if (groups.coin.empty() || groups.hms.empty() || groups.shms.empty()) {
+    const bool availableAll = !groups.coin.empty() && !groups.hms.empty() &&
+                              !groups.shms.empty();
+    const bool availableAny = !groups.coin.empty() || !groups.hms.empty() ||
+                              !groups.shms.empty();
+    if ((!explicitCsvSelection && !availableAll) ||
+        (explicitCsvSelection && !availableAny)) {
       std::cerr << "[ERROR] Available-file selection produced an empty "
                 << "required category; no outputs were changed.\n";
       return;
@@ -1255,10 +1368,13 @@ void hodo_calib_qc_batch(
   gSystem->mkdir(resultsDir + "/tables", true);
   PrintPhysicsLogic(Phase);
 
-  if (!ProcessCategory("shms", rootDir, Phase, outputSuffix, groups.shms))
+  if (!groups.shms.empty() &&
+      !ProcessCategory("shms", rootDir, Phase, outputSuffix, groups.shms))
     return;
-  if (!ProcessCategory("hms", rootDir, Phase, outputSuffix, groups.hms))
+  if (!groups.hms.empty() &&
+      !ProcessCategory("hms", rootDir, Phase, outputSuffix, groups.hms))
     return;
-  if (!ProcessCategory("coin", rootDir, Phase, outputSuffix, groups.coin))
+  if (!groups.coin.empty() &&
+      !ProcessCategory("coin", rootDir, Phase, outputSuffix, groups.coin))
     return;
 }
