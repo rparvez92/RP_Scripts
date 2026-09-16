@@ -594,6 +594,37 @@ void DrawCoinTimeVsHmsXfp(TTree *tree, int phase, int run,
   SaveCanvas(canvas, pdfPath);
 }
 
+void DrawCoinTimeVsShmsXfp(TTree *tree, int phase, int run,
+                           const TString &pdfPath) {
+  const TString histName = TString::Format("h_ctime_shms_xfp_%d", run);
+  TH2D hist(
+      histName,
+      TString::Format(
+          "Phase %d run %d: CTime (ROC2) vs SHMS xfp;"
+          "P.dc.x_fp [cm];CTime.ePiCoinTime_ROC2 [ns]",
+          phase, run),
+      80, -45, 45, 400, 0, 100);
+  hist.Sumw2();
+  tree->Project(histName, "CTime.ePiCoinTime_ROC2:P.dc.x_fp",
+                BuildCuts("coin"));
+
+  TCanvas canvas(TString::Format("c_ctime_shms_xfp_%d", run), "",
+                 kCanvasWidth, kCanvasHeight);
+  canvas.SetLeftMargin(0.12);
+  canvas.SetRightMargin(0.18);
+  canvas.SetBottomMargin(0.13);
+  canvas.SetTopMargin(0.10);
+  gStyle->SetOptStat(0);
+  hist.GetXaxis()->SetTitleOffset(1.15);
+  hist.GetYaxis()->SetTitleOffset(1.15);
+  hist.GetXaxis()->SetLabelSize(0.035);
+  hist.GetYaxis()->SetLabelSize(0.035);
+  hist.GetZaxis()->SetLabelSize(0.035);
+  hist.GetZaxis()->SetTitleOffset(1.25);
+  hist.Draw("COLZ");
+  SaveCanvas(canvas, pdfPath);
+}
+
 bool CaptureFitDiagnostics(const TFitResultPtr &result, const TF1 &fit,
                            bool enforceBounds, FitDiagnostics &diagnostics) {
   diagnostics.fitAttempted = true;
@@ -951,6 +982,7 @@ RunSummary ProcessOneRun(const TString &spec, const TString &rootDir,
     DrawBetaVsXfp(tree, "coin", "hms", phase, run, pdfPath);
     DrawBetaVsXfp(tree, "coin", "shms", phase, run, pdfPath);
     DrawCoinTimeVsHmsXfp(tree, phase, run, pdfPath);
+    DrawCoinTimeVsShmsXfp(tree, phase, run, pdfPath);
     DrawCoinTime1D(tree, phase, run, pdfPath);
 
     if (ComputeCoinTimeMetrics(tree, run, summary.fitMean,
