@@ -2,7 +2,7 @@
 # ------------------------------------------------------------
 # generator_hmsdis.tcsh
 #
-# Run from calibration_check_v1/:
+# Run from hodo_cal/:
 #   tcsh tools/generator_hmsdis.tcsh
 #
 # Reads:

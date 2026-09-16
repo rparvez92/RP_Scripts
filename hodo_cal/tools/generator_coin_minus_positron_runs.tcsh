@@ -2,7 +2,7 @@
 # ------------------------------------------------------------
 # generator_coin_minus_positron_runs.tcsh
 #
-# Usage (run from calibration_check_v1/):
+# Usage (run from hodo_cal/):
 #   tcsh tools/generator_coin_minus_positron_runs.tcsh
 #
 # What it does:
@@ -27,7 +27,7 @@ set tmp_runs = "/tmp/coin_minus_positron_runs_$$.txt"
 # Basic checks
 if ( ! -e "$in_csv" ) then
   echo "[ERROR] Input CSV not found: $in_csv"
-  echo "        Run this from calibration_check_v1/ or edit in_csv path."
+  echo "        Run this from hodo_cal/ or edit in_csv path."
   exit 1
 endif
 

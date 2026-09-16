@@ -3,12 +3,12 @@
 Compare RSIDIS 2026 and 2025 HV snapshots.
 
 Inputs:
-  HV_Check/rsidis_2026_HV_27087.txt
-  HV_Check/rsidis_2025_HV_24425.txt
+  hv_check/rsidis_2026_HV_27087.txt
+  hv_check/rsidis_2025_HV_24425.txt
 
 Outputs:
-  HV_Check/results/HV_Compare.html
-  HV_Check/results/HV_Compare.csv
+  hv_check/results/HV_Compare.html
+  hv_check/results/HV_Compare.csv
 
 The detector key is normalized only for the known EPICS naming difference
 V0Setr -> V0Set. Voltage values are matched when |2026 - 2025| <= 5.
