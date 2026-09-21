@@ -653,7 +653,10 @@ void DrawBetaVsXfp(TTree *tree, const TString &selectionSpec,
 }
 
 void DrawCoinTimeVsHmsXfp(TTree *tree, int phase, int run,
-                          const TString &pdfPath) {
+                          double ctimeCenter, const TString &pdfPath) {
+  constexpr double kCtimeHalfWidth = 3.0;
+  const double ctimeLow = ctimeCenter - kCtimeHalfWidth;
+  const double ctimeHigh = ctimeCenter + kCtimeHalfWidth;
   const TString histName = TString::Format("h_ctime_hms_xfp_%d", run);
   TH2D hist(
       histName,
@@ -661,7 +664,7 @@ void DrawCoinTimeVsHmsXfp(TTree *tree, int phase, int run,
           "Phase %d run %d: CTime (ROC2) vs HMS xfp;"
           "H.dc.x_fp [cm];CTime.ePiCoinTime_ROC2 [ns]",
           phase, run),
-      80, -45, 45, 400, 0, 100);
+      80, -45, 45, 120, ctimeLow, ctimeHigh);
   hist.Sumw2();
   tree->Project(histName, "CTime.ePiCoinTime_ROC2:H.dc.x_fp",
                 BuildCuts("coin"));
@@ -684,7 +687,10 @@ void DrawCoinTimeVsHmsXfp(TTree *tree, int phase, int run,
 }
 
 void DrawCoinTimeVsShmsXfp(TTree *tree, int phase, int run,
-                           const TString &pdfPath) {
+                           double ctimeCenter, const TString &pdfPath) {
+  constexpr double kCtimeHalfWidth = 3.0;
+  const double ctimeLow = ctimeCenter - kCtimeHalfWidth;
+  const double ctimeHigh = ctimeCenter + kCtimeHalfWidth;
   const TString histName = TString::Format("h_ctime_shms_xfp_%d", run);
   TH2D hist(
       histName,
@@ -692,7 +698,7 @@ void DrawCoinTimeVsShmsXfp(TTree *tree, int phase, int run,
           "Phase %d run %d: CTime (ROC2) vs SHMS xfp;"
           "P.dc.x_fp [cm];CTime.ePiCoinTime_ROC2 [ns]",
           phase, run),
-      80, -45, 45, 400, 0, 100);
+      80, -45, 45, 120, ctimeLow, ctimeHigh);
   hist.Sumw2();
   tree->Project(histName, "CTime.ePiCoinTime_ROC2:P.dc.x_fp",
                 BuildCuts("coin"));
@@ -836,6 +842,39 @@ bool FitCoinTimePeak(TH1D &hist, TF1 &fit,
 
   const TFitResultPtr result = hist.Fit(&fit, "QNRSB");
   return CaptureFitDiagnostics(result, fit, true, diagnostics);
+}
+
+double FindCoinTimeDisplayCenter(TTree *tree, int run) {
+  const TString histName = TString::Format("h_ctime_window_%d", run);
+  TH1D hist(histName, "", 400, 0, 100);
+  hist.Sumw2();
+  tree->Project(histName, "CTime.ePiCoinTime_ROC2", BuildCuts("coin"));
+
+  const double peak = hist.GetBinCenter(hist.GetMaximumBin());
+  if (hist.GetEntries() < 50) {
+    std::cerr << "[WARN] Run " << run
+              << ": using maximum-bin CTime center " << peak
+              << " ns for narrow 2D plots (low statistics)\n";
+    return peak;
+  }
+
+  const double fitLow = std::max(0.0, peak - 0.75);
+  const double fitHigh = std::min(100.0, peak + 0.75);
+  TF1 fit(TString::Format("f_ctime_window_%d", run),
+          "gaus(0)+pol0(3)", fitLow, fitHigh);
+  FitDiagnostics diagnostics;
+  if (FitCoinTimePeak(hist, fit, fitLow, peak, fitHigh, diagnostics)) {
+    std::cout << "[RUN " << run << "] narrow CTime display window=["
+              << diagnostics.candidateMean - 3.0 << ','
+              << diagnostics.candidateMean + 3.0 << "] ns (fit-centered)\n";
+    return diagnostics.candidateMean;
+  }
+
+  std::cerr << "[WARN] Run " << run
+            << ": using maximum-bin CTime center " << peak
+            << " ns for narrow 2D plots (fit rejected: "
+            << diagnostics.failureReason << ")\n";
+  return peak;
 }
 
 void DrawCoinTime1D(TTree *tree, int phase, int run,
@@ -1068,10 +1107,11 @@ RunSummary ProcessOneRun(const TString &spec, const TString &rootDir,
                       summary.fitDiagnostics);
     }
   } else {
+    const double ctimeDisplayCenter = FindCoinTimeDisplayCenter(tree, run);
     DrawBetaVsXfp(tree, "coin", "hms", phase, run, pdfPath);
     DrawBetaVsXfp(tree, "coin", "shms", phase, run, pdfPath);
-    DrawCoinTimeVsHmsXfp(tree, phase, run, pdfPath);
-    DrawCoinTimeVsShmsXfp(tree, phase, run, pdfPath);
+    DrawCoinTimeVsHmsXfp(tree, phase, run, ctimeDisplayCenter, pdfPath);
+    DrawCoinTimeVsShmsXfp(tree, phase, run, ctimeDisplayCenter, pdfPath);
     DrawCoinTime1D(tree, phase, run, pdfPath);
 
     if (ComputeCoinTimeMetrics(tree, run, summary.fitMean,
