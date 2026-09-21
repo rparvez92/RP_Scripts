@@ -1,0 +1,23 @@
+Run 28425 HMS beta-vs-xfp bump diagnostic
+
+Selection: (H.gtr.dp>-8)&&(H.gtr.dp<8)&&(H.cal.etottracknorm>0.7)&&(H.cer.npeSum>2.0)&&(P.gtr.dp>-10)&&(P.gtr.dp<22)&&(P.cal.etottracknorm<0.8)&&(((P.gtr.p<2.7)&&(P.aero.npeSum>2))||((P.gtr.p>=2.7)&&(P.hgcer.npeSum>1)&&(P.aero.npeSum>2)))
+All events: 1261941
+Selected events: 117967
+Bump-region events (12 <= xfp <= 18 cm): 12811
+Control-region events: 23918
+
+Highest-ranked plane/paddle candidates:
+1. 1x paddle 11, score=2.23813, candidate stage=missing_or_invalid_pos_raw_adc_raw_tdc_timing, bump accepted=11775, pos valid=4497, neg valid=11773
+2. 2x paddle 12, score=0.988478, candidate stage=tof, bump accepted=5625, pos valid=5599, neg valid=5578
+3. 1y paddle 6, score=0.984064, candidate stage=tof, bump accepted=3501, pos valid=3486, neg valid=3466
+4. 2y paddle 6, score=0.966982, candidate stage=tof, bump accepted=3747, pos valid=3730, neg valid=3586
+5. 1y paddle 5, score=0.883573, candidate stage=uncorrected, bump accepted=7543, pos valid=7528, neg valid=7508
+6. 2y paddle 5, score=0.833202, candidate stage=tof, bump accepted=8221, pos valid=8184, neg valid=8030
+7. 2y paddle 7, score=0.754688, candidate stage=tof, bump accepted=596, pos valid=576, neg valid=434
+8. 2y paddle 4, score=0.695375, candidate stage=uncorrected, bump accepted=2730, pos valid=2702, neg valid=2605
+9. 2x paddle 11, score=0.690466, candidate stage=uncorrected, bump accepted=6823, pos valid=6810, neg valid=6789
+10. 1x paddle 16, score=0.660616, candidate stage=corrected, bump accepted=28, pos valid=21, neg valid=21
+
+Conclusion: the leading candidate loses both raw ADC and raw TDC information on one PMT side. This is a raw-level channel/readout problem, not a time-walk, propagation-velocity, cable-offset, or LCoeff calibration effect. Do not change those calibration parameters; inspect the PMT/HV, signal path, discriminator/TDC channel, and run-period hardware records first.
+
+The ranking is evidence triage, not an automatic calibration decision. Inspect the PDF and CSV correction-stage shifts before changing exactly one parameter.
