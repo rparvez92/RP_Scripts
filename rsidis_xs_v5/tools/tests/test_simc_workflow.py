@@ -4,6 +4,7 @@ import csv
 import sys
 import tempfile
 import unittest
+from decimal import Decimal
 from pathlib import Path
 
 
@@ -11,10 +12,22 @@ TOOLS_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS_DIR))
 
 import generate_simc_inputs as generator  # noqa: E402
+import filter_bigtable as filterer  # noqa: E402
 import run_simc_batch as batch  # noqa: E402
 
 
 class GeneratorTests(unittest.TestCase):
+    def test_phase_specific_beam_energies(self):
+        self.assertEqual(filterer.parse_pass("phase1", "8.5831"), "pass4")
+        self.assertEqual(filterer.parse_pass("phase2", "8.581"), "pass4")
+        self.assertEqual(filterer.parse_pass("phase1", "10.6716"), "pass5")
+        self.assertEqual(filterer.parse_pass("phase2", "10.676"), "pass5")
+        self.assertIsNone(filterer.parse_pass("phase1", "8.581"))
+        self.assertIsNone(filterer.parse_pass("phase2", "10.6716"))
+        self.assertEqual(
+            generator.BEAM_MEV[("phase2", "pass5")], Decimal("10676.0")
+        )
+
     def test_production_event_counts(self):
         self.assertEqual(generator.EVENT_COUNTS["sidis"], 100_000)
         for reaction in ("rho", "delta", "exclusive"):

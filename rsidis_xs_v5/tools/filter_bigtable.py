@@ -37,9 +37,15 @@ PHASE_CONFIG = {
 }
 
 ENERGY_TO_PASS = {
-    6.4490: "pass3",
-    8.5831: "pass4",
-    10.6716: "pass5",
+    "phase1": {
+        8.5831: "pass4",
+        10.6716: "pass5",
+    },
+    "phase2": {
+        6.4490: "pass3",
+        8.5810: "pass4",
+        10.6760: "pass5",
+    },
 }
 
 RUN_TYPE_MAP = {
@@ -81,15 +87,15 @@ SettingValues = Tuple[Decimal, Decimal, Decimal, Decimal]
 GroupKey = Tuple[BaseCategory, SettingValues]
 
 
-def parse_pass(raw_energy: str) -> str | None:
-    """Return the pass for an exact supported beam-energy value."""
+def parse_pass(phase: str, raw_energy: str) -> str | None:
+    """Return the pass for an exact phase-specific beam-energy value."""
     try:
         energy = float(raw_energy)
     except (TypeError, ValueError):
         return None
     if not math.isfinite(energy):
         return None
-    return ENERGY_TO_PASS.get(energy)
+    return ENERGY_TO_PASS.get(phase, {}).get(energy)
 
 
 def parse_charge(raw_hms_p: str) -> str | None:
@@ -223,7 +229,7 @@ def read_and_filter_phase(
                 exclusions[(phase, f"target:{source_target or '<blank>'}")] += 1
                 continue
 
-            pass_name = parse_pass(row["ebeam"])
+            pass_name = parse_pass(phase, row["ebeam"])
             if pass_name is None:
                 exclusions[(phase, f"ebeam:{row['ebeam'] or '<blank>'}")] += 1
                 continue

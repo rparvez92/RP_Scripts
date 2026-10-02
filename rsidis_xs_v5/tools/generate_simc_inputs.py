@@ -32,14 +32,18 @@ TARGETS = ("LH2", "LD2")
 REACTIONS = ("sidis", "rho", "delta", "exclusive")
 
 BEAM_MEV = {
-    "pass3": Decimal("6449.0"),
-    "pass4": Decimal("8583.1"),
-    "pass5": Decimal("10671.6"),
+    ("phase1", "pass4"): Decimal("8583.1"),
+    ("phase1", "pass5"): Decimal("10671.6"),
+    ("phase2", "pass3"): Decimal("6449.0"),
+    ("phase2", "pass4"): Decimal("8581.0"),
+    ("phase2", "pass5"): Decimal("10676.0"),
 }
 BEAM_GEV = {
-    "pass3": Decimal("6.4490"),
-    "pass4": Decimal("8.5831"),
-    "pass5": Decimal("10.6716"),
+    ("phase1", "pass4"): Decimal("8.5831"),
+    ("phase1", "pass5"): Decimal("10.6716"),
+    ("phase2", "pass3"): Decimal("6.4490"),
+    ("phase2", "pass4"): Decimal("8.5810"),
+    ("phase2", "pass5"): Decimal("10.6760"),
 }
 EVENT_COUNTS = {
     "sidis": 100_000,
@@ -187,7 +191,8 @@ def validate_leaf(identity: LeafIdentity, path: Path, leaf_root: Path) -> LeafRe
     if not rows:
         return LeafResult(identity, path, STATUS_INVALID, "leaf contains no rows")
 
-    expected_ebeam = BEAM_GEV[identity.pass_name]
+    beam_key = (identity.phase, identity.pass_name)
+    expected_ebeam = BEAM_GEV[beam_key]
     tuples: Dict[Tuple[str, str, str, str], List[int]] = {}
     runs: List[int] = []
     errors: List[str] = []
@@ -254,7 +259,7 @@ def validate_leaf(identity: LeafIdentity, path: Path, leaf_root: Path) -> LeafRe
         source=path,
         status="VALID",
         reason=f"validated {source_text}",
-        ebeam_mev=format_decimal(BEAM_MEV[identity.pass_name], "0.1"),
+        ebeam_mev=format_decimal(BEAM_MEV[beam_key], "0.1"),
         hms_p_mev=values[0],
         hms_theta_deg=values[1],
         shms_p_mev=values[2],
