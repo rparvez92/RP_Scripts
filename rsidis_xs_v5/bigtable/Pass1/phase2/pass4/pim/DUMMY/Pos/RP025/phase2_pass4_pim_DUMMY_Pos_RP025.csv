@@ -1,0 +1,3 @@
+run,ebeam,target,hms_p,hms_th,shms_p,shms_th,run_type,x,Q2,z,thpq,setting_id,BCM2_Q,BCM2_I,h_esing_Eff,h_hadron_Eff,p_esing_Eff,p_hadron_Eff,ps5,ps6,comp_livetime,electr_livetime,coin,ransubcoin,ransubcoin_err,normyield,normyield_err,ctmean,ctsigma,boil_corr,coinblock_ratio,RF_signal
+28054,8.5814,DUMMY,3.254,19.185,-2.806,12.99,pim,0.31,3.1,0.5,2.0,RP025,17.122,42.009,1.0,0.9976,0.9891,0.9782,-1.0,1.0,1.0,0.999938,0.0,-0.153846,0.108786,-0.00918554,0.00649515,51.25,0.5,1.000,0.938615,2
+28055,8.5814,DUMMY,3.254,19.185,-2.806,12.99,pim,0.31,3.1,0.5,2.0,RP025,41.188,45.958,1.0,0.9972,0.9903,0.9819,-1.0,1.0,1.0,0.999937,3.0,3.0,1.73205,0.0741794,0.0428275,51.25,0.5,1.000,0.936715,2
