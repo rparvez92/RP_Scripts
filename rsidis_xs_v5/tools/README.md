@@ -175,6 +175,22 @@ Data PID cuts are a common data-only baseline because standard SIMC does not
 simulate calorimeter or Cherenkov detector response. Delta-only refers to the
 spectrometer momentum acceptance.
 
+Normalize one completed Pass1 setting with:
+
+```bash
+root -l -b -q 'macros/RP_get_coin_normyield.C("results/Pass1/Tables/RP_get_good_coin_ev/<setting>.csv")'
+```
+
+Or process all available settings and rebuild the summary/problematic tables:
+
+```bash
+python3 tools/run_coin_normyield_batch.py
+```
+
+This stage uses each run's bigtable `comp_livetime`; trigger and PID
+efficiencies remain provisional constants of 1.0. Outputs use the same setting
+ID filenames under `results/Pass1/{PDFs,Tables}/RP_get_coin_normyield/`.
+
 ---
 
 ## 8) Generate and run the RP SIMC input manifest

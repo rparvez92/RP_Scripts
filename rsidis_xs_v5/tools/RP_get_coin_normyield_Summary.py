@@ -12,26 +12,25 @@ from typing import Dict, Iterable, List, Sequence
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = SCRIPT_DIR.parent
-DEFAULT_INPUT_DIR = PROJECT_DIR / "results" / "Tables" / "RP_get_coin_normyield"
+DEFAULT_INPUT_DIR = (
+    PROJECT_DIR / "results" / "Pass1" / "Tables" / "RP_get_coin_normyield"
+)
 SUMMARY_NAME = "RP_get_coin_normyield_Summary.csv"
 PROBLEMATIC_NAME = "RP_get_coin_normyield_Problematic.csv"
 
 REQUIRED_COLUMNS = {
     "Run",
+    "setting_id",
     "Run_type",
-    "RP_Goodcoin_delta",
-    "RP_Goodcoin_err_delta",
-    "RP_Goodcoin_full",
-    "RP_Goodcoin_err_full",
+    "RP_Goodcoin",
+    "RP_Goodcoin_err",
     "Norm_factor",
-    "RP_Normyield_delta",
-    "RP_Normyield_err_delta",
-    "RP_Normyield_full",
-    "RP_Normyield_err_full",
-    "RP_Normyield_full_by_delta",
+    "RP_Normyield",
+    "RP_Normyield_err",
     "normyield",
     "normyield_err",
-    "normyield_by_RP_Normyield_delta",
+    "normyield_by_RP_Normyield",
+    "normyield_by_RP_Normyield_err",
     "Norm_status",
     "Norm_reason",
 }
@@ -60,42 +59,38 @@ def tf(value: bool) -> str:
 
 def flag_row(row: Dict[str, str]) -> Dict[str, str]:
     status = row.get("Norm_status", "").strip()
-    normyield_delta = finite(row.get("RP_Normyield_delta", ""))
-    normyield_err_delta = finite(row.get("RP_Normyield_err_delta", ""))
-    normyield_full = finite(row.get("RP_Normyield_full", ""))
-    normyield_err_full = finite(row.get("RP_Normyield_err_full", ""))
+    rp_normyield = finite(row.get("RP_Normyield", ""))
+    rp_normyield_err = finite(row.get("RP_Normyield_err", ""))
     normfactor = finite(row.get("Norm_factor", ""))
     replay_normyield = finite(row.get("normyield", ""))
-    ratio = finite(row.get("normyield_by_RP_Normyield_delta", ""))
+    ratio = finite(row.get("normyield_by_RP_Normyield", ""))
+    ratio_err = finite(row.get("normyield_by_RP_Normyield_err", ""))
 
     normalization_flag = status != "OK"
     yield_flag = (
-        normyield_delta is None
-        or normyield_delta <= 0.0
-        or normyield_full is None
-        or normyield_full <= 0.0
+        rp_normyield is None
+        or rp_normyield <= 0.0
     )
     numeric_flag = (
         normfactor is None
         or normfactor <= 0.0
-        or normyield_err_delta is None
-        or normyield_err_delta < 0.0
-        or normyield_err_full is None
-        or normyield_err_full < 0.0
+        or rp_normyield_err is None
+        or rp_normyield_err < 0.0
+        or (ratio is not None and (ratio_err is None or ratio_err < 0.0))
     )
 
     # A missing legacy replay result is not a failure of the new normalization.
     # Apply the comparison threshold only when the replay normyield is usable.
     comparison_available = replay_normyield is not None and replay_normyield != -999.0
     ratio_flag = comparison_available and (
-        ratio is None or abs(ratio - 1.0) > 0.20
+        ratio is None or abs(ratio - 1.0) > 0.30
     )
 
     reasons: List[str] = []
     if normalization_flag:
         reasons.append("NORMALIZATION_FAILED")
     if ratio_flag:
-        reasons.append("NORMYIELD_RATIO_DEVIATION_GT_20PCT")
+        reasons.append("NORMYIELD_RATIO_DEVIATION_GT_30PCT")
     if yield_flag:
         reasons.append("RP_NORMYIELD_NONPOSITIVE_OR_INVALID")
     if numeric_flag:

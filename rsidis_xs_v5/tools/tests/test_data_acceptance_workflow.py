@@ -87,20 +87,34 @@ class DataAcceptanceSummaryTests(unittest.TestCase):
         flagged = good_summary.flag_row(row)
         self.assertEqual(flagged["Yield_flag"], "TRUE")
 
-    def test_normyield_dual_tier_row_is_valid(self):
+    def test_normyield_row_is_valid(self):
         row = {
             "Norm_status": "OK",
             "Norm_factor": "0.01",
-            "RP_Normyield_delta": "10.0",
-            "RP_Normyield_err_delta": "0.4",
-            "RP_Normyield_full": "6.0",
-            "RP_Normyield_err_full": "0.3",
-            "RP_Normyield_full_by_delta": "0.6",
+            "RP_Normyield": "10.0",
+            "RP_Normyield_err": "0.4",
             "normyield": "10.5",
-            "normyield_by_RP_Normyield_delta": "1.05",
+            "normyield_by_RP_Normyield": "1.05",
+            "normyield_by_RP_Normyield_err": "0.06",
         }
         flagged = norm_summary.flag_row(row)
         self.assertEqual(flagged["Problematic"], "FALSE")
+
+    def test_normyield_ratio_uses_thirty_percent_threshold(self):
+        row = {
+            "Norm_status": "OK",
+            "Norm_factor": "0.01",
+            "RP_Normyield": "10.0",
+            "RP_Normyield_err": "0.4",
+            "normyield": "12.5",
+            "normyield_by_RP_Normyield": "1.25",
+            "normyield_by_RP_Normyield_err": "0.08",
+        }
+        self.assertEqual(norm_summary.flag_row(dict(row))["Normyield_ratio_flag"], "FALSE")
+        row["normyield_by_RP_Normyield"] = "1.31"
+        flagged = norm_summary.flag_row(row)
+        self.assertEqual(flagged["Normyield_ratio_flag"], "TRUE")
+        self.assertIn("NORMYIELD_RATIO_DEVIATION_GT_30PCT", flagged["Problem_reason"])
 
 
 if __name__ == "__main__":
