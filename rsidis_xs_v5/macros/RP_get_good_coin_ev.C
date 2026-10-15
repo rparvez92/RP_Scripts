@@ -52,25 +52,14 @@ constexpr double kHistLow = 0.0;
 constexpr double kHistHigh = 100.0;
 constexpr const char* kCTBranch = "CTime_ePiCoinTime_ROC2";
 constexpr const char* kTreeName = "T";
-constexpr const char* kDeltaCoinCuts =
-  "(P_gtr_p<=2.7 || P_hgcer_npeSum>1) && P_aero_npeSum>2 && "
+constexpr const char* kBaselineCoinCuts =
+  "(P_gtr_p<=2.9 || P_hgcer_npeSum>1) && P_aero_npeSum>2 && "
   "P_cal_etottracknorm<0.8 && P_gtr_dp>-10 && P_gtr_dp<22 && "
-  "H_cer_npeSum>2 && H_cal_etottracknorm>0.8 && abs(H_gtr_dp)<8";
-constexpr const char* kFullCoinCuts =
-  "(P_gtr_p<=2.7 || P_hgcer_npeSum>1) && P_aero_npeSum>2 && "
-  "P_cal_etottracknorm<0.8 && P_gtr_dp>-10 && P_gtr_dp<22 && "
-  "H_cer_npeSum>2 && H_cal_etottracknorm>0.8 && abs(H_gtr_dp)<8 && "
-  "H_gtr_th>-0.15 && H_gtr_th<0.15 && "
-  "H_gtr_ph>-0.10 && H_gtr_ph<0.10 && "
-  "P_gtr_th>-0.15 && P_gtr_th<0.15 && "
-  "P_gtr_ph>-0.10 && P_gtr_ph<0.10";
-
+  "H_cer_npeSum>2 && H_cal_etottracknorm>0.7 && abs(H_gtr_dp)<8";
 const double kNaN = std::numeric_limits<double>::quiet_NaN();
-const std::vector<int> kRandomOffsets = {-4, -3, -2, 2, 3, 4};
-constexpr const char* kPhase1RootDir =
-  "/Volumes/T7/RSIDIS/Phase1/Pass0p1/ROOTfiles/SkimmedData";
-constexpr const char* kPhase2RootDir =
-  "/Volumes/T7/RSIDIS/Phase2/Passm1/ROOTfiles/SkimmedData";
+const std::vector<int> kRandomOffsets = {-6, -5, -4, -3, -2, 2, 3, 4, 5, 6};
+constexpr const char* kPass1RootDir =
+  "/Volumes/T7/RSIDIS/Pass1/Data/ROOTfiles/SkimmedData";
 
 struct InputRow {
   int run = 0;
@@ -85,6 +74,8 @@ struct InputRow {
   double q2 = kNaN;
   double z = kNaN;
   double thpq = kNaN;
+  std::string settingId;
+  double rfSignal = kNaN;
   double replayCtmean = kNaN;
   double replayCtsigma = kNaN;
   double ransubcoin = kNaN;
@@ -119,8 +110,7 @@ struct OutputRow {
   double ctPosRefCtmeanRange = kNaN;
   double rfPeriod = kNaN;
   Long64_t rootEntries = 0;
-  TierCounts delta;
-  TierCounts full;
+  TierCounts baseline;
   FitInfo fit;
   double ctLow = kNaN;
   double ctHigh = kNaN;
@@ -128,8 +118,8 @@ struct OutputRow {
   double leftHigh = kNaN;
   double rightLow = kNaN;
   double rightHigh = kNaN;
-  double fullByDelta = kNaN;
   double ctmeanResidual = kNaN;
+  double ctsigmaResidual = kNaN;
   double ransubcoinByRPGoodcoin = kNaN;
   std::vector<std::pair<double, double>> randomWindows;
 };
@@ -198,7 +188,8 @@ bool ReadInputCSV(const std::string& path, std::vector<InputRow>& rows,
   for (size_t i = 0; i < header.size(); ++i) column[ToLower(header[i])] = i;
   for (const char* required : {"run", "ebeam", "target", "run_type",
                                "hms_p", "hms_th", "shms_p", "shms_th",
-                               "x", "q2", "z", "thpq", "ctmean", "ctsigma",
+                               "x", "q2", "z", "thpq", "setting_id", "rf_signal",
+                               "ctmean", "ctsigma",
                                "ransubcoin"}) {
     if (!column.count(required)) {
       std::cerr << "ERROR: missing input column: " << required << "\n";
@@ -226,12 +217,14 @@ bool ReadInputCSV(const std::string& path, std::vector<InputRow>& rows,
     row.q2 = ParseDouble(get("q2"));
     row.z = ParseDouble(get("z"));
     row.thpq = ParseDouble(get("thpq"));
+    row.settingId = get("setting_id");
+    row.rfSignal = ParseDouble(get("rf_signal"));
     row.replayCtmean = ParseDouble(get("ctmean"));
     row.replayCtsigma = ParseDouble(get("ctsigma"));
     row.ransubcoin = ParseDouble(get("ransubcoin"));
-    if (row.runType == "PI-SIDIS") row.runType = "PIMINUS";
-    if (row.runType == "PI+SIDIS") row.runType = "PIPLUS";
-    if (row.runType != "PIMINUS" && row.runType != "PIPLUS") {
+    if (row.runType == "PI-SIDIS" || row.runType == "PIMINUS") row.runType = "pim";
+    if (row.runType == "PI+SIDIS" || row.runType == "PIPLUS") row.runType = "pip";
+    if (row.runType != "pim" && row.runType != "pip") {
       if (warnSkippedRuns)
         std::cerr << "WARNING: skipping non-PI-SIDIS run " << row.run << "\n";
       continue;
@@ -246,8 +239,8 @@ bool IsPositron(const InputRow& row) {
 }
 
 std::string PhaseBigtablePath(const std::string& phase) {
-  if (phase == "phase1") return "bigtable/rsidis_bigtable_phase1.csv";
-  if (phase == "phase2") return "bigtable/rsidis_bigtable_phase2.csv";
+  if (phase == "phase1" || phase == "phase2")
+    return "bigtable/Pass1/rp_rsidis_bigtable_pass1_sidis.csv";
   return "";
 }
 
@@ -340,16 +333,12 @@ void AssignPositronReference(const InputRow& positron,
   }
 }
 
-double RFPeriod(double ebeam) {
-  if (ebeam == 6.4490) return 2.0;
-  if (ebeam == 8.5831 || ebeam == 10.6716) return 4.0;
-  return kNaN;
-}
-
 std::string PassFromEnergy(double ebeam) {
-  if (ebeam == 6.4490) return "pass3";
+  if (ebeam == 6.4724) return "pass3";
   if (ebeam == 8.5831) return "pass4";
+  if (ebeam == 8.5814) return "pass4";
   if (ebeam == 10.6716) return "pass5";
+  if (ebeam == 10.6759) return "pass5";
   return "UNKNOWN";
 }
 
@@ -393,25 +382,6 @@ std::string RootPathForRun(const std::string& rootDir, int run) {
          std::to_string(run) + "_-1.root";
 }
 
-std::string SettingNumber(double value) {
-  if (value == -999.0) return "neg999";
-  std::ostringstream out;
-  out << std::fixed << std::setprecision(10) << value;
-  std::string text = out.str();
-  while (text.size() > 2 && text.back() == '0') text.pop_back();
-  if (!text.empty() && text.back() == '.') text.push_back('0');
-  if (!text.empty() && text.front() == '-') text.replace(0, 1, "neg");
-  std::replace(text.begin(), text.end(), '.', 'p');
-  return text;
-}
-
-std::string SettingName(const InputRow& row) {
-  return "x" + SettingNumber(row.x) +
-         "Q2" + SettingNumber(row.q2) +
-         "z" + SettingNumber(row.z) +
-         "thpq" + SettingNumber(row.thpq);
-}
-
 bool SameNumber(double a, double b) {
   return std::isfinite(a) && std::isfinite(b) && std::fabs(a - b) < 1.0e-9;
 }
@@ -445,8 +415,8 @@ DatasetMetadata ValidateDataset(const std::string& inputPath,
     if (phaseIndex + 5 < parts.size()) meta.setting = parts[phaseIndex + 5];
   }
 
-  if (meta.phase == "phase1") meta.rootDir = kPhase1RootDir;
-  else if (meta.phase == "phase2") meta.rootDir = kPhase2RootDir;
+  if (meta.phase == "phase1" || meta.phase == "phase2")
+    meta.rootDir = kPass1RootDir;
   else meta.rootDir = "";
 
   if (rows.empty()) {
@@ -457,7 +427,7 @@ DatasetMetadata ValidateDataset(const std::string& inputPath,
   const InputRow& first = rows.front();
   const std::string firstPass = PassFromEnergy(first.ebeam);
   const std::string firstCharge = first.hmsP < 0.0 ? "Elec" : "Pos";
-  const std::string firstSetting = SettingName(first);
+  const std::string firstSetting = first.settingId;
 
   if (meta.passName != firstPass)
     AddUniqueWarning(meta.warnings, "Path pass disagrees with Ebeam");
@@ -468,7 +438,7 @@ DatasetMetadata ValidateDataset(const std::string& inputPath,
   if (meta.charge != firstCharge)
     AddUniqueWarning(meta.warnings, "Path Elec/Pos disagrees with hms_p sign");
   if (meta.setting != firstSetting)
-    AddUniqueWarning(meta.warnings, "Path setting disagrees with x-Q2-z-thpq");
+    AddUniqueWarning(meta.warnings, "Path setting disagrees with setting_id");
 
   for (const auto& row : rows) {
     if (PassFromEnergy(row.ebeam) != firstPass)
@@ -487,6 +457,10 @@ DatasetMetadata ValidateDataset(const std::string& inputPath,
       AddUniqueWarning(meta.warnings, "Rows contain more than one z value");
     if (!SameNumber(row.thpq, first.thpq))
       AddUniqueWarning(meta.warnings, "Rows contain more than one thpq value");
+    if (row.settingId != first.settingId)
+      AddUniqueWarning(meta.warnings, "Rows contain more than one setting_id");
+    if (!std::isfinite(row.rfSignal) || !(row.rfSignal > 0.0))
+      AddUniqueWarning(meta.warnings, "Rows contain invalid RF_signal values");
   }
   return meta;
 }
@@ -545,9 +519,9 @@ FitInfo FitPeakTwice(TH1D* hist, int run) {
   return info;
 }
 
-double IntegralHalfOpen(TH1D* hist, double low, double high, double& error) {
+double IntegralClosed(TH1D* hist, double low, double high, double& error) {
   const int lowBin = hist->GetXaxis()->FindFixBin(low);
-  const int highBin = hist->GetXaxis()->FindFixBin(high) - 1;
+  const int highBin = hist->GetXaxis()->FindFixBin(high);
   if (highBin < lowBin) {
     error = 0.0;
     return 0.0;
@@ -562,7 +536,7 @@ void CountWindows(TH1D* hist, OutputRow& row, TierCounts& counts,
   row.ctHigh = row.fit.mean + halfWidth;
 
   double coinError = 0.0;
-  counts.nCoin = IntegralHalfOpen(hist, row.ctLow, row.ctHigh, coinError);
+  counts.nCoin = IntegralClosed(hist, row.ctLow, row.ctHigh, coinError);
 
   double randomVariance = 0.0;
   counts.nRandomTotal = 0.0;
@@ -571,7 +545,7 @@ void CountWindows(TH1D* hist, OutputRow& row, TierCounts& counts,
     const double low = center - halfWidth;
     const double high = center + halfWidth;
     double error = 0.0;
-    const double count = IntegralHalfOpen(hist, low, high, error);
+    const double count = IntegralClosed(hist, low, high, error);
     counts.nRandomTotal += count;
     randomVariance += error * error;
     if (saveWindows) row.randomWindows.emplace_back(low, high);
@@ -580,9 +554,9 @@ void CountWindows(TH1D* hist, OutputRow& row, TierCounts& counts,
   counts.nRandomPeaks = static_cast<int>(kRandomOffsets.size());
   if (saveWindows) {
     row.leftLow = row.randomWindows[0].first;
-    row.leftHigh = row.randomWindows[2].second;
-    row.rightLow = row.randomWindows[3].first;
-    row.rightHigh = row.randomWindows[5].second;
+    row.leftHigh = row.randomWindows[4].second;
+    row.rightLow = row.randomWindows[5].first;
+    row.rightHigh = row.randomWindows[9].second;
   }
   counts.randomMean = counts.nRandomTotal / counts.nRandomPeaks;
   const double randomMeanError =
@@ -592,19 +566,19 @@ void CountWindows(TH1D* hist, OutputRow& row, TierCounts& counts,
 }
 
 void FinalizeCounts(OutputRow& row) {
-  if (std::isfinite(row.delta.goodCoin) && row.delta.goodCoin != 0.0 &&
-      std::isfinite(row.full.goodCoin))
-    row.fullByDelta = row.full.goodCoin / row.delta.goodCoin;
-  if (row.ctMethod != "PRIOR_ELEC_AVERAGE" &&
-      row.input.replayCtmean != -999.0 &&
+  if (row.input.replayCtmean != -999.0 &&
       std::isfinite(row.input.replayCtmean) && std::isfinite(row.fit.mean)) {
     row.ctmeanResidual = row.input.replayCtmean - row.fit.mean;
   }
+  if (row.input.replayCtsigma != -999.0 &&
+      std::isfinite(row.input.replayCtsigma) && std::isfinite(row.fit.sigma)) {
+    row.ctsigmaResidual = row.input.replayCtsigma - row.fit.sigma;
+  }
   if (row.ctMethod != "PRIOR_ELEC_AVERAGE" &&
       row.input.ransubcoin != -999.0 && std::isfinite(row.input.ransubcoin) &&
-      std::isfinite(row.delta.goodCoin) && row.delta.goodCoin != 0.0) {
+      std::isfinite(row.baseline.goodCoin) && row.baseline.goodCoin != 0.0) {
     row.ransubcoinByRPGoodcoin =
-      row.input.ransubcoin / row.delta.goodCoin;
+      row.input.ransubcoin / row.baseline.goodCoin;
   }
 }
 
@@ -690,19 +664,12 @@ void DrawMetadataPage1(TCanvas* canvas, const DatasetMetadata& meta,
                             (kHistHigh - kHistLow) / kNBins));
   AddMetadataLine(box, " ");
   AddMetadataLine(box, "Baseline PID + Delta-only acceptance", 0.029, kBlack, 62);
-  AddMetadataLine(box, "  (P_gtr_p <= 2.7 || P_hgcer_npeSum > 1)", 0.022);
+  AddMetadataLine(box, "  (P_gtr_p <= 2.9 || P_hgcer_npeSum > 1)", 0.022);
   AddMetadataLine(box, "  && P_aero_npeSum > 2 && P_cal_etottracknorm < 0.8", 0.022);
   AddMetadataLine(box, "  && P_gtr_dp > -10 && P_gtr_dp < 22", 0.022);
   AddMetadataLine(box, "  && H_cer_npeSum > 2", 0.022);
-  AddMetadataLine(box, "  && H_cal_etottracknorm > 0.8", 0.022);
+  AddMetadataLine(box, "  && H_cal_etottracknorm > 0.7", 0.022);
   AddMetadataLine(box, "  && abs(H_gtr_dp) < 8", 0.022);
-  AddMetadataLine(box, "Full-cut adds target-angle acceptance:", 0.024,
-                  kBlack, 62);
-  AddMetadataLine(box, "  -0.15 < H_gtr_th < 0.15; "
-                       "-0.10 < H_gtr_ph < 0.10", 0.021);
-  AddMetadataLine(box, "  -0.15 < P_gtr_th < 0.15; "
-                       "-0.10 < P_gtr_ph < 0.10", 0.021);
-
   box.Draw();
   canvas->Print(pdfPath.c_str());
 }
@@ -761,40 +728,37 @@ void DrawMetadataPage3(TCanvas* canvas, const std::string& pdfPath) {
                   0.034, kBlue + 2, 62);
   AddMetadataLine(box, " ");
   AddMetadataLine(box, "RF-cell counting", 0.029, kBlack, 62);
-  AddMetadataLine(box, "RF period: 6.4490 GeV #rightarrow 2 ns; "
-                       "8.5831/10.6716 GeV #rightarrow 4 ns.");
+  AddMetadataLine(box, "RF period is read from the input row's RF_signal column.");
   AddMetadataLine(box, "Central window: CTmean #pm RFperiodNs/2.");
   AddMetadataLine(box, "Random centers: CTmean + k #times RFperiodNs,");
-  AddMetadataLine(box, "  k = {-4, -3, -2, +2, +3, +4}.");
+  AddMetadataLine(box, "  k = {-6, -5, -4, -3, -2, +2, +3, +4, +5, +6}.");
   AddMetadataLine(box, "Each random window has half-width RFperiodNs/2.");
-  AddMetadataLine(box, "All integration windows are half-open: [low, high).");
-  AddMetadataLine(box, "CTmean, CTsigma, and all RF-window positions are "
-                       "calibrated from Delta-only.");
-  AddMetadataLine(box, "The same fixed windows are integrated separately for "
-                       "Delta-only and Full-cut.");
+  AddMetadataLine(box, "All integration windows are both-closed: [low, high].");
+  AddMetadataLine(box, "CTmean, CTsigma, and all RF-window positions use the "
+                       "Baseline PID + Delta-only acceptance sample.");
   AddMetadataLine(box, " ");
   AddMetadataLine(box, "Random subtraction", 0.029, kBlack, 62);
-  AddMetadataLine(box, "N_rndm_peak = 6");
+  AddMetadataLine(box, "N_rndm_peak = 10 (five RF cells on each side)");
   AddMetadataLine(box, "Rndm_mean = N_rndm_total / N_rndm_peak");
-  AddMetadataLine(box, "RP_Goodcoin_<tier> = N_coin_<tier> - "
-                       "Rndm_mean_<tier>");
+  AddMetadataLine(box, "RP_Goodcoin = N_coin - Rndm_mean");
   AddMetadataLine(box, "Goodcoin_err = sqrt(N_coin + "
                        "N_rndm_total / N_rndm_peak^{2})");
   AddMetadataLine(box, " ");
   AddMetadataLine(box, "Initial-replay comparison", 0.029, kBlack, 62);
   AddMetadataLine(box, "ransubcoin = initial replay-script good-coin result.");
   AddMetadataLine(box, "Replay comparison = ransubcoin / "
-                       "RP_Goodcoin_delta.");
+                       "RP_Goodcoin.");
   AddMetadataLine(box, "Ratio is nan when ransubcoin = -999 or "
-                       "RP_Goodcoin_delta = 0.");
+                       "RP_Goodcoin = 0.");
   AddMetadataLine(box, "ctmean = initial replay-script fitted coincidence mean.");
   AddMetadataLine(box, "CTmean_residual = ctmean - CTmean (this macro).");
-  AddMetadataLine(box, "Positron residual and replay ratio are nan/not applicable.");
+  AddMetadataLine(box, "Bigtable ctmean/ctsigma are trusted for positron comparisons.");
   AddMetadataLine(box, " ");
   AddMetadataLine(box, "Summary plots and output", 0.029, kBlack, 62);
-  AddMetadataLine(box, "CTmean axis: [40, 60] ns; CTsigma axis: [0, 0.7] ns.");
+  AddMetadataLine(box, "CTmean axis: [40, 60] ns; sigma values are vertical bars.");
   AddMetadataLine(box, "Run axes use integer ticks and padded limits.");
-  AddMetadataLine(box, "Electron: blue value/red error; positron: red value/blue error.");
+  AddMetadataLine(box, "Calculated: blue mean dot/red sigma bar.");
+  AddMetadataLine(box, "Bigtable: red ctmean dot/blue ctsigma bar.");
   AddMetadataLine(box, "CSV floating-point precision: four decimal places.");
 
   box.Draw();
@@ -883,42 +847,32 @@ void DrawRunPage(TCanvas* canvas, TH1D* hist, const OutputRow& row,
       info.AddText(Form("Ref ctmean stddev/range: %.4f / %.4f ns",
                         row.ctPosRefCtmeanStddev, row.ctPosRefCtmeanRange));
   }
-  info.AddText(Form("Tree / Delta / Full entries: %lld / %lld / %lld",
-                    row.rootEntries, row.delta.selectedEntries,
-                    row.full.selectedEntries));
+  info.AddText(Form("Tree / baseline entries: %lld / %lld",
+                    row.rootEntries, row.baseline.selectedEntries));
   if (row.fit.ok) {
     info.AddText(Form("CTmean = %.4f #pm %.4f ns", row.fit.mean, row.fit.meanErr));
     info.AddText(Form("CTsigma = %.4f #pm %.4f ns", row.fit.sigma, row.fit.sigmaErr));
-    if (row.ctMethod == "PRIOR_ELEC_AVERAGE") {
-      info.AddText("ctmean = untrusted for positron");
-      info.AddText("ctmean - CTmean = not applicable");
-    } else {
-      info.AddText(Form("ctmean = %.4f ns", row.input.replayCtmean));
-      if (std::isfinite(row.ctmeanResidual))
-        info.AddText(Form("ctmean - CTmean = %.4f ns", row.ctmeanResidual));
-      else
-        info.AddText("ctmean - CTmean = nan");
-    }
-    info.AddText(Form("Central: [%.4f, %.4f) ns", row.ctLow, row.ctHigh));
-    info.AddText(Form("Delta: N_{coin}=%.0f, N_{rndm,total}=%.0f",
-                      row.delta.nCoin, row.delta.nRandomTotal));
-    info.AddText(Form("Delta RP_Goodcoin = %.4f #pm %.4f",
-                      row.delta.goodCoin, row.delta.goodCoinErr));
-    info.AddText(Form("Full: N_{coin}=%.0f, N_{rndm,total}=%.0f",
-                      row.full.nCoin, row.full.nRandomTotal));
-    info.AddText(Form("Full RP_Goodcoin = %.4f #pm %.4f",
-                      row.full.goodCoin, row.full.goodCoinErr));
-    if (std::isfinite(row.fullByDelta))
-      info.AddText(Form("Full / Delta Goodcoin = %.4f", row.fullByDelta));
+    info.AddText(Form("Bigtable ctmean/ctsigma = %.4f / %.4f ns",
+                      row.input.replayCtmean, row.input.replayCtsigma));
+    if (std::isfinite(row.ctmeanResidual) && std::isfinite(row.ctsigmaResidual))
+      info.AddText(Form("Bigtable - calculated mean/sigma = %.4f / %.4f ns",
+                        row.ctmeanResidual, row.ctsigmaResidual));
+    else
+      info.AddText("Bigtable - calculated mean/sigma = nan");
+    info.AddText(Form("Central: [%.4f, %.4f] ns", row.ctLow, row.ctHigh));
+    info.AddText(Form("Baseline: N_{coin}=%.0f, N_{rndm,total}=%.0f",
+                      row.baseline.nCoin, row.baseline.nRandomTotal));
+    info.AddText(Form("RP_Goodcoin = %.4f #pm %.4f",
+                      row.baseline.goodCoin, row.baseline.goodCoinErr));
   }
   info.AddText(Form("ransubcoin = %.4f", row.input.ransubcoin));
   if (row.ctMethod == "PRIOR_ELEC_AVERAGE")
-    info.AddText("ransubcoin / Delta RP_Goodcoin = not applicable");
+    info.AddText("ransubcoin / RP_Goodcoin = not applicable");
   else if (std::isfinite(row.ransubcoinByRPGoodcoin))
-    info.AddText(Form("ransubcoin / Delta RP_Goodcoin = %.4f",
+    info.AddText(Form("ransubcoin / RP_Goodcoin = %.4f",
                       row.ransubcoinByRPGoodcoin));
   else
-    info.AddText("ransubcoin / Delta RP_Goodcoin = nan");
+    info.AddText("ransubcoin / RP_Goodcoin = nan");
   info.Draw();
 
   TLegend legend(0.61, 0.58, 0.95, 0.70);
@@ -953,7 +907,7 @@ double NiceRunSpacing(double span, int maxIntervals = 6) {
 }
 
 void DrawSummaryPage(TCanvas* canvas, const std::vector<OutputRow>& rows,
-                     bool drawMean, const std::string& pdfPath) {
+                     const std::string& pdfPath) {
   canvas->Clear();
   canvas->SetLeftMargin(0.14);
   canvas->SetRightMargin(0.05);
@@ -964,21 +918,23 @@ void DrawSummaryPage(TCanvas* canvas, const std::vector<OutputRow>& rows,
   gStyle->SetGridStyle(3);
   gStyle->SetGridWidth(1);
   std::vector<double> allRuns;
-  std::vector<double> electronRun, electronValue, electronError;
-  std::vector<double> positronRun, positronValue, positronError;
+  std::vector<double> calculatedRun, calculatedMean, calculatedSigma;
+  std::vector<double> bigtableRun, bigtableMean, bigtableSigma;
   for (const auto& row : rows) {
-    if (!row.fit.ok) continue;
-    const double value = drawMean ? row.fit.mean : row.fit.sigma;
-    const double error = drawMean ? row.fit.meanErr : row.fit.sigmaErr;
     allRuns.push_back(row.input.run);
-    if (row.ctMethod == "PRIOR_ELEC_AVERAGE") {
-      positronRun.push_back(row.input.run);
-      positronValue.push_back(value);
-      positronError.push_back(error);
-    } else {
-      electronRun.push_back(row.input.run);
-      electronValue.push_back(value);
-      electronError.push_back(error);
+    if (row.fit.ok && std::isfinite(row.fit.mean) &&
+        std::isfinite(row.fit.sigma)) {
+      calculatedRun.push_back(row.input.run);
+      calculatedMean.push_back(row.fit.mean);
+      calculatedSigma.push_back(row.fit.sigma);
+    }
+    if (std::isfinite(row.input.replayCtmean) &&
+        row.input.replayCtmean != -999.0 &&
+        std::isfinite(row.input.replayCtsigma) &&
+        row.input.replayCtsigma > 0.0) {
+      bigtableRun.push_back(row.input.run);
+      bigtableMean.push_back(row.input.replayCtmean);
+      bigtableSigma.push_back(row.input.replayCtsigma);
     }
   }
 
@@ -1003,14 +959,13 @@ void DrawSummaryPage(TCanvas* canvas, const std::vector<OutputRow>& rows,
       1, static_cast<int>(std::lround((axisMax - axisMin) / spacing)));
   }
 
-  TH1D frame(drawMean ? "h_ctmean_summary_frame" : "h_ctsigma_summary_frame",
-             drawMean ? "CTmean VS Run;Run;CTmean (ns)"
-                      : "CTsigma VS Run;Run;CTsigma (ns)",
+  TH1D frame("h_ctmean_summary_frame",
+             "CTmean VS Run;Run;CTmean (ns)",
              1, axisMin, axisMax);
   frame.SetDirectory(nullptr);
   frame.SetStats(false);
-  frame.SetMinimum(drawMean ? 40.0 : 0.0);
-  frame.SetMaximum(drawMean ? 60.0 : 0.7);
+  frame.SetMinimum(40.0);
+  frame.SetMaximum(60.0);
   frame.GetXaxis()->SetNdivisions(intervals, false);
   frame.GetXaxis()->SetNoExponent(true);
   frame.GetXaxis()->SetDecimals(false);
@@ -1018,26 +973,34 @@ void DrawSummaryPage(TCanvas* canvas, const std::vector<OutputRow>& rows,
   frame.SetLineColor(kWhite);
   frame.Draw();
 
-  TGraphErrors electronGraph(electronRun.size(), electronRun.data(),
-                             electronValue.data(), nullptr,
-                             electronError.data());
-  electronGraph.SetMarkerStyle(20);
-  electronGraph.SetMarkerSize(1.20);
-  electronGraph.SetMarkerColor(kBlue + 1);
-  electronGraph.SetLineColor(kRed + 1);
-  electronGraph.SetLineWidth(2);
+  TGraphErrors calculatedGraph(calculatedRun.size(), calculatedRun.data(),
+                               calculatedMean.data(), nullptr,
+                               calculatedSigma.data());
+  calculatedGraph.SetMarkerStyle(20);
+  calculatedGraph.SetMarkerSize(1.20);
+  calculatedGraph.SetMarkerColor(kBlue + 1);
+  calculatedGraph.SetLineColor(kRed + 1);
+  calculatedGraph.SetLineWidth(2);
 
-  TGraphErrors positronGraph(positronRun.size(), positronRun.data(),
-                             positronValue.data(), nullptr,
-                             positronError.data());
-  positronGraph.SetMarkerStyle(20);
-  positronGraph.SetMarkerSize(1.20);
-  positronGraph.SetMarkerColor(kRed + 1);
-  positronGraph.SetLineColor(kBlue + 1);
-  positronGraph.SetLineWidth(2);
+  TGraphErrors bigtableGraph(bigtableRun.size(), bigtableRun.data(),
+                             bigtableMean.data(), nullptr,
+                             bigtableSigma.data());
+  bigtableGraph.SetMarkerStyle(21);
+  bigtableGraph.SetMarkerSize(1.10);
+  bigtableGraph.SetMarkerColor(kRed + 1);
+  bigtableGraph.SetLineColor(kBlue + 1);
+  bigtableGraph.SetLineWidth(2);
+
   gStyle->SetEndErrorSize(6);
-  if (!electronRun.empty()) electronGraph.Draw("P same");
-  if (!positronRun.empty()) positronGraph.Draw("P same");
+  if (!calculatedRun.empty()) calculatedGraph.Draw("P same");
+  if (!bigtableRun.empty()) bigtableGraph.Draw("P same");
+
+  TLegend legend(0.72, 0.78, 0.94, 0.90);
+  legend.SetBorderSize(0);
+  legend.SetFillStyle(0);
+  legend.AddEntry(&calculatedGraph, "calculated", "lep");
+  legend.AddEntry(&bigtableGraph, "bigtable", "lep");
+  legend.Draw();
 
   canvas->Modified();
   canvas->Update();
@@ -1051,20 +1014,17 @@ void WriteNumber(std::ostream& out, double value) {
 
 void WriteOutputCSV(const std::string& path, const std::vector<OutputRow>& rows) {
   std::ofstream out(path);
-  out << "Run,Ebeam,Target,Run_type,CT_method,CT_POS_ref_status,"
+  out << "Run,setting_id,Ebeam,Target,Run_type,CT_method,CT_POS_ref_status,"
          "CT_POS_ref_count,CT_POS_ref_runs,CT_POS_ref_ctmean_stddev,"
          "CT_POS_ref_ctmean_range,hms_p,hms_th,shms_p,shms_th,x,Q2,z,thpq,"
-         "RFperiodNs,CTmean,CTmean_err,CTsigma,CTsigma_err,ctmean,"
-         "CTmean_residual,CT_low,CT_high,N_rndm_peak,Left_rndm_low,"
+         "RFperiodNs,CTmean,CTmean_err,CTsigma,CTsigma_err,ctmean,ctsigma,"
+         "CTmean_residual,CTsigma_residual,CT_low,CT_high,N_rndm_peak,Left_rndm_low,"
          "Left_rndm_high,Right_rndm_low,Right_rndm_high,"
-         "N_coin_delta,N_rndm_total_delta,Rndm_mean_delta,"
-         "RP_Goodcoin_delta,RP_Goodcoin_err_delta,CoinCuts_entries_delta,"
-         "N_coin_full,N_rndm_total_full,Rndm_mean_full,"
-         "RP_Goodcoin_full,RP_Goodcoin_err_full,CoinCuts_entries_full,"
-         "RP_Goodcoin_full_by_delta,ransubcoin,"
-         "ransubcoin_by_RP_Goodcoin_delta,Fit_status,Root_entries\n";
+         "N_coin,N_rndm_total,Rndm_mean,"
+         "RP_Goodcoin,RP_Goodcoin_err,CoinCuts_entries,ransubcoin,"
+         "ransubcoin_by_RP_Goodcoin,Fit_status,Root_entries\n";
   for (const auto& row : rows) {
-    out << row.input.run << ',';
+    out << row.input.run << ',' << row.input.settingId << ',';
     WriteNumber(out, row.input.ebeam); out << ',' << row.input.target << ','
         << row.input.runType << ',';
     out << row.ctMethod << ',' << row.ctPosRefStatus << ','
@@ -1085,27 +1045,22 @@ void WriteOutputCSV(const std::string& path, const std::vector<OutputRow>& rows)
     WriteNumber(out, row.fit.sigma); out << ',';
     WriteNumber(out, row.fit.sigmaErr); out << ',';
     WriteNumber(out, row.input.replayCtmean); out << ',';
+    WriteNumber(out, row.input.replayCtsigma); out << ',';
     WriteNumber(out, row.ctmeanResidual); out << ',';
+    WriteNumber(out, row.ctsigmaResidual); out << ',';
     WriteNumber(out, row.ctLow); out << ',';
     WriteNumber(out, row.ctHigh); out << ',';
-    out << row.delta.nRandomPeaks << ',';
+    out << row.baseline.nRandomPeaks << ',';
     WriteNumber(out, row.leftLow); out << ',';
     WriteNumber(out, row.leftHigh); out << ',';
     WriteNumber(out, row.rightLow); out << ',';
     WriteNumber(out, row.rightHigh); out << ',';
-    WriteNumber(out, row.delta.nCoin); out << ',';
-    WriteNumber(out, row.delta.nRandomTotal); out << ',';
-    WriteNumber(out, row.delta.randomMean); out << ',';
-    WriteNumber(out, row.delta.goodCoin); out << ',';
-    WriteNumber(out, row.delta.goodCoinErr); out << ','
-        << row.delta.selectedEntries << ',';
-    WriteNumber(out, row.full.nCoin); out << ',';
-    WriteNumber(out, row.full.nRandomTotal); out << ',';
-    WriteNumber(out, row.full.randomMean); out << ',';
-    WriteNumber(out, row.full.goodCoin); out << ',';
-    WriteNumber(out, row.full.goodCoinErr); out << ','
-        << row.full.selectedEntries << ',';
-    WriteNumber(out, row.fullByDelta); out << ',';
+    WriteNumber(out, row.baseline.nCoin); out << ',';
+    WriteNumber(out, row.baseline.nRandomTotal); out << ',';
+    WriteNumber(out, row.baseline.randomMean); out << ',';
+    WriteNumber(out, row.baseline.goodCoin); out << ',';
+    WriteNumber(out, row.baseline.goodCoinErr); out << ','
+        << row.baseline.selectedEntries << ',';
     WriteNumber(out, row.input.ransubcoin); out << ',';
     WriteNumber(out, row.ransubcoinByRPGoodcoin); out << ',' << row.fit.status << ','
         << row.rootEntries << '\n';
@@ -1147,9 +1102,9 @@ int RP_get_good_coin_ev(const std::string& inputCSVArgument = "") {
 
   const std::string stem = InputStem(inputCSV);
   const std::string outputPDF =
-    "results/PDFs/RP_get_good_coin_ev/" + stem + ".pdf";
+    "results/Pass1/PDFs/RP_get_good_coin_ev/" + stem + ".pdf";
   const std::string outputCSV =
-    "results/Tables/RP_get_good_coin_ev/" + stem + ".csv";
+    "results/Pass1/Tables/RP_get_good_coin_ev/" + stem + ".csv";
   gSystem->mkdir(gSystem->DirName(outputPDF.c_str()), true);
   gSystem->mkdir(gSystem->DirName(outputCSV.c_str()), true);
 
@@ -1167,19 +1122,14 @@ int RP_get_good_coin_ev(const std::string& inputCSVArgument = "") {
       row.ctPosRefStatus = "NOT_EVALUATED";
       AssignPositronReference(input, positronReferenceTable, row);
     }
-    row.rfPeriod = RFPeriod(input.ebeam);
+    row.rfPeriod = input.rfSignal;
     const std::string rootPath = RootPathForRun(metadata.rootDir, input.run);
     std::unique_ptr<TH1D> hist(new TH1D(Form("h_ct_%d", input.run), "",
                                         kNBins, kHistLow, kHistHigh));
     hist->Sumw2();
-    std::unique_ptr<TH1D> fullHist(
-      new TH1D(Form("h_ct_full_%d", input.run), "",
-               kNBins, kHistLow, kHistHigh));
-    fullHist->Sumw2();
-
-    if (!std::isfinite(row.rfPeriod)) {
+    if (!std::isfinite(row.rfPeriod) || !(row.rfPeriod > 0.0)) {
       row.fit.ok = false;
-      row.fit.status = "UNKNOWN_EBEAM";
+      row.fit.status = "INVALID_RF_SIGNAL";
     } else if (gSystem->AccessPathName(rootPath.c_str())) {
       row.fit.ok = false;
       row.fit.status = "FILE_MISSING";
@@ -1196,30 +1146,20 @@ int RP_get_good_coin_ev(const std::string& inputCSVArgument = "") {
         } else if (!tree->GetBranch(kCTBranch)) {
           row.fit.ok = false;
           row.fit.status = "CTIME_BRANCH_MISSING";
-        } else if (!tree->GetBranch("H_gtr_th") ||
-                   !tree->GetBranch("H_gtr_ph") ||
-                   !tree->GetBranch("P_gtr_th") ||
-                   !tree->GetBranch("P_gtr_ph")) {
-          row.fit.ok = false;
-          row.fit.status = "FULL_CUT_BRANCH_MISSING";
         } else {
           row.rootEntries = tree->GetEntries();
           gROOT->cd();
           hist->SetDirectory(gROOT);
-          fullHist->SetDirectory(gROOT);
-          row.delta.selectedEntries =
-            tree->Project(hist->GetName(), kCTBranch, kDeltaCoinCuts);
-          row.full.selectedEntries =
-            tree->Project(fullHist->GetName(), kCTBranch, kFullCoinCuts);
-          if (row.delta.selectedEntries < 0 || row.full.selectedEntries < 0) {
+          row.baseline.selectedEntries =
+            tree->Project(hist->GetName(), kCTBranch, kBaselineCoinCuts);
+          if (row.baseline.selectedEntries < 0) {
             row.fit.ok = false;
             row.fit.status = "CUT_PROJECTION_FAILED";
           } else {
             if (!IsPositron(input))
               row.fit = FitPeakTwice(hist.get(), input.run);
             if (row.fit.ok) {
-              CountWindows(hist.get(), row, row.delta, true);
-              CountWindows(fullHist.get(), row, row.full, false);
+              CountWindows(hist.get(), row, row.baseline, true);
               FinalizeCounts(row);
             }
           }
@@ -1239,8 +1179,7 @@ int RP_get_good_coin_ev(const std::string& inputCSVArgument = "") {
   DrawMetadataPage3(&canvas, outputPDF);
   for (size_t i = 0; i < outputs.size(); ++i)
     DrawRunPage(&canvas, histograms[i].get(), outputs[i], outputPDF);
-  DrawSummaryPage(&canvas, outputs, true, outputPDF);
-  DrawSummaryPage(&canvas, outputs, false, outputPDF);
+  DrawSummaryPage(&canvas, outputs, outputPDF);
   canvas.Print((outputPDF + "]").c_str());
 
   WriteOutputCSV(outputCSV, outputs);

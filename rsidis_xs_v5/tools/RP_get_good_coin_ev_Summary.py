@@ -12,12 +12,13 @@ from typing import Dict, Iterable, List, Sequence
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = SCRIPT_DIR.parent
-DEFAULT_INPUT_DIR = PROJECT_DIR / "results" / "Tables" / "RP_get_good_coin_ev"
+DEFAULT_INPUT_DIR = PROJECT_DIR / "results" / "Pass1" / "Tables" / "RP_get_good_coin_ev"
 SUMMARY_NAME = "RP_get_good_coin_ev_Summary.csv"
 PROBLEMATIC_NAME = "RP_get_good_coin_ev_Problematic.csv"
 
 REQUIRED_COLUMNS = {
     "Run",
+    "setting_id",
     "CT_method",
     "CT_POS_ref_status",
     "CT_POS_ref_count",
@@ -28,15 +29,15 @@ REQUIRED_COLUMNS = {
     "CTmean_err",
     "CTsigma",
     "CTsigma_err",
+    "ctmean",
+    "ctsigma",
     "CTmean_residual",
+    "CTsigma_residual",
     "N_rndm_peak",
-    "RP_Goodcoin_delta",
-    "RP_Goodcoin_err_delta",
-    "RP_Goodcoin_full",
-    "RP_Goodcoin_err_full",
-    "RP_Goodcoin_full_by_delta",
+    "RP_Goodcoin",
+    "RP_Goodcoin_err",
     "ransubcoin",
-    "ransubcoin_by_RP_Goodcoin_delta",
+    "ransubcoin_by_RP_Goodcoin",
     "Fit_status",
 }
 
@@ -69,9 +70,8 @@ def flag_row(row: Dict[str, str]) -> Dict[str, str]:
     method = row.get("CT_method", "").strip()
     is_positron_reference = method == "PRIOR_ELEC_AVERAGE"
     residual = parse_finite(row.get("CTmean_residual", ""))
-    ratio = parse_finite(row.get("ransubcoin_by_RP_Goodcoin_delta", ""))
-    goodcoin_delta = parse_finite(row.get("RP_Goodcoin_delta", ""))
-    goodcoin_full = parse_finite(row.get("RP_Goodcoin_full", ""))
+    ratio = parse_finite(row.get("ransubcoin_by_RP_Goodcoin", ""))
+    goodcoin = parse_finite(row.get("RP_Goodcoin", ""))
     sigma = parse_finite(row.get("CTsigma", ""))
 
     numerical_fields = [
@@ -80,15 +80,13 @@ def flag_row(row: Dict[str, str]) -> Dict[str, str]:
         "CTsigma",
         "CTsigma_err",
     ]
-    if not is_positron_reference:
-        numerical_fields.append("CTmean_residual")
+    numerical_fields.extend(("CTmean_residual", "CTsigma_residual"))
     numeric_flag = any(parse_finite(row.get(name, "")) is None for name in numerical_fields)
     if sigma is not None and sigma <= 0.0:
         numeric_flag = True
 
     residual_flag = (
-        not is_positron_reference
-        and residual is not None
+        residual is not None
         and abs(residual) > 2.0
     )
     ratio_flag = (
@@ -109,15 +107,13 @@ def flag_row(row: Dict[str, str]) -> Dict[str, str]:
     )
 
     try:
-        random_window_flag = int(row.get("N_rndm_peak", "")) != 6
+        random_window_flag = int(row.get("N_rndm_peak", "")) != 10
     except (TypeError, ValueError):
         random_window_flag = True
 
     yield_flag = (
-        goodcoin_delta is None
-        or goodcoin_delta <= 0.0
-        or goodcoin_full is None
-        or goodcoin_full <= 0.0
+        goodcoin is None
+        or goodcoin <= 0.0
     )
 
     reasons: List[str] = []
@@ -130,7 +126,7 @@ def flag_row(row: Dict[str, str]) -> Dict[str, str]:
     if positron_ref_flag:
         reasons.append("POSITRON_REFERENCE_INVALID")
     if random_window_flag:
-        reasons.append("N_RNDM_PEAK_NOT_6")
+        reasons.append("N_RNDM_PEAK_NOT_10")
     if yield_flag:
         reasons.append("RP_GOODCOIN_NONPOSITIVE_OR_INVALID")
     if numeric_flag:

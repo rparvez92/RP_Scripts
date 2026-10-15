@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regression tests for explicit Delta-only and Full-cut data schemas."""
+"""Regression tests for the data-acceptance result schemas."""
 
 from __future__ import annotations
 
@@ -16,18 +16,18 @@ import RP_get_good_coin_ev_Summary as good_summary  # noqa: E402
 
 
 class DataAcceptanceSummaryTests(unittest.TestCase):
-    def test_active_cpp_stages_use_matching_wide_angle_acceptance(self):
+    def test_goodcoin_uses_only_baseline_delta_acceptance(self):
         project = TOOLS_DIR.parent
         goodcoin = (project / "macros" / "RP_get_good_coin_ev.C").read_text()
         xsec = (project / "macros" / "TableCoinXsec.C").read_text()
         for branch in ("H_gtr_th", "P_gtr_th"):
-            self.assertIn(f"{branch}>-0.15", goodcoin)
-            self.assertIn(f"{branch}<0.15", goodcoin)
+            self.assertNotIn(f"{branch}>-0.15", goodcoin)
+            self.assertNotIn(f"{branch}<0.15", goodcoin)
             self.assertIn(f"({branch}>-0.15)", xsec)
             self.assertIn(f"({branch}<0.15)", xsec)
         for branch in ("H_gtr_ph", "P_gtr_ph"):
-            self.assertIn(f"{branch}>-0.10", goodcoin)
-            self.assertIn(f"{branch}<0.10", goodcoin)
+            self.assertNotIn(f"{branch}>-0.10", goodcoin)
+            self.assertNotIn(f"{branch}<0.10", goodcoin)
             self.assertIn(f"({branch}>-0.10)", xsec)
             self.assertIn(f"({branch}<0.10)", xsec)
         for branch in ("hsxptar", "ssxptar"):
@@ -37,7 +37,18 @@ class DataAcceptanceSummaryTests(unittest.TestCase):
             self.assertIn(f"({branch}>-0.10)", xsec)
             self.assertIn(f"({branch}<0.10)", xsec)
 
-    def test_goodcoin_dual_tier_row_is_valid(self):
+    def test_goodcoin_pass1_configuration(self):
+        project = TOOLS_DIR.parent
+        goodcoin = (project / "macros" / "RP_get_good_coin_ev.C").read_text()
+        self.assertIn("{-6, -5, -4, -3, -2, 2, 3, 4, 5, 6}", goodcoin)
+        self.assertIn('row.rfPeriod = input.rfSignal;', goodcoin)
+        self.assertIn('results/Pass1/PDFs/RP_get_good_coin_ev/', goodcoin)
+        self.assertIn('results/Pass1/Tables/RP_get_good_coin_ev/', goodcoin)
+        self.assertIn('/Volumes/T7/RSIDIS/Pass1/Data/ROOTfiles/SkimmedData', goodcoin)
+        self.assertIn('"RP_Goodcoin,RP_Goodcoin_err,CoinCuts_entries,ransubcoin,"', goodcoin)
+        self.assertNotIn("RP_Goodcoin_full", goodcoin)
+
+    def test_goodcoin_baseline_row_is_valid(self):
         row = {
             "CT_method": "TWO_STAGE_GAUSSIAN_FIT",
             "CT_POS_ref_status": "NOT_APPLICABLE",
@@ -47,19 +58,17 @@ class DataAcceptanceSummaryTests(unittest.TestCase):
             "CTsigma": "0.4",
             "CTsigma_err": "0.05",
             "CTmean_residual": "0.2",
-            "N_rndm_peak": "6",
-            "RP_Goodcoin_delta": "1000",
-            "RP_Goodcoin_err_delta": "35",
-            "RP_Goodcoin_full": "600",
-            "RP_Goodcoin_err_full": "27",
-            "RP_Goodcoin_full_by_delta": "0.6",
-            "ransubcoin_by_RP_Goodcoin_delta": "1.05",
+            "CTsigma_residual": "0.1",
+            "N_rndm_peak": "10",
+            "RP_Goodcoin": "1000",
+            "RP_Goodcoin_err": "35",
+            "ransubcoin_by_RP_Goodcoin": "1.05",
             "Fit_status": "OK",
         }
         flagged = good_summary.flag_row(row)
         self.assertEqual(flagged["Problematic"], "FALSE")
 
-    def test_missing_full_goodcoin_is_problematic(self):
+    def test_missing_goodcoin_is_problematic(self):
         row = {
             "CT_method": "TWO_STAGE_GAUSSIAN_FIT",
             "CT_POS_ref_status": "NOT_APPLICABLE",
@@ -69,10 +78,10 @@ class DataAcceptanceSummaryTests(unittest.TestCase):
             "CTsigma": "0.4",
             "CTsigma_err": "0.05",
             "CTmean_residual": "0.2",
-            "N_rndm_peak": "6",
-            "RP_Goodcoin_delta": "1000",
-            "RP_Goodcoin_full": "nan",
-            "ransubcoin_by_RP_Goodcoin_delta": "1.05",
+            "CTsigma_residual": "0.1",
+            "N_rndm_peak": "10",
+            "RP_Goodcoin": "nan",
+            "ransubcoin_by_RP_Goodcoin": "1.05",
             "Fit_status": "OK",
         }
         flagged = good_summary.flag_row(row)

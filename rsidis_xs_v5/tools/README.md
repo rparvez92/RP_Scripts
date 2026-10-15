@@ -152,38 +152,28 @@ python3 tools/validate_output_schema.py results/.../xsec_phipq.csv
 
 ---
 
-## 7) Extract Delta-only and Full-cut data yields
+## 7) Extract Pass1 good-coin yields
 
-`RP_get_good_coin_ev.C` uses the PID-selected Delta-only sample to determine
-CTmean, CTsigma, and the common central/random RF windows. It then integrates
-those same fixed windows for two matched acceptance tiers:
+`RP_get_good_coin_ev.C` uses the Baseline PID + Delta-only acceptance sample to
+determine CTmean, CTsigma, the central RF window, and ten random RF windows
+(five on each side). The RF period is read from the input bigtable's
+`RF_signal` column.
 
 ```text
-Delta-only:
+Baseline PID + Delta-only acceptance:
   -8 < H_gtr_dp < 8
   -10 < P_gtr_dp < 22
-
-Full-cut:
-  Delta-only plus
-  -0.15 < H_gtr_th < 0.15
-  -0.10 < H_gtr_ph < 0.10
-  -0.15 < P_gtr_th < 0.15
-  -0.10 < P_gtr_ph < 0.10
 ```
 
-The corresponding SIMC branches use the same numerical limits:
-`hsxptar`/`ssxptar` are restricted to `[-0.15, 0.15]`, and
-`hsyptar`/`ssyptar` are restricted to `[-0.10, 0.10]`.
-
-The output reports explicit `RP_Goodcoin_delta` and `RP_Goodcoin_full`
-counts and errors. `RP_get_coin_normyield.C` applies the same run
-normalization factor to both, producing explicit `_delta` and `_full`
-normalized yields. Replay `ransubcoin` and `normyield` comparisons remain
-against the Delta-only tier.
+The output reports one `RP_Goodcoin` count and error. Pass1 PDFs are written
+under `results/Pass1/PDFs/RP_get_good_coin_ev/`; per-setting, summary, and
+problematic CSVs are written under
+`results/Pass1/Tables/RP_get_good_coin_ev/`. Filenames use the Pass1
+setting-ID schema.
 
 Data PID cuts are a common data-only baseline because standard SIMC does not
-simulate calorimeter or Cherenkov detector response. The Delta-only and
-Full-cut labels refer to geometrical acceptance matched between data and SIMC.
+simulate calorimeter or Cherenkov detector response. Delta-only refers to the
+spectrometer momentum acceptance.
 
 ---
 
