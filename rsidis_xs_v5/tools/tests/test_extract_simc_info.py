@@ -17,19 +17,17 @@ import RP_extract_simc_info as extractor  # noqa: E402
 
 
 class ExtractorTests(unittest.TestCase):
-    def test_full_cut_uses_common_wide_angle_acceptance(self):
-        for branch in ("hsxptar", "ssxptar"):
-            self.assertIn(f"{branch} > -0.15", extractor.FULL_CUT)
-            self.assertIn(f"{branch} < 0.15", extractor.FULL_CUT)
-        for branch in ("hsyptar", "ssyptar"):
-            self.assertIn(f"{branch} > -0.10", extractor.FULL_CUT)
-            self.assertIn(f"{branch} < 0.10", extractor.FULL_CUT)
+    def test_only_baseline_acceptance_is_reported(self):
+        self.assertIn("hsdelta > -8.0", extractor.DELTA_CUT)
+        self.assertIn("ssdelta < 22.0", extractor.DELTA_CUT)
+        self.assertFalse(any("full" in column.lower() for column in extractor.OUTPUT_COLUMNS))
+        self.assertIn("SimYield", extractor.OUTPUT_COLUMNS)
 
     def manifest_row(self, status="GENERATED", reaction="sidis"):
         return {
             "Phase": "phase1",
             "Pass": "pass4",
-            "Run_type": "PIPLUS",
+            "Run_type": "pip",
             "Target": "LH2",
             "Setting": "x0p25Q23p3z0p5thpq2p0",
             "Reaction": reaction,
@@ -46,7 +44,7 @@ class ExtractorTests(unittest.TestCase):
 
     def output_paths(self, root):
         stem = Path(self.manifest_row()["Output_file"]).stem
-        simulation = root / "Phase1" / "Simulation"
+        simulation = root
         hist_dir = simulation / "outfiles" / "coin"
         root_dir = simulation / "ROOTfiles" / "coin"
         hist_dir.mkdir(parents=True)
@@ -198,21 +196,15 @@ class ExtractorTests(unittest.TestCase):
             self.assertEqual(result["Recon_Ngen"], 1001)
             self.assertEqual(result["Recon_normfac"], 100.0)
             self.assertEqual(result["N_selected_nocut"], 1001)
-            self.assertEqual(result["N_selected_full"], 1001)
-            self.assertAlmostEqual(result["SimYield_full"], 100.0, places=5)
-            self.assertAlmostEqual(result["SimYield_err_full"], 100 / math.sqrt(1001), places=5)
-            self.assertAlmostEqual(result["Neff_full"], 1001.0, places=3)
+            self.assertEqual(result["N_selected"], 1001)
+            self.assertAlmostEqual(result["SimYield"], 100.0, places=5)
+            self.assertAlmostEqual(result["SimYield_err"], 100 / math.sqrt(1001), places=5)
+            self.assertAlmostEqual(result["Neff"], 1001.0, places=3)
             self.assertLess(result["FWeight_identity_max_rel_diff"], 1e-5)
-            for tier in ("delta", "full"):
-                self.assertAlmostEqual(
-                    result[f"Q2_{tier}_simc_weighted_mean"], 0.205, places=5
-                )
-                self.assertAlmostEqual(
-                    result[f"Q2_{tier}_residual_weighted_mean"],
-                    0.01,
-                    places=5,
-                )
-            self.assertNotIn("Q2_residual_weighted_mean", result)
+            self.assertAlmostEqual(result["Q2_simc_weighted_mean"], 0.205, places=5)
+            self.assertAlmostEqual(
+                result["Q2_residual_weighted_mean"], 0.01, places=5
+            )
             self.assertAlmostEqual(
                 result["Raw_root_size_MB"],
                 paths["raw"].stat().st_size / 1e6,
@@ -224,17 +216,17 @@ class ExtractorTests(unittest.TestCase):
 
     def test_grouped_setting_positions(self):
         rows = [
-            {"Setting": "setting_b", "Run_type": "PIPLUS", "Target": "LH2"},
-            {"Setting": "setting_a", "Run_type": "PIMINUS", "Target": "LH2"},
-            {"Setting": "setting_a", "Run_type": "PIPLUS", "Target": "LH2"},
-            {"Setting": "setting_a", "Run_type": "PIMINUS", "Target": "LD2"},
+            {"setting_id": "setting_b", "Run_type": "pip", "Target": "LH2"},
+            {"setting_id": "setting_a", "Run_type": "pim", "Target": "LH2"},
+            {"setting_id": "setting_a", "Run_type": "pip", "Target": "LH2"},
+            {"setting_id": "setting_a", "Run_type": "pim", "Target": "LD2"},
         ]
         settings = extractor.setting_names(rows)
         self.assertEqual(settings, ["setting_a", "setting_b"])
         setting_index = {
             setting: index for index, setting in enumerate(settings, start=1)
         }
-        setting_a = [row for row in rows if row["Setting"] == "setting_a"]
+        setting_a = [row for row in rows if row["setting_id"] == "setting_a"]
         category_positions = [
             extractor.grouped_x(row, setting_index) for row in setting_a
         ]
@@ -260,27 +252,19 @@ class ExtractorTests(unittest.TestCase):
             )
             # Q2 is the second synthetic kinematic pair; its weighted mean is
             # 0.205 after the deterministic per-entry offset.
-            for tier in ("delta", "full"):
-                self.assertAlmostEqual(
-                    result[f"xbj_{tier}_simc_weighted_mean"],
-                    0.205 / (2 * 0.9382720813 * 4.0),
-                    places=6,
-                )
-                self.assertAlmostEqual(
-                    result[f"z_{tier}_simc_weighted_mean"], 0.5, places=6
-                )
-                self.assertAlmostEqual(
-                    result[f"z_{tier}_recon_weighted_mean"], 0.4, places=6
-                )
-                self.assertGreater(
-                    result[f"pt2_{tier}_simc_weighted_mean"], 0.0
-                )
+            self.assertAlmostEqual(
+                result["xbj_simc_weighted_mean"],
+                0.205 / (2 * 0.9382720813 * 4.0), places=6,
+            )
+            self.assertAlmostEqual(result["z_simc_weighted_mean"], 0.5, places=6)
+            self.assertAlmostEqual(result["z_recon_weighted_mean"], 0.4, places=6)
+            self.assertGreater(result["pt2_simc_weighted_mean"], 0.0)
 
     def test_setting_chunks_never_split_categories(self):
         for count, expected_chunks in ((1, 1), (6, 1), (7, 2), (10, 2)):
             rows = [
                 {
-                    "Setting": f"setting_{setting:02d}",
+                    "setting_id": f"setting_{setting:02d}",
                     "Run_type": run_type,
                     "Target": target,
                 }
@@ -295,7 +279,7 @@ class ExtractorTests(unittest.TestCase):
                 self.assertLessEqual(len(names), 6)
                 for name in names:
                     self.assertEqual(
-                        sum(row["Setting"] == name for row in chunk), 4
+                        sum(row["setting_id"] == name for row in chunk), 4
                     )
                 seen.extend(names)
             self.assertEqual(seen, extractor.setting_names(rows))
@@ -320,16 +304,16 @@ class ExtractorTests(unittest.TestCase):
             self.assertEqual(
                 extractor.kinematic_availability(result, "Q2"), "available"
             )
-            self.assertEqual(result["xbj_full_simc_weighted_mean"], "")
+            self.assertEqual(result["xbj_simc_weighted_mean"], "")
             self.assertEqual(
                 extractor.unavailable_kinematic_message(
-                    [result], "xbj", "full"
+                    [result], "xbj", "selected"
                 ),
                 "Unavailable: all values = -999",
             )
             self.assertEqual(
                 extractor.unavailable_kinematic_message(
-                    [result], "z", "full"
+                    [result], "z", "selected"
                 ),
                 "Unavailable: branch missing",
             )
@@ -343,10 +327,10 @@ class ExtractorTests(unittest.TestCase):
             self.assertEqual(
                 extractor.kinematic_availability(result, "Q2"), "available"
             )
-            self.assertEqual(result["Q2_delta_simc_weighted_mean"], "")
+            self.assertEqual(result["Q2_simc_weighted_mean"], "")
             self.assertEqual(
                 extractor.unavailable_kinematic_message(
-                    [result], "Q2", "delta"
+                    [result], "Q2", "selected"
                 ),
                 "No valid values after selection",
             )

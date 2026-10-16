@@ -21,18 +21,18 @@ ROOT.TH1.SetDefaultSumw2(True)
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = SCRIPT_DIR.parent
-DEFAULT_NORM_DIR = PROJECT_DIR / "results" / "Tables" / "RP_get_coin_normyield"
-DEFAULT_BIGTABLE_DIR = PROJECT_DIR / "bigtable"
+DEFAULT_NORM_DIR = PROJECT_DIR / "results" / "Pass1" / "Tables" / "RP_get_coin_normyield"
+DEFAULT_BIGTABLE_DIR = PROJECT_DIR / "bigtable" / "Pass1"
 DEFAULT_SIMC_CATALOG = (
-    PROJECT_DIR / "results" / "Tables" / "RP_extract_simc_info"
+    PROJECT_DIR / "results" / "Pass1" / "Tables" / "RP_extract_simc_info"
     / "RP_extract_simc_info.csv"
 )
-DEFAULT_TABLE_DIR = PROJECT_DIR / "results" / "Tables" / "RP_data_mc_compare"
-DEFAULT_PDF_DIR = PROJECT_DIR / "results" / "PDFs" / "RP_data_mc_compare"
-DEFAULT_T7_ROOT = Path("/Volumes/T7/RSIDIS")
+DEFAULT_TABLE_DIR = PROJECT_DIR / "results" / "Pass1" / "Tables" / "RP_data_mc_compare"
+DEFAULT_PDF_DIR = PROJECT_DIR / "results" / "Pass1" / "PDFs" / "RP_data_mc_compare"
+DEFAULT_T7_ROOT = Path("/Volumes/T7/RSIDIS/Pass1/Data/ROOTfiles/SkimmedData")
 
 REACTIONS = ("sidis", "rho", "delta", "exclusive")
-TIERS = ("delta", "full")
+TIERS = ("delta",)
 CANVAS_WIDTH = 1800
 CANVAS_HEIGHT = 1200
 METADATA_LINE_CHARS = 90
@@ -46,26 +46,14 @@ S_DUMMY = {
 }
 
 PID_CUT = (
-    "(P_gtr_p<=2.7 || P_hgcer_npeSum>1) && P_aero_npeSum>2 && "
-    "P_cal_etottracknorm<0.8 && H_cer_npeSum>2 && H_cal_etottracknorm>0.8"
+    "(P_gtr_p<=2.9 || P_hgcer_npeSum>1) && P_aero_npeSum>2 && "
+    "P_cal_etottracknorm<0.8 && H_cer_npeSum>2 && H_cal_etottracknorm>0.7"
 )
 DATA_DELTA = "H_gtr_dp>-8 && H_gtr_dp<8 && P_gtr_dp>-10 && P_gtr_dp<22"
-DATA_ANGLE_CUTS = {
-    "hxp": ("H_gtr_th", -0.15, 0.15),
-    "hyp": ("H_gtr_ph", -0.10, 0.10),
-    "pxp": ("P_gtr_th", -0.15, 0.15),
-    "pyp": ("P_gtr_ph", -0.10, 0.10),
-}
 SIMC_DELTA = "hsdelta>-8 && hsdelta<8 && ssdelta>-10 && ssdelta<22"
-SIMC_ANGLE_CUTS = {
-    "hxp": ("hsxptar", -0.15, 0.15),
-    "hyp": ("hsyptar", -0.10, 0.10),
-    "pxp": ("ssxptar", -0.15, 0.15),
-    "pyp": ("ssyptar", -0.10, 0.10),
-}
 
 # Versioned fixed comparison bins. They intentionally extend beyond acceptance cuts.
-BINNING_VERSION = "RP_DMC_V3"
+BINNING_VERSION = "RP_DMC_V7"
 BINNING = {
     "hdelta": (20, -12.0, 12.0, "HMS #delta", "%"),
     "pdelta": (20, -15.0, 25.0, "SHMS #delta", "%"),
@@ -74,15 +62,15 @@ BINNING = {
     "pxp": (20, -0.20, 0.20, "SHMS x'_{tar}", "rad"),
     "pyp": (20, -0.15, 0.15, "SHMS y'_{tar}", "rad"),
     "hytar": (20, -5.0, 5.0, "HMS y_{tar}", "cm"),
-    "pytar": (20, -5.0, 5.0, "SHMS y_{tar}", "cm"),
+    "pytar": (20, -10.0, 10.0, "SHMS y_{tar}", "cm"),
     "xbj": (20, 0.0, 0.6, "x_{bj}", ""),
     "Q2": (20, 0.0, 6.0, "Q^{2}", "GeV^{2}"),
     "W": (20, 0.0, 4.0, "W", "GeV"),
     "z": (20, 0.0, 1.0, "z", ""),
     "thetapq": (20, 0.0, 0.20, "#theta_{pq}", "rad"),
     "phipq": (20, 0.0, 2.0 * math.pi, "#phi_{pq}", "rad"),
-    "pt2": (20, 0.0, 0.6, "p_{T}^{2}", "GeV^{2}"),
-    "missmass": (20, 0.0, 3.0, "Missing mass", "GeV"),
+    "pt": (20, 0.0, 0.6, "P_{t}", "GeV"),
+    "missmass": (20, 0.0, 4.0, "Missing mass", "GeV"),
 }
 ACCEPTANCE_VARIABLES = tuple(list(BINNING)[:8])
 PHYSICS_VARIABLES = tuple(list(BINNING)[8:])
@@ -97,7 +85,7 @@ DATA_EXPRESSIONS = {
     "z": "P_gtr_p/H_kin_primary_nu",
     "thetapq": "P_kin_secondary_th_xq",
     "phipq": "P_kin_secondary_ph_xq<0 ? P_kin_secondary_ph_xq+2*TMath::Pi() : P_kin_secondary_ph_xq",
-    "pt2": "pt*pt", "missmass": "mmass",
+    "pt": "abs(pt)", "missmass": "mmass",
 }
 SIMC_EXPRESSIONS = {
     "hdelta": "hsdelta", "pdelta": "ssdelta",
@@ -107,11 +95,15 @@ SIMC_EXPRESSIONS = {
     "xbj": "xbj_recon", "Q2": "Q2_recon", "W": "W_recon",
     "z": "z_recon", "thetapq": "thetapq_recon",
     "phipq": "phipq_recon<0 ? phipq_recon+2*TMath::Pi() : phipq_recon",
-    "pt2": "pt2_recon", "missmass": "missmass_recon",
+    "pt": (
+        "(std::isfinite(static_cast<double>(pt2_recon)) && pt2_recon>=0) ? "
+        "sqrt(pt2_recon) : std::numeric_limits<double>::quiet_NaN()"
+    ),
+    "missmass": "missmass_recon",
 }
 
 CSV_COLUMNS = [
-    "Phase", "Pass", "Run_type", "Target", "Setting", "Tier", "Variable",
+    "Phase", "Pass", "Run_type", "Target", "setting_id", "Variable",
     "Bin_index", "Bin_low", "Bin_high", "Binning_version", "S_dummy",
     "Target_Elec", "Target_Elec_err", "Target_Pos", "Target_Pos_err",
     "Target_pos_sub", "Target_pos_sub_err", "Dummy_Elec", "Dummy_Elec_err",
@@ -149,16 +141,16 @@ def parse_norm_stem(path: Path) -> Dict[str, str]:
     parts = path.stem.split("_", 5)
     if len(parts) != 6:
         raise ValueError(f"unexpected normalized-yield filename: {path.name}")
-    return dict(zip(("Phase", "Pass", "Run_type", "Target", "Charge", "Setting"), parts))
+    return dict(zip(("Phase", "Pass", "Run_type", "Target", "Charge", "setting_id"), parts))
 
 
 def setting_key(identity: Mapping[str, str]) -> Tuple[str, str, str, str]:
-    return tuple(identity[key] for key in ("Phase", "Pass", "Run_type", "Setting"))
+    return tuple(identity[key] for key in ("Phase", "Pass", "Run_type", "setting_id"))
 
 
 def discover_norm_files(directory: Path) -> Dict[Tuple[str, str, str, str], Dict[Tuple[str, str], Path]]:
     groups: Dict[Tuple[str, str, str, str], Dict[Tuple[str, str], Path]] = defaultdict(dict)
-    for path in sorted(directory.glob("phase*_pass*_PI*_*.csv")):
+    for path in sorted(directory.glob("phase*_pass*_*.csv")):
         if path.name.endswith(("_Summary.csv", "_Problematic.csv")):
             continue
         identity = parse_norm_stem(path)
@@ -171,7 +163,7 @@ def leaf_bigtable_path(norm_path: Path, bigtable_dir: Path) -> Path:
     return (
         bigtable_dir / identity["Phase"] / identity["Pass"]
         / identity["Run_type"] / identity["Target"] / identity["Charge"]
-        / identity["Setting"] / f"{norm_path.stem}.csv"
+        / identity["setting_id"] / f"{norm_path.stem}.csv"
     )
 
 
@@ -203,16 +195,10 @@ def signal_stability_points(
         if not finite(current) or float(current) == -999:
             reasons.append(f"BCM2_I_UNAVAILABLE_RUN_{run}")
             continue
-        for tier in TIERS:
-            if not (
-                finite(row.get(f"RP_Normyield_{tier}"))
-                and finite(row.get(f"RP_Normyield_err_{tier}"))
-            ):
-                continue
-            points[tier].append((
-                float(row["Run"]), float(current),
-                float(row[f"RP_Normyield_{tier}"]),
-                float(row[f"RP_Normyield_err_{tier}"]),
+        if finite(row.get("RP_Normyield")) and finite(row.get("RP_Normyield_err")):
+            points["delta"].append((
+                float(row["Run"]), float(current), float(row["RP_Normyield"]),
+                float(row["RP_Normyield_err"]),
             ))
     return points, sorted(set(reasons))
 
@@ -226,14 +212,9 @@ def filtered_simc_warning(reason: str) -> str:
 
 
 def data_root_path(t7: Path, phase: str, run: int) -> Path:
-    roots = (
-        t7 / ("Phase1" if phase == "phase1" else "Phase2")
-        / ("Pass0p1" if phase == "phase1" else "Passm1")
-        / "ROOTfiles" / "SkimmedData"
-    )
     candidates = (
-        roots / f"skimmed_coin_replay_production_{run}_-1.root",
-        roots / f"coin_replay_production_{run}_-1.root",
+        t7 / f"skimmed_coin_replay_production_{run}_-1.root",
+        t7 / f"coin_replay_production_{run}_-1.root",
     )
     return next((path for path in candidates if path.is_file()), candidates[0])
 
@@ -254,20 +235,24 @@ def make_hist(name: str, variable: str) -> ROOT.TH1D:
     return hist
 
 
+def make_polar_hist(name: str) -> ROOT.TH2D:
+    phi_bins, phi_low, phi_high, _, _ = BINNING["phipq"]
+    pt_bins, pt_low, pt_high, _, _ = BINNING["pt"]
+    hist = ROOT.TH2D(
+        name, ";#phi_{pq} [rad];P_{t} [GeV];Normalized yield",
+        phi_bins, phi_low, phi_high, pt_bins, pt_low, pt_high,
+    )
+    hist.Sumw2()
+    hist.SetDirectory(0)
+    return hist
+
+
 def add_scaled(destination: ROOT.TH1, source: ROOT.TH1, scale: float) -> None:
     destination.Add(source, scale)
 
 
-def full_cut(cuts: Mapping[str, Tuple[str, float, float]], delta: str) -> str:
-    return delta + " && " + " && ".join(
-        f"{expression}>{low:.12g} && {expression}<{high:.12g}"
-        for expression, low, high in cuts.values()
-    )
-
-
-def nminus1_cut(variable: str, simc: bool, tier: str = "full") -> str:
+def nminus1_cut(variable: str, simc: bool, tier: str = "delta") -> str:
     delta = SIMC_DELTA if simc else DATA_DELTA
-    angle_cuts = SIMC_ANGLE_CUTS if simc else DATA_ANGLE_CUTS
     delta_parts = {
         "hdelta": ("hsdelta>-8 && hsdelta<8" if simc else "H_gtr_dp>-8 && H_gtr_dp<8"),
         "pdelta": ("ssdelta>-10 && ssdelta<22" if simc else "P_gtr_dp>-10 && P_gtr_dp<22"),
@@ -276,10 +261,6 @@ def nminus1_cut(variable: str, simc: bool, tier: str = "full") -> str:
     for name, expression in delta_parts.items():
         if name != variable:
             parts.append(expression)
-    if tier == "full":
-        for name, (expression, low, high) in angle_cuts.items():
-            if name != variable:
-                parts.append(f"{expression}>{low:.12g} && {expression}<{high:.12g}")
     return " && ".join(parts) or "1"
 
 
@@ -315,6 +296,66 @@ def dataframe_histograms(
     return result
 
 
+def dataframe_polar_histogram(
+    path: Path,
+    tree_name: str,
+    expressions: Mapping[str, str],
+    selection: str,
+    weight_expression: str,
+    prefix: str,
+) -> ROOT.TH2D:
+    phi_bins, phi_low, phi_high, _, _ = BINNING["phipq"]
+    pt_bins, pt_low, pt_high, _, _ = BINNING["pt"]
+    frame = (
+        ROOT.RDataFrame(tree_name, path.as_posix())
+        .Filter(selection)
+        .Define("_rp_dmc_polar_weight", weight_expression)
+        .Define("_rp_dmc_polar_phi", expressions["phipq"])
+        .Define("_rp_dmc_polar_pt", expressions["pt"])
+        .Filter(
+            "std::isfinite(static_cast<double>(_rp_dmc_polar_phi)) && "
+            "std::isfinite(static_cast<double>(_rp_dmc_polar_pt)) && "
+            "_rp_dmc_polar_phi>-998 && _rp_dmc_polar_pt>-998"
+        )
+    )
+    action = frame.Histo2D(
+        (f"{prefix}_polar", "", phi_bins, phi_low, phi_high,
+         pt_bins, pt_low, pt_high),
+        "_rp_dmc_polar_phi", "_rp_dmc_polar_pt", "_rp_dmc_polar_weight",
+    )
+    hist = action.GetValue().Clone(f"{prefix}_polar_owned")
+    hist.SetDirectory(0)
+    hist.Sumw2()
+    return hist
+
+
+def timing_weight_expression(row: Mapping[str, str]) -> str:
+    rf = float(row["RFperiodNs"])
+    mean = float(row["CTmean"])
+    # Match TH1::Integral(lowBin, highBin): both endpoint bins are included.
+    bin_low = lambda value: math.floor(value / 0.25) * 0.25
+    bin_high = lambda value: (math.floor(value / 0.25) + 1.0) * 0.25
+    central_low = bin_low(float(row["CT_low"]))
+    central_high = bin_high(float(row["CT_high"]))
+    random_ranges = [
+        (
+            bin_low(mean + offset * rf - rf / 2.0),
+            bin_high(mean + offset * rf + rf / 2.0),
+        )
+        for offset in (-6, -5, -4, -3, -2, 2, 3, 4, 5, 6)
+    ]
+    random_weight = " + ".join(
+        f"((CTime_ePiCoinTime_ROC2>={low:.12g} && "
+        f"CTime_ePiCoinTime_ROC2<{high:.12g}) ? 1.0 : 0.0)"
+        for low, high in random_ranges
+    )
+    return (
+        f"(CTime_ePiCoinTime_ROC2>={central_low:.12g} && "
+        f"CTime_ePiCoinTime_ROC2<{central_high:.12g}) ? 1.0 : "
+        f"(-1.0/10.0)*({random_weight})"
+    )
+
+
 def class_histograms(
     csv_path: Path,
     t7_root: Path,
@@ -329,7 +370,7 @@ def class_histograms(
         row for row in rows
         if row.get("Norm_status") == "OK"
         and finite(row.get("BCM2_Q")) and float(row["BCM2_Q"]) > 0
-        and finite(row.get(f"RP_Normyield_{tier}"))
+        and finite(row.get("RP_Normyield"))
     ]
     output = {variable: make_hist(f"{prefix}_{tier}_{variable}", variable) for variable in variables}
     excluded = [
@@ -349,34 +390,10 @@ def class_histograms(
         if not path.is_file():
             reasons.append(f"DATA_ROOT_MISSING_RUN_{run}")
             continue
-        rf = float(row["RFperiodNs"])
-        mean = float(row["CTmean"])
-        # RP_get_good_coin_ev integrates a 400-bin, 0--100 ns histogram.
-        # Reproduce its FindFixBin(low), FindFixBin(high)-1 semantics exactly.
-        align = lambda value: math.floor(value / 0.25) * 0.25
-        central_low, central_high = (
-            align(mean - rf / 2.0), align(mean + rf / 2.0)
-        )
-        random_ranges = [
-            (
-                align(mean + offset * rf - rf / 2.0),
-                align(mean + offset * rf + rf / 2.0),
-            )
-            for offset in (-4, -3, -2, 2, 3, 4)
-        ]
-        random_test = " || ".join(
-            f"(CTime_ePiCoinTime_ROC2>={low:.12g} && CTime_ePiCoinTime_ROC2<{high:.12g})"
-            for low, high in random_ranges
-        )
-        timing_weight = (
-            f"(CTime_ePiCoinTime_ROC2>={central_low:.12g} && "
-            f"CTime_ePiCoinTime_ROC2<{central_high:.12g}) ? 1.0 : "
-            f"(({random_test}) ? -1.0/6.0 : 0.0)"
-        )
+        timing_weight = timing_weight_expression(row)
         tier_cut = (
             selection_override if selection_override is not None
-            else DATA_DELTA if tier == "delta"
-            else full_cut(DATA_ANGLE_CUTS, DATA_DELTA)
+            else DATA_DELTA
         )
         selection = f"({PID_CUT}) && ({tier_cut}) && ({timing_weight})!=0"
         run_hists = dataframe_histograms(
@@ -387,7 +404,7 @@ def class_histograms(
         alpha = float(row["BCM2_Q"]) / total_charge
         for variable in variables:
             add_scaled(output[variable], run_hists[variable], alpha)
-        expected += alpha * float(row[f"RP_Normyield_{tier}"])
+        expected += alpha * float(row["RP_Normyield"])
     closure = output[variables[0]].Integral(
         0, output[variables[0]].GetNbinsX() + 1
     )
@@ -396,6 +413,39 @@ def class_histograms(
     if check_closure and relative > 5e-3:
         reasons.append(f"DATA_CLOSURE_FAILED={relative:.6g}")
     return output, reasons, relative
+
+
+def class_polar_histogram(
+    csv_path: Path, t7_root: Path, tier: str, prefix: str
+) -> Tuple[ROOT.TH2D, List[str]]:
+    rows = read_csv(csv_path)
+    valid = [
+        row for row in rows
+        if row.get("Norm_status") == "OK"
+        and finite(row.get("BCM2_Q")) and float(row["BCM2_Q"]) > 0
+        and finite(row.get("RP_Normyield"))
+    ]
+    output = make_polar_hist(f"{prefix}_{tier}_polar")
+    excluded = [row.get("Run", "?") for row in rows if row.get("Norm_status") != "OK"]
+    reasons = (["EXCLUDED_INVALID_NORM_RUNS=" + "|".join(excluded)] if excluded else [])
+    if not valid:
+        return output, reasons + ["NO_VALID_NORMALIZED_RUNS"]
+    total_charge = sum(float(row["BCM2_Q"]) for row in valid)
+    for row in valid:
+        run = int(float(row["Run"]))
+        path = data_root_path(t7_root, parse_norm_stem(csv_path)["Phase"], run)
+        if not path.is_file():
+            reasons.append(f"DATA_ROOT_MISSING_RUN_{run}")
+            continue
+        timing_weight = timing_weight_expression(row)
+        selection = f"({PID_CUT}) && ({DATA_DELTA}) && ({timing_weight})!=0"
+        run_hist = dataframe_polar_histogram(
+            path, "T", DATA_EXPRESSIONS, selection,
+            f"({float(row['Norm_factor']):.17g})*({timing_weight})",
+            f"{prefix}_{tier}_{run}",
+        )
+        output.Add(run_hist, float(row["BCM2_Q"]) / total_charge)
+    return output, reasons
 
 
 def simc_expressions(reaction: str) -> Dict[str, str]:
@@ -414,10 +464,10 @@ def simc_expressions(reaction: str) -> Dict[str, str]:
                 "abs(nu_recon)>1e-12) ? phad/nu_recon : "
                 "std::numeric_limits<double>::quiet_NaN()"
             ),
-            "pt2": (
+            "pt": (
                 "(std::isfinite(static_cast<double>(phad)) && phad>-998 && "
                 "std::isfinite(static_cast<double>(thetapq_recon)) && thetapq_recon>-998) ? "
-                "pow(phad*sin(thetapq_recon),2) : "
+                "abs(phad*sin(thetapq_recon)) : "
                 "std::numeric_limits<double>::quiet_NaN()"
             ),
         })
@@ -439,15 +489,14 @@ def simc_histograms(
         return output, ["SIMC_ROOT_MISSING"]
     selection = (
         selection_override if selection_override is not None
-        else SIMC_DELTA if tier == "delta"
-        else full_cut(SIMC_ANGLE_CUTS, SIMC_DELTA)
+        else SIMC_DELTA
     )
     try:
         histograms = dataframe_histograms(
             path, "h10", variables, simc_expressions(catalog_row["Reaction"]),
             selection, "static_cast<double>(fWeight)", prefix,
         )
-        expected = number_or_nan(catalog_row.get(f"SimYield_{tier}", ""))
+        expected = number_or_nan(catalog_row.get("SimYield", ""))
         observed = histograms[variables[0]].Integral(
             0, histograms[variables[0]].GetNbinsX() + 1
         )
@@ -460,6 +509,24 @@ def simc_histograms(
         return histograms, reasons
     except Exception as error:
         return output, [f"SIMC_HIST_FAILED={type(error).__name__}:{error}"]
+
+
+def simc_polar_histogram(
+    catalog_row: Mapping[str, str], tier: str, prefix: str
+) -> Tuple[ROOT.TH2D, List[str]]:
+    output = make_polar_hist(f"{prefix}_{tier}_polar")
+    path = Path(catalog_row.get("Recon_root_path", ""))
+    if catalog_row.get("QA_status") not in {"OK", "WARNING"}:
+        return output, [f"SIMC_QA_{catalog_row.get('QA_status','MISSING')}"]
+    if not path.is_file():
+        return output, ["SIMC_ROOT_MISSING"]
+    try:
+        return dataframe_polar_histogram(
+            path, "h10", simc_expressions(catalog_row["Reaction"]),
+            SIMC_DELTA, "static_cast<double>(fWeight)", prefix,
+        ), []
+    except Exception as error:
+        return output, [f"SIMC_POLAR_HIST_FAILED={type(error).__name__}:{error}"]
 
 
 def number_or_nan(value: object) -> float:
@@ -490,11 +557,27 @@ def combine_data(classes: Mapping[str, Dict[str, ROOT.TH1D]], variable: str,
     }
 
 
-def add_mc_total(components: Mapping[str, Dict[str, ROOT.TH1D]], variable: str) -> ROOT.TH1D:
-    total = make_hist(f"{variable}_mc_total", variable)
+def add_mc_total(components: Mapping[str, Dict[str, ROOT.TH1]], variable: str) -> ROOT.TH1:
+    total = components[REACTIONS[0]][variable].Clone(f"{variable}_mc_total")
+    total.Reset("ICES")
+    total.SetDirectory(0)
     for reaction in REACTIONS:
         total.Add(components[reaction][variable])
     return total
+
+
+def applicable_reactions(run_type: str) -> Tuple[str, ...]:
+    """Return the physical SIMC components for the selected pion charge."""
+    if run_type == "pim":
+        return ("sidis", "rho", "delta")
+    return REACTIONS
+
+
+def zero_histograms(prefix: str, variables: Sequence[str]) -> Dict[str, ROOT.TH1D]:
+    return {
+        variable: make_hist(f"{prefix}_{variable}", variable)
+        for variable in variables
+    }
 
 
 def bin_value(hist: ROOT.TH1, index: int) -> Tuple[float, float]:
@@ -521,10 +604,10 @@ def rows_for_variable(
         / max(mc_regular_abs + abs(mc_under) + abs(mc_over), 1e-30)
     )
     local_reasons = list(reasons)
-    if data_flow_fraction > 0.01:
-        local_reasons.append(f"DATA_FLOW_GT_1PCT_{variable}={data_flow_fraction:.6g}")
-    if mc_complete and mc_flow_fraction > 0.01:
-        local_reasons.append(f"MC_FLOW_GT_1PCT_{variable}={mc_flow_fraction:.6g}")
+    if data_flow_fraction > 0.02:
+        local_reasons.append(f"DATA_FLOW_GT_2PCT_{variable}={data_flow_fraction:.6g}")
+    if mc_complete and mc_flow_fraction > 0.02:
+        local_reasons.append(f"MC_FLOW_GT_2PCT_{variable}={mc_flow_fraction:.6g}")
     local_status = status
     if local_reasons and status == "OK":
         local_status = "WARNING"
@@ -553,7 +636,7 @@ def rows_for_variable(
             if values["target_sub"][0] != 0 else math.nan
         )
         row: Dict[str, object] = {
-            **identity, "Tier": tier, "Variable": variable, "Bin_index": index,
+            **identity, "Variable": variable, "Bin_index": index,
             "Bin_low": final.GetXaxis().GetBinLowEdge(index),
             "Bin_high": final.GetXaxis().GetBinUpEdge(index),
             "Binning_version": BINNING_VERSION, "S_dummy": s_dummy,
@@ -589,7 +672,7 @@ def rows_for_variable(
 def metadata_row(identity: Mapping[str, str], status: str, reason: str,
                  s_dummy: float | str = "") -> Dict[str, object]:
     return {
-        **identity, "Tier": "", "Variable": "", "Binning_version": BINNING_VERSION,
+        **identity, "Variable": "", "Binning_version": BINNING_VERSION,
         "S_dummy": s_dummy, "MC_complete": 0, "Provisional_flag": 1,
         "Status": status, "Reason": reason,
     }
@@ -599,7 +682,7 @@ def catalog_index(path: Path) -> Dict[Tuple[str, str, str, str, str, str], Dict[
     output = {}
     for row in read_csv(path):
         key = tuple(row[field] for field in (
-            "Phase", "Pass", "Run_type", "Target", "Setting", "Reaction"
+            "Phase", "Pass", "Run_type", "Target", "setting_id", "Reaction"
         ))
         output[key] = row
     return output
@@ -619,7 +702,9 @@ def draw_text_page(
     box.SetTextAlign(12)
     box.SetTextFont(42)
     box.SetTextSize(text_size)
-    box.AddText(title)
+    title_line = box.AddText(title)
+    title_line.SetTextFont(62)
+    title_line.SetTextSize(max(0.040, text_size * 1.5))
     for line in lines:
         box.AddText(line)
     box.Draw()
@@ -676,8 +761,8 @@ def draw_metadata_pages(
     ]
     page1_suffix = [
         "Data: Per-run random subtraction, charge-weighted run combination, then positron and scaled-dummy subtraction.",
-        "SIMC: Event weight = fWeight, Normalized Yield = sum(fWeight), Total = sidis + rho + delta + exclusive.",
-        "PROVISIONAL: comp_livetime=1, trigger efficiency=1, PID efficiency=1.",
+        "SIMC: Event weight = fWeight; yield = sum(fWeight); total includes exclusive only where physically applicable.",
+        "Run-specific bigtable comp_livetime; provisional trigger efficiency=1 and PID efficiency=1.",
     ]
     page1 = [
         *page1_prefix,
@@ -698,18 +783,15 @@ def draw_metadata_pages(
         continuation += 1
 
     page2 = [
-        "Data random subtraction: central coincidence window minus the average of six random windows at RF offsets -4, -3, -2, +2, +3, +4.",
+        "Data random subtraction: central coincidence window minus the average of ten random windows",
+        "at RF offsets -6 through -2 and +2 through +6.",
         "Run combination: each normalized run distribution is weighted by its fraction of the total setting charge.",
         "Corrected data = (Signal e- - Signal e+) - S_dummy x (Dummy e- - Dummy e+).",
-        "Data Cuts: Delta-only = PID + Delta Acceptance",
-        "Data Cuts: Full-cut = PID + Delta Acceptance + Angle Acceptance",
-        "MC Cuts: Delta-only = Delta Acceptance",
-        "MC Cuts: Full-cut = Delta Acceptance + Angle Acceptance",
-        "PID: (P_gtr_p<=2.7 || P_hgcer_npeSum>1) && P_aero_npeSum>2 && P_cal_etottracknorm<0.8",
-        "     && H_cer_npeSum>2 && H_cal_etottracknorm>0.8",
+        "Data cuts: baseline PID + momentum acceptance",
+        "MC cuts: momentum acceptance",
+        "PID: (P_gtr_p<=2.9 || P_hgcer_npeSum>1) && P_aero_npeSum>2 && P_cal_etottracknorm<0.8",
+        "     && H_cer_npeSum>2 && H_cal_etottracknorm>0.7",
         "Delta Acceptance: -8 < HMS delta < 8 && -10 < SHMS delta < 22",
-        "Angle Acceptance: -0.15 < HMS xptar < 0.15 && -0.10 < HMS yptar < 0.10",
-        "                  && -0.15 < SHMS xptar < 0.15 && -0.10 < SHMS yptar < 0.10",
         "Cut-removed (N-1) Plots: Every cut applied except the plotted-variable cut.",
     ]
     draw_text_page(canvas, pdf, "RP Data-to-MC Comparison - Calculation and cuts", page2)
@@ -740,10 +822,7 @@ def draw_run_stability(
     )
     for pad in pads:
         pad.Draw()
-    series = (
-        ("delta", ROOT.kBlue + 1, "Delta-only"),
-        ("full", ROOT.kRed + 1, "Full-cut"),
-    )
+    series = (("delta", ROOT.kBlue + 1, "calculated"),)
     keepalive = []
     for pad_index, (x_index, title, x_title) in enumerate((
         (0, "Signal Normalized Yield Vs Run", "Run"),
@@ -777,8 +856,8 @@ def draw_diagnostic_text(
     draw_text_page(canvas, pdf, title, lines)
 
 
-def transparent_legend(x1: float = 0.70, y1: float = 0.64,
-                       x2: float = 0.94, y2: float = 0.91) -> ROOT.TLegend:
+def transparent_legend(x1: float = 0.76, y1: float = 0.64,
+                       x2: float = 0.955, y2: float = 0.91) -> ROOT.TLegend:
     legend = ROOT.TLegend(x1, y1, x2, y2)
     legend.SetBorderSize(0)
     legend.SetFillStyle(0)
@@ -827,7 +906,7 @@ def draw_comparison_pair(
     canvas.cd()
     pads = {}
     for column, tier in enumerate(TIERS):
-        x1, x2 = 0.5 * column, 0.5 * (column + 1)
+        x1, x2 = 0.0, 1.0
         pads[(tier, "top")] = ROOT.TPad(
             f"pad_{tier}_{variable}_top", "", x1, 0.30, x2, 1.0
         )
@@ -836,12 +915,6 @@ def draw_comparison_pair(
         )
         for pad in (pads[(tier, "top")], pads[(tier, "bottom")]):
             pad.Draw()
-    if cut_removed and not delta_applicable:
-        draw_not_applicable(
-            pads[("delta", "top")],
-            f"Delta-only, Cut-removed (N-1): {BINNING[variable][3]}",
-        )
-
     ymin, ymax = comparison_y_range(payloads, variable)
     colors = {
         "sidis": ROOT.kGreen + 2, "rho": ROOT.kMagenta + 1,
@@ -850,15 +923,12 @@ def draw_comparison_pair(
     keepalive = list(pads.values())
     shared_legend = None
     for tier in TIERS:
-        if tier == "delta" and cut_removed and not delta_applicable:
-            continue
         data, mc, total = payloads[tier]
         final = data["final"]
         axis_title = final.GetXaxis().GetTitle()
-        tier_label = "Delta-only" if tier == "delta" else "Full-cut"
         heading = (
-            f"{tier_label}, Cut-removed (N-1): {BINNING[variable][3]}"
-            if cut_removed else f"{tier_label}: {BINNING[variable][3]}"
+            f"Cut-removed (N-1): {BINNING[variable][3]}"
+            if cut_removed else BINNING[variable][3]
         )
         top = pads[(tier, "top")]
         top.cd(); top.SetGrid()
@@ -888,16 +958,13 @@ def draw_comparison_pair(
         total.Draw("E2 SAME"); total.Draw("HIST SAME")
         legend.AddEntry(total, "MC total", "l")
         final.Draw("E1 SAME")
-        if tier == "delta" and delta_applicable:
-            legend.Draw()
-            shared_legend = legend
+        legend.Draw()
+        shared_legend = legend
         keepalive.append(legend)
 
         if cut_removed:
             boundaries = {
                 "hdelta": (-8.0, 8.0), "pdelta": (-10.0, 22.0),
-                **{name: (values[1], values[2])
-                   for name, values in DATA_ANGLE_CUTS.items()},
             }[variable]
             top.Update()
             for boundary in boundaries:
@@ -949,17 +1016,80 @@ def draw_comparison_pair(
         line.SetLineStyle(2); line.Draw()
         keepalive.extend((ratio_frame, ratio, line))
 
-    if cut_removed and not delta_applicable:
-        pads[("delta", "top")].cd()
-        data, mc, total = payloads["full"]
-        legend = transparent_legend()
-        legend.AddEntry(data["final"], "Corrected data", "lep")
-        for reaction in REACTIONS:
-            legend.AddEntry(mc[reaction][variable], reaction, "l")
-        legend.AddEntry(total, "MC total", "l")
-        legend.Draw()
-        keepalive.append(legend)
     canvas._rp_comparison_objects = keepalive
+    canvas.Print(pdf.as_posix())
+
+
+def regular_bin_values(hist: ROOT.TH2) -> List[float]:
+    return [
+        hist.GetBinContent(ix, iy)
+        for ix in range(1, hist.GetNbinsX() + 1)
+        for iy in range(1, hist.GetNbinsY() + 1)
+        if finite(hist.GetBinContent(ix, iy))
+    ]
+
+
+def draw_polar_comparison(
+    canvas: ROOT.TCanvas, pdf: Path, data: ROOT.TH2D, mc: ROOT.TH2D
+) -> None:
+    """Draw corrected data, total MC, and supported-bin ratio in polar axes."""
+    canvas.Clear()
+    canvas.cd()
+    ratio = data.Clone(f"{data.GetName()}_ratio")
+    ratio.Reset("ICES")
+    supported = 0
+    for ix in range(1, data.GetNbinsX() + 1):
+        for iy in range(1, data.GetNbinsY() + 1):
+            denominator = mc.GetBinContent(ix, iy)
+            if finite(denominator) and denominator > 0:
+                ratio.SetBinContent(ix, iy, data.GetBinContent(ix, iy) / denominator)
+                supported += 1
+
+    absolute_values = regular_bin_values(data) + regular_bin_values(mc)
+    absolute_low = min([0.0, *absolute_values])
+    absolute_high = max([0.0, *absolute_values])
+    if absolute_high <= absolute_low:
+        absolute_high = absolute_low + 1.0
+    panels = (
+        (data, "Corrected data", absolute_low, absolute_high),
+        (mc, "MC total", absolute_low, absolute_high),
+        (ratio, "Data / MC (MC > 0)", 0.0, 2.0),
+    )
+    keepalive = [ratio]
+    page_title = ROOT.TLatex()
+    page_title.SetNDC(); page_title.SetTextFont(62); page_title.SetTextAlign(22)
+    page_title.SetTextSize(0.040)
+    page_title.DrawLatex(0.5, 0.94, "RP Data-to-MC Comparison - P_{t} vs #phi_{pq}")
+    keepalive.append(page_title)
+    for index, (hist, title, low, high) in enumerate(panels, start=1):
+        x1 = 0.015 + (index - 1) * 0.33
+        pad = ROOT.TPad(f"polar_pad_{index}", "", x1, 0.22, x1 + 0.31, 0.75)
+        pad.Draw(); pad.cd()
+        pad.SetLeftMargin(0.02); pad.SetRightMargin(0.15)
+        pad.SetTopMargin(0.04); pad.SetBottomMargin(0.04)
+        hist.SetTitle("")
+        hist.SetMinimum(low); hist.SetMaximum(high)
+        hist.GetZaxis().SetTitle("Data / MC" if index == 3 else "Normalized yield")
+        hist.GetZaxis().SetTitleSize(0.035)
+        hist.GetZaxis().SetLabelSize(0.030)
+        hist.Draw("COLZ POL")
+        canvas.cd()
+        label = ROOT.TLatex()
+        label.SetNDC(); label.SetTextFont(62); label.SetTextAlign(22)
+        label.SetTextSize(0.030)
+        label.DrawLatex(x1 + 0.155, 0.79, title)
+        keepalive.extend((pad, label))
+    canvas.cd()
+    heading = ROOT.TLatex()
+    heading.SetNDC(); heading.SetTextFont(62); heading.SetTextAlign(22)
+    heading.SetTextSize(0.030)
+    heading.DrawLatex(
+        0.5, 0.14,
+        f"P_{{t}} vs #phi_{{pq}}: 20 #times 20 bins; "
+        f"ratio support {supported}/{data.GetNbinsX() * data.GetNbinsY()} bins",
+    )
+    keepalive.append(heading)
+    canvas._rp_polar_objects = keepalive
     canvas.Print(pdf.as_posix())
 
 
@@ -979,22 +1109,21 @@ def draw_waterfall(
     pad.SetLeftMargin(0.10); pad.SetRightMargin(0.03)
     pad.SetTopMargin(0.08); pad.SetBottomMargin(0.16)
     labels = (
-        "Signal e-", "Signal After e+", "Dummy After e+",
-        "Scaled Dummy", "Final",
+        "Signal e-", "Signal After e+ Sub:", "Dummy e-",
+        "Dummy After e+ Sub:", "Scaled Dummy", "Final",
     )
-    keys = ("target_e", "target_sub", "dummy_sub", "dummy_scaled", "final")
+    keys = (
+        "target_e", "target_sub", "dummy_e", "dummy_sub", "dummy_scaled", "final"
+    )
     frame = ROOT.TH1D("waterfall_frame", "Normalized Yield Correction;;Normalized Yield",
-                      5, 0.5, 5.5)
+                      6, 0.5, 6.5)
     frame.SetDirectory(0)
     frame.SetLineColor(0)
     values = []
     for index, label in enumerate(labels, start=1):
         frame.GetXaxis().SetBinLabel(index, label)
     graphs = []
-    for tier, color, offset in (
-        ("delta", ROOT.kBlue + 1, -0.08),
-        ("full", ROOT.kRed + 1, 0.08),
-    ):
+    for tier, color, offset in (("delta", ROOT.kBlue + 1, 0.0),):
         graph = ROOT.TGraphErrors()
         for index, key in enumerate(keys, start=1):
             value, error = integrated_value(comparisons[tier][key])
@@ -1008,12 +1137,10 @@ def draw_waterfall(
     span = max(ymax - ymin, 1e-12)
     frame.SetMinimum(ymin - 0.08 * span); frame.SetMaximum(ymax + 0.15 * span)
     frame.LabelsOption("h", "X"); frame.Draw()
-    legend = transparent_legend(0.78, 0.78, 0.95, 0.92)
+    legend = transparent_legend(0.80, 0.78, 0.955, 0.92)
     for tier, graph in graphs:
         graph.Draw("P SAME")
-        legend.AddEntry(
-            graph, "Delta-only" if tier == "delta" else "Full-cut", "lep"
-        )
+        legend.AddEntry(graph, "calculated", "lep")
     legend.Draw()
     canvas._rp_waterfall_objects = (pad, frame, graphs, legend)
     canvas.Print(pdf.as_posix())
@@ -1032,7 +1159,7 @@ def process_setting(
     phase, pass_name, run_type, target, setting = key
     identity = {
         "Phase": phase, "Pass": pass_name, "Run_type": run_type,
-        "Target": target, "Setting": setting,
+        "Target": target, "setting_id": setting,
     }
     stem = "_".join(identity.values())
     output_csv = table_dir / f"{stem}.csv"
@@ -1054,29 +1181,15 @@ def process_setting(
         "dummy_e": ("DUMMY", "Elec"), "dummy_p": ("DUMMY", "Pos"),
     }
     missing_classes = [name for name, category in required_classes.items() if category not in files]
-    if missing_classes:
-        reason = "MISSING_DATA_CLASSES=" + "|".join(missing_classes)
-        atomic_csv(output_csv, [metadata_row(identity, "PENDING", reason, s_dummy)])
-        if not no_pdf:
-            pdf_dir.mkdir(parents=True, exist_ok=True)
-            canvas = ROOT.TCanvas(
-                f"c_rp_dmc_pending_{abs(hash(stem))}", "RP DMC",
-                CANVAS_WIDTH, CANVAS_HEIGHT,
-            )
-            canvas.Print(output_pdf.as_posix() + "[")
-            draw_metadata_pages(
-                canvas, output_pdf, identity, "PENDING", s_dummy, files
-            )
-            draw_diagnostic_text(
-                canvas, output_pdf, "Pending data-to-MC comparison", [reason]
-            )
-            canvas.Print(output_pdf.as_posix() + "]")
-        return "PENDING"
+    data_class_warnings = [
+        "ZERO_CORRECTION_CLASS=" + name for name in missing_classes
+    ]
     simc_rows = {}
     missing_mc = []
     structural_mc = []
     catalog_warnings = []
-    for reaction in REACTIONS:
+    physical_reactions = applicable_reactions(run_type)
+    for reaction in physical_reactions:
         row = catalog.get((phase, pass_name, run_type, target, setting, reaction))
         if row is None or row.get("QA_status") in {"PENDING", "SKIPPED"}:
             missing_mc.append(reaction)
@@ -1092,10 +1205,10 @@ def process_setting(
                     )
 
     all_rows: List[Dict[str, object]] = []
-    reasons: List[str] = []
-    status = "ERROR" if structural_mc else "PENDING" if missing_mc else "OK"
+    reasons: List[str] = list(data_class_warnings)
+    status = "ERROR" if structural_mc or missing_mc else "OK"
     if missing_mc:
-        reasons.append("INCOMPLETE_MC=" + "|".join(missing_mc))
+        reasons.append("MISSING_REQUIRED_MC=" + "|".join(missing_mc))
     if structural_mc:
         reasons.append("STRUCTURAL_SIMC_ERROR=" + "|".join(structural_mc))
     reasons.extend(catalog_warnings)
@@ -1123,9 +1236,13 @@ def process_setting(
         closures = []
         closure_report[tier] = {}
         for name, category in required_classes.items():
-            histograms, class_reasons, closure = class_histograms(
-                files[category], t7_root, tier, variables, f"{stem}_{name}"
-            )
+            if category in files:
+                histograms, class_reasons, closure = class_histograms(
+                    files[category], t7_root, tier, variables, f"{stem}_{name}"
+                )
+            else:
+                histograms = zero_histograms(f"{stem}_{name}", variables)
+                class_reasons, closure = [], 0.0
             classes[name] = histograms
             reasons.extend(class_reasons)
             if finite(closure):
@@ -1135,7 +1252,12 @@ def process_setting(
         tier_mc_complete = not missing_mc and not structural_mc
         tier_available_reactions: set[str] = set()
         for reaction in REACTIONS:
-            if reaction in simc_rows:
+            if reaction not in physical_reactions:
+                components[reaction] = zero_histograms(
+                    f"{stem}_{reaction}_{tier}", variables
+                )
+                tier_available_reactions.add(reaction)
+            elif reaction in simc_rows:
                 components[reaction], component_reasons = simc_histograms(
                     simc_rows[reaction], tier, variables, f"{stem}_{reaction}_{tier}"
                 )
@@ -1145,10 +1267,9 @@ def process_setting(
                 else:
                     tier_available_reactions.add(reaction)
             else:
-                components[reaction] = {
-                    variable: make_hist(f"{stem}_{reaction}_{tier}_{variable}", variable)
-                    for variable in variables
-                }
+                components[reaction] = zero_histograms(
+                    f"{stem}_{reaction}_{tier}", variables
+                )
         comparison = {}
         totals = {}
         for variable in variables:
@@ -1171,6 +1292,33 @@ def process_setting(
             {tier: tier_comparisons[tier]["hdelta"] for tier in TIERS},
         )
         if all(tier_complete.values()):
+            polar_classes = {}
+            for name, category in required_classes.items():
+                if category in files:
+                    polar_hist, polar_reasons = class_polar_histogram(
+                        files[category], t7_root, "delta", f"{stem}_{name}"
+                    )
+                    reasons.extend(polar_reasons)
+                else:
+                    polar_hist = make_polar_hist(f"{stem}_{name}_delta_polar")
+                polar_classes[name] = {"polar": polar_hist}
+            polar_components = {}
+            for reaction in REACTIONS:
+                if reaction in physical_reactions:
+                    polar_hist, polar_reasons = simc_polar_histogram(
+                        simc_rows[reaction], "delta", f"{stem}_{reaction}_delta"
+                    )
+                    reasons.extend(polar_reasons)
+                else:
+                    polar_hist = make_polar_hist(
+                        f"{stem}_{reaction}_delta_polar"
+                    )
+                polar_components[reaction] = {"polar": polar_hist}
+            polar_data = combine_data(polar_classes, "polar", s_dummy)
+            polar_total = add_mc_total(polar_components, "polar")
+            draw_polar_comparison(
+                canvas, output_pdf, polar_data["final"], polar_total
+            )
             for variable in variables:
                 draw_comparison_pair(
                     canvas, output_pdf, variable,
@@ -1183,41 +1331,51 @@ def process_setting(
                         for tier in TIERS
                     },
                 )
-    # Tier-aware acceptance diagnostics with only the plotted cut removed.
+    # Baseline-acceptance diagnostics with only the plotted cut removed.
     if not missing_mc and not structural_mc:
-        for variable in ("hdelta", "pdelta", "hxp", "hyp", "pxp", "pyp"):
+        for variable in ("hdelta", "pdelta"):
             nminus_payloads = {}
-            applicable_tiers = TIERS if variable in {"hdelta", "pdelta"} else ("full",)
+            applicable_tiers = TIERS
             for tier in applicable_tiers:
                 nminus_classes = {}
                 for name, category in required_classes.items():
-                    nminus_classes[name], class_reasons, _ = class_histograms(
-                        files[category], t7_root, tier, (variable,),
-                        f"{stem}_{name}_{tier}_nminus1_{variable}",
-                        selection_override=nminus1_cut(variable, False, tier),
-                        check_closure=False,
-                    )
+                    if category in files:
+                        nminus_classes[name], class_reasons, _ = class_histograms(
+                            files[category], t7_root, tier, (variable,),
+                            f"{stem}_{name}_{tier}_nminus1_{variable}",
+                            selection_override=nminus1_cut(variable, False, tier),
+                            check_closure=False,
+                        )
+                    else:
+                        nminus_classes[name] = zero_histograms(
+                            f"{stem}_{name}_{tier}_nminus1", (variable,)
+                        )
+                        class_reasons = []
                     reasons.extend(class_reasons)
                 nminus_components = {}
                 for reaction in REACTIONS:
-                    nminus_components[reaction], component_reasons = simc_histograms(
-                        simc_rows[reaction], tier, (variable,),
-                        f"{stem}_{reaction}_{tier}_nminus1_{variable}",
-                        selection_override=nminus1_cut(variable, True, tier),
-                    )
+                    if reaction in physical_reactions:
+                        nminus_components[reaction], component_reasons = simc_histograms(
+                            simc_rows[reaction], tier, (variable,),
+                            f"{stem}_{reaction}_{tier}_nminus1_{variable}",
+                            selection_override=nminus1_cut(variable, True, tier),
+                        )
+                    else:
+                        nminus_components[reaction] = zero_histograms(
+                            f"{stem}_{reaction}_{tier}_nminus1", (variable,)
+                        )
+                        component_reasons = []
                     reasons.extend(component_reasons)
                 nminus_data = combine_data(nminus_classes, variable, s_dummy)
                 nminus_total = add_mc_total(nminus_components, variable)
                 nminus_payloads[tier] = (
                     nminus_data, nminus_components, nminus_total
                 )
-            if "delta" not in nminus_payloads:
-                nminus_payloads["delta"] = nminus_payloads["full"]
             if not no_pdf:
                 draw_comparison_pair(
                     canvas, output_pdf, variable, nminus_payloads,
                     cut_removed=True,
-                    delta_applicable=variable in {"hdelta", "pdelta"},
+                    delta_applicable=True,
                 )
     final_status = (
         "WARNING"
@@ -1237,7 +1395,7 @@ def process_setting(
     if not no_pdf:
         diagnostic_lines = []
         for tier in TIERS:
-            label = "Delta-only" if tier == "delta" else "Full-cut"
+            label = "Baseline"
             for name, value in closure_report.get(tier, {}).items():
                 diagnostic_lines.append(
                     f"{label} {name} integrated closure relative difference = {value:.6g}"
@@ -1274,7 +1432,7 @@ def main() -> int:
         identity = parse_norm_stem(args.input)
         keys = [(
             identity["Phase"], identity["Pass"], identity["Run_type"],
-            identity["Target"], identity["Setting"],
+            identity["Target"], identity["setting_id"],
         )]
     else:
         keys = sorted(
@@ -1296,7 +1454,7 @@ def main() -> int:
             phase, pass_name, run_type, target, setting = key
             identity = {
                 "Phase": phase, "Pass": pass_name, "Run_type": run_type,
-                "Target": target, "Setting": setting,
+                "Target": target, "setting_id": setting,
             }
             reason = f"SETTING_PROCESSING_FAILED={type(error).__name__}:{error}"
             atomic_csv(

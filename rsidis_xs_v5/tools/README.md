@@ -238,18 +238,23 @@ products currently available on T7:
 python3 tools/RP_extract_simc_info.py
 ```
 
+The Pass1 job manifest is read from
+`JLab_upstream_forks/simc_gfortran/util/batch_job/simc_job_list_pass1.csv`.
+Products are resolved under
+`/Volumes/T7/RSIDIS/Pass1/Simulation/{ROOTfiles,outfiles,runout}/coin/`.
+
 The extractor writes the complete catalog, a warning/error-only table, and a
 multipage diagnostic PDF under:
 
 ```text
-results/Tables/RP_extract_simc_info/
-results/PDFs/RP_extract_simc_info/
+results/Pass1/Tables/RP_extract_simc_info/
+results/Pass1/PDFs/RP_extract_simc_info/
 ```
 
 Limit a rerun when needed:
 
 ```bash
-python3 tools/RP_extract_simc_info.py --phase 1 --reaction sidis
+python3 tools/RP_extract_simc_info.py --phase phase1 --reaction sidis
 ```
 
 Use `--no-pdf` for a CSV-only validation. Missing future products remain
@@ -267,15 +272,12 @@ sigma_MC = sqrt(sum(fWeight^2))
 `fWeight` already includes the SIMC normalization factor divided by the
 generated-event count and must not be normalized a second time.
 
-The catalog uses `nocut`, `delta`, and `full` acceptance tiers. File sizes are
+The catalog reports no-cut bookkeeping and one untiered baseline-acceptance
+result using `-8 < hsdelta < 8` and `-10 < ssdelta < 22`. File sizes are
 reported in decimal MB (`bytes / 1e6`). Reconstructed `Ngen` and `normfac` are
 reported as single values, while the extractor still rejects either branch
-when it is not constant across the reconstructed tree.
-
-Kinematic weighted means, RMS values, and recon-minus-SIMC residuals are saved
-with explicit `delta` and `full` tier names. The QA PDF groups target/charge
-points beneath one label per setting and compares Delta-only with Full-cut
-yield and MC-precision diagnostics.
+when it is not constant across the reconstructed tree. Kinematic weighted
+means, RMS values, and recon-minus-SIMC residuals use untiered column names.
 
 Kinematic availability distinguishes usable branches (`available`), branches
 containing only sentinel values such as `-999` (`sentinel_only`), and absent
@@ -283,9 +285,8 @@ branches (`missing`). Sentinel-only and missing metrics remain blank, with the
 reason printed in the PDF panel. Entry-count diagnostics use at most six
 settings per page so Raw/Hist/Recon markers remain distinguishable.
 
-Exclusive PIMINUS production from LH2 is omitted entirely from the SIMC input
-manifest and therefore from batch-running and QA catalogs; exclusive PIMINUS
-from LD2 remains supported.
+The Pass1 manifest contains exclusive `pip` production only; no exclusive
+`pim` points are synthesized by the extractor.
 
 For delta and exclusive samples, the QA layer derives common original and
 reconstructed coordinates when their reaction-native `xbj`, `z`, or `pt2`
@@ -309,7 +310,7 @@ Process one setting from its target normalized-yield CSV:
 
 ```bash
 python3 tools/RP_data_mc_compare.py \
-  results/Tables/RP_get_coin_normyield/<setting>.csv
+  results/Pass1/Tables/RP_get_coin_normyield/<setting>.csv
 ```
 
 Process every discovered LH2/LD2 setting:
@@ -327,8 +328,8 @@ diagnostic.
 Outputs are written under:
 
 ```text
-results/Tables/RP_data_mc_compare/
-results/PDFs/RP_data_mc_compare/
+results/Pass1/Tables/RP_data_mc_compare/
+results/Pass1/PDFs/RP_data_mc_compare/
 ```
 
 The data calculation rebuilds differential random subtraction from the saved
@@ -337,20 +338,75 @@ combines runs by beam-charge fraction. It then subtracts positrons and the
 phase/target-specific thickness-scaled dummy yield. `S_dummy` is retained in
 every binned output row.
 
-Each SIMC reaction uses `fWeight` directly. SIDIS, rho, delta, and exclusive
-are shown individually and summed without fitted scaling. Delta-only and
-Full-cut use identical data/SIMC acceptance definitions. Acceptance QA pages
-label cut-removed (N-1) distributions explicitly: every Full-cut requirement
-except the cut on the plotted variable is active.
+Each SIMC reaction uses `fWeight` directly. SIDIS, rho, and delta are always
+shown and summed without fitted scaling; exclusive is included for `pip` and
+is explicitly zero for `pim`, where that production channel is physically
+inapplicable. Data use the current
+baseline PID and momentum-acceptance cuts; SIMC uses the matching momentum
+acceptance. Acceptance QA pages remove only the plotted HMS or SHMS momentum
+cut.
 
-Results remain visibly provisional while computer live time, trigger
-efficiency, or PID efficiency are provisionally set to one. A sentinel setting
-identity is `SKIPPED`; a valid setting with missing data classes or MC
-components is `PENDING`.
+Results remain visibly provisional while trigger or PID efficiency is set to
+one. Computer livetime comes from the Pass1 bigtable. A sentinel setting
+identity is `SKIPPED`. An unavailable positron or dummy correction class is
+represented by a zero histogram and identified with `ZERO_CORRECTION_CLASS`
+instead of leaving the setting `PENDING`; a missing required SIMC component is
+an error.
 
 All per-setting comparison variables use 20 fixed bins with variable-specific
-ranges.  PDF pages use the same wide layout, place Delta-only and Full-cut
-comparisons side by side, and report `S_dummy` to four decimal places.  CSV
+ranges. `P_t` spans 0--0.6 GeV. The PDF places a 20-by-20 polar
+`P_t`-versus-phi page immediately after the normalized-yield correction page;
+corrected data and total MC share one color scale, while Data/MC is shown only
+in bins with positive MC support. Missing mass spans 0--4 GeV, with reconstructed negative values counted
+as underflow. Data or MC flow above 2% receives a `*_FLOW_GT_2PCT_*` warning.
+PDF pages use the whole wide canvas for the baseline comparison and
+report `S_dummy` to four decimal places. CSV
 outputs retain the full configured `S_dummy` precision.  SIMC effective-statistics
 warnings remain part of SIMC QA but are not propagated into the downstream
 Data-to-MC status.
+
+---
+
+## 11) Extract setting-integrated SIDIS cross sections
+
+Build the Pass1 central-model catalog from the current SIMC job manifest:
+
+```bash
+python3 tools/RP_build_sidis_model.py
+```
+
+Then extract every setting and rebuild the summary tables:
+
+```bash
+python3 tools/RP_extract_sidis_xsec.py --all
+python3 tools/RP_extract_sidis_xsec_Summary.py
+```
+
+Outputs use the Pass1 setting-ID schema under
+`results/Pass1/<Tables,PDFs>/RP_extract_sidis_xsec/`. The extraction integrates
+the untiered `hdelta` rows from `RP_data_mc_compare`, corresponding to Baseline
+PID + Delta-only acceptance. No full-cut or tier suffix is used. The yield
+correction is `C_Y = Y_Data/Y_MC`, where `Y_MC` is the sum of SIDIS, rho,
+delta, and the physically applicable exclusive contribution. The same
+correction scales the central SIDIS cross-section and multiplicity models.
+
+---
+
+## 12) Build the setting-integrated SIDIS overview
+
+```bash
+python3 tools/RP_plot_sidis_setting_overview.py
+```
+
+The overview joins the Pass1 extraction summary to the setting-ID model catalog
+and writes its catalog and two multipage PDFs under
+`results/Pass1/<Tables,PDFs>/RP_sidis_setting_overview/`. It produces controlled
+central-`z` scans and central-`P_t` scans of the extracted and model SIDIS
+cross section and multiplicity. The cross-section and multiplicity PDFs place
+their respective `z` and `P_t` scans side by side with plot grids. `P_t` is the magnitude
+`|p_pi sin(theta_pq)|` in GeV; neither `p_T` nor `P_t^2` is used as the scan
+coordinate. The overview axes use fixed ranges `0 <= z <= 1` and
+`0 <= P_t <= 0.6 GeV`, with labeled major ticks every 0.1. Overview columns
+use the concise `Q2` and `thpq` labels, and PDF
+provenance is relative to `RP_Scripts/`. Inputs and outputs contain no full-cut
+or tier labels.

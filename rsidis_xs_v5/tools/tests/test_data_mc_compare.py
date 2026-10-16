@@ -30,16 +30,9 @@ class DataMcComparisonTests(unittest.TestCase):
         self.assertAlmostEqual(compare.S_DUMMY[("phase2", "LD2")], 1 / 4.1854)
 
     def test_nminus1_removes_only_named_acceptance_cut(self):
-        hms = compare.nminus1_cut("hxp", False)
-        self.assertNotIn("H_gtr_th>", hms)
-        self.assertIn("H_gtr_ph>", hms)
-        self.assertIn("H_gtr_dp>-8", hms)
         hdelta = compare.nminus1_cut("hdelta", False)
         self.assertNotIn("H_gtr_dp>-8", hdelta)
         self.assertIn("P_gtr_dp>-10", hdelta)
-        simc = compare.nminus1_cut("pyp", True)
-        self.assertNotIn("ssyptar>", simc)
-        self.assertIn("hsxptar>", simc)
         delta_tier = compare.nminus1_cut("hdelta", False, "delta")
         self.assertNotIn("H_gtr_dp>-8", delta_tier)
         self.assertIn("P_gtr_dp>-10", delta_tier)
@@ -52,21 +45,28 @@ class DataMcComparisonTests(unittest.TestCase):
         self.assertEqual(compare.BINNING["Q2"][:3], (20, 0.0, 6.0))
         self.assertEqual(compare.BINNING["W"][:3], (20, 0.0, 4.0))
         self.assertEqual(compare.BINNING["thetapq"][:3], (20, 0.0, 0.2))
-        self.assertEqual(compare.BINNING["pt2"][:3], (20, 0.0, 0.6))
+        self.assertEqual(compare.BINNING["pt"][:3], (20, 0.0, 0.6))
+        self.assertEqual(compare.BINNING["pytar"][:3], (20, -10.0, 10.0))
+        self.assertEqual(compare.BINNING["missmass"][:3], (20, 0.0, 4.0))
         self.assertEqual(compare.BINNING["hxp"][:3], (20, -0.20, 0.20))
         self.assertEqual(compare.BINNING["hyp"][:3], (20, -0.15, 0.15))
         self.assertEqual(compare.BINNING["pxp"][:3], (20, -0.20, 0.20))
         self.assertEqual(compare.BINNING["pyp"][:3], (20, -0.15, 0.15))
         self.assertEqual((compare.CANVAS_WIDTH, compare.CANVAS_HEIGHT), (1800, 1200))
 
-    def test_data_and_simc_use_matching_wide_angle_acceptance(self):
-        expected = {
-            "hxp": (-0.15, 0.15), "hyp": (-0.10, 0.10),
-            "pxp": (-0.15, 0.15), "pyp": (-0.10, 0.10),
-        }
-        for variable, limits in expected.items():
-            self.assertEqual(compare.DATA_ANGLE_CUTS[variable][1:], limits)
-            self.assertEqual(compare.SIMC_ANGLE_CUTS[variable][1:], limits)
+    def test_polar_histogram_matches_phi_and_pt_1d_binning(self):
+        hist = compare.make_polar_hist("polar_test")
+        self.assertEqual(hist.GetNbinsX(), compare.BINNING["phipq"][0])
+        self.assertEqual(hist.GetNbinsY(), compare.BINNING["pt"][0])
+        self.assertAlmostEqual(hist.GetXaxis().GetXmin(), compare.BINNING["phipq"][1])
+        self.assertAlmostEqual(hist.GetXaxis().GetXmax(), compare.BINNING["phipq"][2])
+        self.assertAlmostEqual(hist.GetYaxis().GetXmin(), compare.BINNING["pt"][1])
+        self.assertAlmostEqual(hist.GetYaxis().GetXmax(), compare.BINNING["pt"][2])
+
+    def test_recently_adopted_pid_cuts(self):
+        self.assertIn("P_gtr_p<=2.9", compare.PID_CUT)
+        self.assertIn("H_cal_etottracknorm>0.7", compare.PID_CUT)
+        self.assertNotIn("H_gtr_th", compare.DATA_DELTA)
 
     def test_metadata_run_lists_wrap_without_losing_runs(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -97,29 +97,26 @@ class DataMcComparisonTests(unittest.TestCase):
     def test_signal_stability_joins_leaf_current_by_run(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            stem = "phase1_pass4_PIPLUS_LH2_Elec_x0p25Q23p3z0p5thpq2p0"
+            stem = "phase1_pass4_pip_LH2_Elec_RP001"
             norm = root / f"{stem}.csv"
             with norm.open("w", newline="") as stream:
                 writer = csv.DictWriter(stream, fieldnames=[
                     "Run", "Norm_status",
-                    "RP_Normyield_delta", "RP_Normyield_err_delta",
-                    "RP_Normyield_full", "RP_Normyield_err_full",
+                    "RP_Normyield", "RP_Normyield_err",
                 ])
                 writer.writeheader()
                 writer.writerow({
                     "Run": 100, "Norm_status": "OK",
-                    "RP_Normyield_delta": 2.5, "RP_Normyield_err_delta": 0.2,
-                    "RP_Normyield_full": 2.0, "RP_Normyield_err_full": 0.15,
+                    "RP_Normyield": 2.5, "RP_Normyield_err": 0.2,
                 })
                 writer.writerow({
                     "Run": 101, "Norm_status": "OK",
-                    "RP_Normyield_delta": 2.4, "RP_Normyield_err_delta": 0.2,
-                    "RP_Normyield_full": 1.9, "RP_Normyield_err_full": 0.15,
+                    "RP_Normyield": 2.4, "RP_Normyield_err": 0.2,
                 })
             bigtable = root / "bigtable"
             leaf = (
-                bigtable / "phase1" / "pass4" / "PIPLUS" / "LH2"
-                / "Elec" / "x0p25Q23p3z0p5thpq2p0" / f"{stem}.csv"
+                bigtable / "phase1" / "pass4" / "pip" / "LH2"
+                / "Elec" / "RP001" / f"{stem}.csv"
             )
             leaf.parent.mkdir(parents=True)
             with leaf.open("w", newline="") as stream:
@@ -129,7 +126,6 @@ class DataMcComparisonTests(unittest.TestCase):
                 writer.writerow({"run": 101, "BCM2_I": -999})
             points, reasons = compare.signal_stability_points(norm, bigtable)
             self.assertEqual(points["delta"], [(100.0, 28.5, 2.5, 0.2)])
-            self.assertEqual(points["full"], [(100.0, 28.5, 2.0, 0.15)])
             self.assertEqual(reasons, ["BCM2_I_UNAVAILABLE_RUN_101"])
 
     def test_positron_and_dummy_subtraction_error_propagation(self):
@@ -158,13 +154,25 @@ class DataMcComparisonTests(unittest.TestCase):
             math.sqrt(sum((0.1 * index) ** 2 for index in range(1, 5))),
         )
 
+    def test_exclusive_is_not_applicable_to_pim(self):
+        self.assertEqual(
+            compare.applicable_reactions("pim"), ("sidis", "rho", "delta")
+        )
+        self.assertEqual(compare.applicable_reactions("pip"), compare.REACTIONS)
+
+    def test_flow_warning_threshold_is_two_percent(self):
+        source = Path(compare.__file__).read_text()
+        self.assertIn("DATA_FLOW_GT_2PCT", source)
+        self.assertIn("MC_FLOW_GT_2PCT", source)
+        self.assertNotIn("FLOW_GT_1PCT", source)
+
     def test_derived_simc_expressions(self):
         native = compare.simc_expressions("sidis")
         derived = compare.simc_expressions("delta")
         self.assertEqual(native["xbj"], "xbj_recon")
         self.assertIn("Q2_recon", derived["xbj"])
         self.assertIn("phad/nu_recon", derived["z"])
-        self.assertIn("sin(thetapq_recon)", derived["pt2"])
+        self.assertIn("sin(thetapq_recon)", derived["pt"])
         self.assertEqual(derived["missmass"], "missmass_recon")
 
     def test_incomplete_mc_never_publishes_total_ratio_or_pull(self):
@@ -183,8 +191,8 @@ class DataMcComparisonTests(unittest.TestCase):
         total = compare.add_mc_total(components, "xbj")
         rows = compare.rows_for_variable(
             {
-                "Phase": "phase1", "Pass": "pass4", "Run_type": "PIPLUS",
-                "Target": "LH2", "Setting": "setting",
+                "Phase": "phase1", "Pass": "pass4", "Run_type": "pip",
+                "Target": "LH2", "setting_id": "setting",
             },
             "delta", "xbj", data, components, total, 0.25,
             "PENDING", ["INCOMPLETE_MC=exclusive"], 0.0, False,

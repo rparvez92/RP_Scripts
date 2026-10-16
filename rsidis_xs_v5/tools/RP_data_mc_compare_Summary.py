@@ -15,17 +15,14 @@ from typing import Dict, Iterable, Mapping
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = SCRIPT_DIR.parent
-DEFAULT_INPUT = PROJECT_DIR / "results" / "Tables" / "RP_data_mc_compare"
+DEFAULT_INPUT = PROJECT_DIR / "results" / "Pass1" / "Tables" / "RP_data_mc_compare"
 SUMMARY_NAME = "RP_data_mc_compare_Summary.csv"
 PROBLEMATIC_NAME = "RP_data_mc_compare_Problematic.csv"
 COLUMNS = [
-    "Phase", "Pass", "Run_type", "Target", "Setting", "Status", "Reason",
+    "Phase", "Pass", "Run_type", "Target", "setting_id", "Status", "Reason",
     "S_dummy", "Binning_version", "Provisional_flag", "N_bin_rows", "N_variables",
     "Max_data_flow_fraction", "Max_MC_flow_fraction",
-    "Delta_Data_final", "Delta_Data_final_err", "Delta_MC_total",
-    "Delta_MC_total_err", "Delta_Data_by_MC",
-    "Full_Data_final", "Full_Data_final_err", "Full_MC_total",
-    "Full_MC_total_err", "Full_Data_by_MC",
+    "Data_final", "Data_final_err", "MC_total", "MC_total_err", "Data_by_MC",
 ]
 
 
@@ -57,7 +54,7 @@ def summarize(path: Path) -> Dict[str, object]:
     first = rows[0]
     output: Dict[str, object] = {
         key: first.get(key, "") for key in
-        ("Phase", "Pass", "Run_type", "Target", "Setting", "S_dummy", "Binning_version")
+        ("Phase", "Pass", "Run_type", "Target", "setting_id", "S_dummy", "Binning_version")
     }
     statuses = [row.get("Status", "") for row in rows]
     precedence = ("ERROR", "WARNING", "PENDING", "SKIPPED", "OK")
@@ -81,30 +78,21 @@ def summarize(path: Path) -> Dict[str, object]:
     output["Max_MC_flow_fraction"] = max(
         (value for value in mc_flows if math.isfinite(value)), default=math.nan
     )
-    for tier, prefix in (("delta", "Delta"), ("full", "Full")):
-        # One variable is enough for integrated normalization; hdelta includes flow.
-        selected = [
-            row for row in physics_rows
-            if row.get("Tier") == tier and row.get("Variable") == "hdelta"
-        ]
-        complete = bool(selected) and all(
-            row.get("MC_complete") == "1" for row in selected
-        )
-        for source in ("Data_final", "MC_total"):
-            if source == "MC_total" and not complete:
-                output[f"{prefix}_{source}"] = ""
-                output[f"{prefix}_{source}_err"] = ""
-                continue
-            values = [number(row[source]) for row in selected]
-            errors = [number(row[source + "_err"]) for row in selected]
-            total = sum(value for value in values if math.isfinite(value))
-            variance = sum(error * error for error in errors if math.isfinite(error))
-            output[f"{prefix}_{source}"] = total
-            output[f"{prefix}_{source}_err"] = math.sqrt(variance)
-        data, mc = output[f"{prefix}_Data_final"], output[f"{prefix}_MC_total"]
-        output[f"{prefix}_Data_by_MC"] = (
-            data / mc if isinstance(mc, (float, int)) and mc else math.nan
-        )
+    selected = [row for row in physics_rows if row.get("Variable") == "hdelta"]
+    complete = bool(selected) and all(row.get("MC_complete") == "1" for row in selected)
+    for source in ("Data_final", "MC_total"):
+        if source == "MC_total" and not complete:
+            output[source] = ""
+            output[source + "_err"] = ""
+            continue
+        values = [number(row[source]) for row in selected]
+        errors = [number(row[source + "_err"]) for row in selected]
+        output[source] = sum(value for value in values if math.isfinite(value))
+        output[source + "_err"] = math.sqrt(sum(
+            error * error for error in errors if math.isfinite(error)
+        ))
+    data, mc = output["Data_final"], output["MC_total"]
+    output["Data_by_MC"] = data / mc if isinstance(mc, (float, int)) and mc else math.nan
     return output
 
 
@@ -114,7 +102,7 @@ def main() -> int:
     args = parser.parse_args()
     directory = args.input_dir.expanduser().resolve()
     paths = sorted(
-        path for path in directory.glob("phase*_pass*_PI*.csv")
+        path for path in directory.glob("phase*_pass*_*.csv")
         if path.name not in {SUMMARY_NAME, PROBLEMATIC_NAME}
     )
     rows = [summarize(path) for path in paths]

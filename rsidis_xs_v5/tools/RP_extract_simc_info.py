@@ -9,6 +9,7 @@ import math
 import os
 import re
 import tempfile
+import textwrap
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Dict, Iterable, List, Mapping, MutableMapping, Sequence, Tuple
@@ -18,13 +19,23 @@ import ROOT
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = SCRIPT_DIR.parent
-DEFAULT_SIMC_DIR = PROJECT_DIR.parents[1] / "simc_gfortran"
-DEFAULT_MANIFEST = DEFAULT_SIMC_DIR / "infiles" / "RP_Simc" / "simc_input_manifest.csv"
-DEFAULT_T7_ROOT = Path("/Volumes/T7/RSIDIS")
-DEFAULT_TABLE_DIR = PROJECT_DIR / "results" / "Tables" / "RP_extract_simc_info"
-DEFAULT_PDF_DIR = PROJECT_DIR / "results" / "PDFs" / "RP_extract_simc_info"
+DEFAULT_MANIFEST = (
+    PROJECT_DIR.parents[1]
+    / "JLab_upstream_forks"
+    / "simc_gfortran"
+    / "util"
+    / "batch_job"
+    / "simc_job_list_pass1.csv"
+)
+DEFAULT_T7_ROOT = Path("/Volumes/T7/RSIDIS/Pass1/Simulation")
+DEFAULT_TABLE_DIR = (
+    PROJECT_DIR / "results" / "Pass1" / "Tables" / "RP_extract_simc_info"
+)
+DEFAULT_PDF_DIR = (
+    PROJECT_DIR / "results" / "Pass1" / "PDFs" / "RP_extract_simc_info"
+)
 
-RUNNABLE_STATUSES = {"GENERATED", "EXISTING_FILE_NOT_OVERWRITTEN"}
+RUNNABLE_STATUSES = {"GENERATED"}
 REACTIONS = ("sidis", "rho", "delta", "exclusive")
 PHASES = ("phase1", "phase2")
 
@@ -32,14 +43,6 @@ DELTA_CUT = (
     "hsdelta > -8.0 && hsdelta < 8.0 && "
     "ssdelta > -10.0 && ssdelta < 22.0"
 )
-FULL_CUT = (
-    DELTA_CUT
-    + " && hsxptar > -0.15 && hsxptar < 0.15"
-    + " && hsyptar > -0.10 && hsyptar < 0.10"
-    + " && ssxptar > -0.15 && ssxptar < 0.15"
-    + " && ssyptar > -0.10 && ssyptar < 0.10"
-)
-
 REQUIRED_RAW_BRANCHES = {
     "Weight", "hsdelta", "hsxptar", "hsyptar",
     "ssdelta", "ssxptar", "ssyptar",
@@ -58,7 +61,7 @@ KINEMATICS = (
 )
 
 IDENTITY_COLUMNS = [
-    "Phase", "Pass", "Reaction", "Run_type", "Target", "Setting",
+    "Phase", "Pass", "Reaction", "Run_type", "Target", "setting_id",
     "Manifest_Ngen", "Generation_status", "Generation_reason",
     "Source_input", "Source_leaf_csv", "Source_template",
 ]
@@ -78,27 +81,23 @@ WEIGHT_COLUMNS = [
     "Weight_sum_nocut", "Weight_sum2_nocut", "Weight_min", "Weight_max",
     "FWeight_zero_count", "FWeight_negative_count", "FWeight_nonfinite_count",
 ]
-TIER_COLUMNS: List[str] = []
-for _tier in ("nocut", "delta", "full"):
-    TIER_COLUMNS.extend([
-        f"N_selected_{_tier}", f"Acceptance_fraction_{_tier}",
-        f"Sum_fWeight_{_tier}", f"Sum_fWeight2_{_tier}",
-        f"SimYield_{_tier}", f"SimYield_err_{_tier}",
-        f"SimYield_rel_err_{_tier}", f"Neff_{_tier}",
-    ])
+TIER_COLUMNS: List[str] = [
+    "N_selected_nocut", "Acceptance_fraction_nocut",
+    "Sum_fWeight_nocut", "Sum_fWeight2_nocut",
+    "SimYield_nocut", "SimYield_err_nocut",
+    "SimYield_rel_err_nocut", "Neff_nocut",
+    "N_selected", "Acceptance_fraction", "Sum_fWeight", "Sum_fWeight2",
+    "SimYield", "SimYield_err", "SimYield_rel_err", "Neff",
+]
 KINEMATIC_COLUMNS: List[str] = [
     "Kinematic_branch_availability", "Kinematic_value_provenance"
 ]
 for _label, _, _, _ in KINEMATICS:
-    for _tier in ("delta", "full"):
-        KINEMATIC_COLUMNS.extend([
-            f"{_label}_{_tier}_simc_weighted_mean",
-            f"{_label}_{_tier}_simc_weighted_rms",
-            f"{_label}_{_tier}_recon_weighted_mean",
-            f"{_label}_{_tier}_recon_weighted_rms",
-            f"{_label}_{_tier}_residual_weighted_mean",
-            f"{_label}_{_tier}_residual_weighted_rms",
-        ])
+    KINEMATIC_COLUMNS.extend([
+        f"{_label}_simc_weighted_mean", f"{_label}_simc_weighted_rms",
+        f"{_label}_recon_weighted_mean", f"{_label}_recon_weighted_rms",
+        f"{_label}_residual_weighted_mean", f"{_label}_residual_weighted_rms",
+    ])
 QA_COLUMNS = [
     "File_flag", "Tree_flag", "Entry_flag", "Ngen_flag", "Normfac_flag",
     "FWeight_flag", "Weight_flag", "MC_precision_flag",
@@ -119,16 +118,36 @@ def empty_output_row() -> Dict[str, object]:
 def read_manifest(path: Path) -> List[Dict[str, str]]:
     with path.open(newline="", encoding="utf-8-sig") as stream:
         reader = csv.DictReader(stream)
-        required = {
-            "Phase", "Pass", "Run_type", "Target", "Setting", "Reaction",
-            "Ngen", "Output_file", "Generation_status",
-        }
         if reader.fieldnames is None:
             raise ValueError(f"manifest has no header: {path}")
+        required = {
+            "phase", "pass", "reaction", "charge", "target", "setting_id",
+            "ngen", "job_id", "validation_status",
+        }
         missing = required.difference(reader.fieldnames)
         if missing:
             raise ValueError(f"manifest is missing columns: {sorted(missing)}")
-        return list(reader)
+        rows = []
+        for source in reader:
+            status = source["validation_status"].strip().upper()
+            rows.append({
+                "Phase": source["phase"],
+                "Pass": source["pass"],
+                "Reaction": source["reaction"],
+                "Run_type": source["charge"],
+                "Target": source["target"],
+                "Setting": source["setting_id"],
+                "Ngen": source["ngen"],
+                "Output_file": source.get("simc_root_file") or f"{source['job_id']}.root",
+                "Generation_status": (
+                    "GENERATED" if status == "VALID" else f"SKIPPED_{status}"
+                ),
+                "Diagnostic_reason": source.get("validation_message", ""),
+                "Source_leaf_csv": source.get("source_bigtable", ""),
+                "Source_template": source.get("source_nominal_settings", ""),
+                "Source_input": source.get("input_file", ""),
+            })
+        return rows
 
 
 def parse_hist(path: Path) -> Tuple[int | None, float | None]:
@@ -160,7 +179,7 @@ def expected_paths(
     t7_root: Path, manifest_row: Mapping[str, str]
 ) -> Dict[str, Path]:
     stem = Path(manifest_row["Output_file"]).stem
-    simulation = t7_root / phase_directory(manifest_row["Phase"]) / "Simulation"
+    simulation = t7_root
     run_type = manifest_row["Run_type"]
 
     def choose(category: str, filename: str) -> Path:
@@ -181,9 +200,9 @@ def manifest_identity(source: Mapping[str, str]) -> Dict[str, object]:
     row = empty_output_row()
     mappings = {
         "Phase": "Phase", "Pass": "Pass", "Reaction": "Reaction",
-        "Run_type": "Run_type", "Target": "Target", "Setting": "Setting",
+        "Run_type": "Run_type", "Target": "Target", "setting_id": "Setting",
         "Manifest_Ngen": "Ngen", "Generation_status": "Generation_status",
-        "Generation_reason": "Diagnostic_reason", "Source_input": "Output_file",
+        "Generation_reason": "Diagnostic_reason", "Source_input": "Source_input",
         "Source_leaf_csv": "Source_leaf_csv", "Source_template": "Source_template",
     }
     for output, original in mappings.items():
@@ -228,21 +247,22 @@ def add_tier_metrics(
     sumw: float,
     sumw2: float,
 ) -> None:
-    row[f"N_selected_{tier}"] = count
-    row[f"Acceptance_fraction_{tier}"] = (
+    suffix = "_nocut" if tier == "nocut" else ""
+    row[f"N_selected{suffix}"] = count
+    row[f"Acceptance_fraction{suffix}"] = (
         count / total_entries if total_entries > 0 else ""
     )
-    row[f"Sum_fWeight_{tier}"] = sumw
-    row[f"Sum_fWeight2_{tier}"] = sumw2
-    row[f"SimYield_{tier}"] = sumw
+    row[f"Sum_fWeight{suffix}"] = sumw
+    row[f"Sum_fWeight2{suffix}"] = sumw2
+    row[f"SimYield{suffix}"] = sumw
     error = math.sqrt(sumw2) if math.isfinite(sumw2) and sumw2 >= 0.0 else math.nan
-    row[f"SimYield_err_{tier}"] = error
-    row[f"SimYield_rel_err_{tier}"] = (
+    row[f"SimYield_err{suffix}"] = error
+    row[f"SimYield_rel_err{suffix}"] = (
         error / abs(sumw)
         if math.isfinite(error) and math.isfinite(sumw) and sumw != 0.0
         else ""
     )
-    row[f"Neff_{tier}"] = (
+    row[f"Neff{suffix}"] = (
         sumw * sumw / sumw2
         if math.isfinite(sumw) and math.isfinite(sumw2) and sumw2 > 0.0
         else ""
@@ -338,8 +358,7 @@ def scan_recon_tree(
     row["Kinematic_value_provenance"] = ";".join(
         f"{label}:{provenance[label]}" for label, _, _, _ in kinematics
     )
-    delta_frame = dataframe.Filter(DELTA_CUT)
-    full_frame = dataframe.Filter(FULL_CUT)
+    selected_frame = dataframe.Filter(DELTA_CUT)
 
     actions: Dict[str, object] = {
         "count": dataframe.Count(),
@@ -356,7 +375,7 @@ def scan_recon_tree(
         "fw_nonfinite": dataframe.Filter("!std::isfinite(_fw)").Count(),
         "identity_max": dataframe.Max("_fw_identity_rel"),
     }
-    tier_frames = {"nocut": dataframe, "delta": delta_frame, "full": full_frame}
+    tier_frames = {"nocut": dataframe, "selected": selected_frame}
     for tier, frame in tier_frames.items():
         actions[f"{tier}_count"] = frame.Count()
         actions[f"{tier}_sumw"] = frame.Sum("_fw")
@@ -386,7 +405,7 @@ def scan_recon_tree(
         availability_action = f"_kin_available_{index}"
         actions[availability_action] = dataframe.Filter(valid).Count()
         availability_actions[label] = availability_action
-        for tier, tier_frame in (("delta", delta_frame), ("full", full_frame)):
+        for tier, tier_frame in (("selected", selected_frame),):
             prefix = f"_kin_{tier}_{index}"
             defined = (
                 tier_frame
@@ -470,10 +489,11 @@ def scan_recon_tree(
             ("simc", original_stats), ("recon", recon_stats),
             ("residual", residual_stats),
         ):
-            row[f"{label}_{tier}_{suffix}_weighted_mean"] = (
+            output_prefix = f"{label}_{suffix}"
+            row[f"{output_prefix}_weighted_mean"] = (
                 "" if stats[0] is None else stats[0]
             )
-            row[f"{label}_{tier}_{suffix}_weighted_rms"] = (
+            row[f"{output_prefix}_weighted_rms"] = (
                 "" if stats[1] is None else stats[1]
             )
 
@@ -646,17 +666,17 @@ def inspect_manifest_row(
         else:
             row["Weight_flag"] = "OK"
 
-        if int(row["N_selected_full"]) <= 0:
-            errors.append("FULL_ACCEPTANCE_EMPTY")
+        if int(row["N_selected"]) <= 0:
+            errors.append("ACCEPTANCE_EMPTY")
             row["MC_precision_flag"] = "ERROR"
         else:
-            relative_error = row["SimYield_rel_err_full"]
-            effective = row["Neff_full"]
+            relative_error = row["SimYield_rel_err"]
+            effective = row["Neff"]
             precision_warnings = []
             if isinstance(relative_error, (float, int)) and relative_error > 0.05:
-                precision_warnings.append(f"FULL_RELERR={relative_error:.6g}")
+                precision_warnings.append(f"RELERR={relative_error:.6g}")
             if isinstance(effective, (float, int)) and effective < 1000.0:
-                precision_warnings.append(f"FULL_NEFF={effective:.6g}")
+                precision_warnings.append(f"NEFF={effective:.6g}")
             if precision_warnings:
                 warnings.extend(precision_warnings)
                 row["MC_precision_flag"] = "WARNING"
@@ -741,27 +761,31 @@ def draw_text_page(
     latex.SetTextSize(0.021)
     y = 0.89
     for line in lines:
-        latex.DrawLatex(0.08, y, line)
-        y -= 0.033
-        if y < 0.06:
-            canvas.Print(pdf.as_posix())
-            canvas.Clear()
-            latex.DrawLatex(0.07, 0.94, title + " (continued)")
-            y = 0.89
+        wrapped = textwrap.wrap(
+            line, width=88, break_long_words=True, break_on_hyphens=False
+        ) or [""]
+        for segment in wrapped:
+            latex.DrawLatex(0.08, y, segment)
+            y -= 0.033
+            if y < 0.06:
+                canvas.Print(pdf.as_posix())
+                canvas.Clear()
+                latex.DrawLatex(0.07, 0.94, title + " (continued)")
+                y = 0.89
     canvas.Print(pdf.as_posix())
 
 
 LONG_CATEGORY_LABELS = {
-    ("PIPLUS", "LH2"): "PIPLUS LH2",
-    ("PIMINUS", "LH2"): "PIMINUS LH2",
-    ("PIPLUS", "LD2"): "PIPLUS LD2",
-    ("PIMINUS", "LD2"): "PIMINUS LD2",
+    ("pip", "LH2"): "pip LH2",
+    ("pim", "LH2"): "pim LH2",
+    ("pip", "LD2"): "pip LD2",
+    ("pim", "LD2"): "pim LD2",
 }
 CATEGORY_COLORS = {
-    ("PIPLUS", "LH2"): ROOT.kBlue + 1,
-    ("PIMINUS", "LH2"): ROOT.kRed + 1,
-    ("PIPLUS", "LD2"): ROOT.kGreen + 2,
-    ("PIMINUS", "LD2"): ROOT.kMagenta + 1,
+    ("pip", "LH2"): ROOT.kBlue + 1,
+    ("pim", "LH2"): ROOT.kRed + 1,
+    ("pip", "LD2"): ROOT.kGreen + 2,
+    ("pim", "LD2"): ROOT.kMagenta + 1,
 }
 CATEGORY_ORDER = tuple(CATEGORY_COLORS)
 CATEGORY_OFFSETS = {
@@ -782,13 +806,13 @@ def group_rows(
         groups[key].append(row)
     for values in groups.values():
         values.sort(key=lambda row: (
-            str(row["Setting"]), str(row["Target"]), str(row["Run_type"])
+            str(row["setting_id"]), str(row["Target"]), str(row["Run_type"])
         ))
     return groups
 
 
 def setting_names(rows: Sequence[Mapping[str, object]]) -> List[str]:
-    return sorted({str(row["Setting"]) for row in rows})
+    return sorted({str(row["setting_id"]) for row in rows})
 
 
 def chunk_rows_by_settings(
@@ -802,7 +826,7 @@ def chunk_rows_by_settings(
     for start in range(0, len(settings), max_settings):
         selected = set(settings[start:start + max_settings])
         chunks.append([
-            row for row in rows if str(row["Setting"]) in selected
+            row for row in rows if str(row["setting_id"]) in selected
         ])
     return chunks
 
@@ -822,7 +846,7 @@ def grouped_x(
         else (series_index - 0.5 * (series_count - 1)) * 0.060
     )
     return (
-        float(setting_index[str(row["Setting"])])
+        float(setting_index[str(row["setting_id"])])
         + CATEGORY_OFFSETS[category]
         + series_offset
     )
@@ -841,7 +865,7 @@ def categorical_frame(
     frame.SetStats(0)
     frame.SetMinimum(low)
     frame.SetMaximum(high)
-    frame.GetXaxis().SetLabelSize(0.020)
+    frame.GetXaxis().SetLabelSize(0.030)
     frame.GetXaxis().SetTitleOffset(3.4)
     frame.GetXaxis().CenterTitle(True)
     for index, setting in enumerate(settings, start=1):
@@ -871,7 +895,7 @@ def draw_plot_legends(
     for legend in (series_legend, category_legend):
         legend.SetBorderSize(0)
         legend.SetFillStyle(0)
-        legend.SetTextSize(0.018)
+        legend.SetTextSize(0.026)
         legend.SetNColumns(2)
 
     keepalive: List[object] = [series_legend, category_legend]
@@ -1004,17 +1028,16 @@ def draw_dual_panel_page(
     canvas.Divide(1, 2)
     panels = (
         (
-            "Relative MC uncertainty: Delta-only and Full-cut",
+            "Relative MC uncertainty",
             "Relative uncertainty",
             (
-                ("Delta-only", "SimYield_rel_err_delta"),
-                ("Full-cut", "SimYield_rel_err_full"),
+                ("calculated", "SimYield_rel_err"),
             ),
         ),
         (
-            "Effective MC entries: Delta-only and Full-cut",
+            "Effective MC entries",
             "N_{eff}",
-            (("Delta-only", "Neff_delta"), ("Full-cut", "Neff_full")),
+            (("calculated", "Neff"),),
         ),
     )
     keepalive = []
@@ -1038,7 +1061,7 @@ def draw_dual_panel_page(
             setting: index for index, setting in enumerate(settings, start=1)
         }
         keepalive.extend(draw_setting_separators(settings, low, high))
-        markers = (24, 20)
+        markers = (20,)
         for series_index, (_, column) in enumerate(columns):
             for category in CATEGORY_ORDER:
                 graph = ROOT.TGraph()
@@ -1109,7 +1132,7 @@ def draw_kinematic_page(
     context: str,
     tier: str,
 ) -> None:
-    tier_label = "Delta-only" if tier == "delta" else "Full-cut"
+    tier_label = "Baseline acceptance"
     canvas.Clear()
     canvas.Divide(3, 3)
     keepalive = []
@@ -1118,7 +1141,7 @@ def draw_kinematic_page(
         pad.SetGrid(1, 1)
         pad.SetBottomMargin(0.25)
         pad.SetLeftMargin(0.24)
-        column = f"{label}_{tier}_residual_weighted_mean"
+        column = f"{label}_residual_weighted_mean"
         values = [
             float(row[column]) for row in rows
             if isinstance(row.get(column), (float, int))
@@ -1148,7 +1171,7 @@ def draw_kinematic_page(
             "Weighted mean residual",
             low, high,
         )
-        frame.GetXaxis().SetLabelSize(0.012)
+        frame.GetXaxis().SetLabelSize(0.022)
         frame.GetYaxis().SetTitleOffset(2.2)
         frame.GetYaxis().SetTitleSize(0.04)
         frame.Draw()
@@ -1217,28 +1240,29 @@ def write_pdf(
     canvas = ROOT.TCanvas("c_simc_info", "SIMC QA", 1200, 1200)
     canvas.Print(path.as_posix() + "[")
     counts = Counter(str(row["QA_status"]) for row in rows)
+    try:
+        manifest_label = manifest.relative_to(PROJECT_DIR.parents[1]).as_posix()
+    except ValueError:
+        manifest_label = manifest.as_posix()
     draw_text_page(canvas, path, "SIMC metadata, normalization, and QA", [
-        f"Manifest: {manifest}",
+        "Manifest:",
+        f"  {manifest_label}",
         f"Simulation root: {t7_root}",
         f"Inventory rows: {len(rows)}",
         ", ".join(f"{status}: {count}" for status, count in sorted(counts.items())),
         "",
-        "SIMC yield = sum(fWeight) after Boolean event selection.",
+        "SIMC yield = sum(fWeight) for events passing the baseline momentum-acceptance cuts.",
         "MC uncertainty = sqrt(sum(fWeight^{2})).",
         "N_{eff} = (sum fWeight)^{2} / sum(fWeight^{2}).",
         "fWeight = Weight #times normfac / Ngen; don't need to normalize it again.",
         "",
-        "Acceptance tiers: nocut, delta-only, and full matched acceptance.",
-        "Delta cut: -8 < hsdelta < 8, -10 < ssdelta < 22.",
-        "Full-cut angle cuts: -0.15 < HMS/SHMS xptar < 0.15.",
-        "Full-cut angle cuts: -0.10 < HMS/SHMS yptar < 0.10.",
-        "Kinematic summaries are saved separately for Delta-only and Full-cut.",
+        "Baseline acceptance: -8 < hsdelta < 8, -10 < ssdelta < 22.",
         "Delta/exclusive xbj, z, pt2 use common derived original/recon coordinates.",
         "Derived momentum uses physical phad; provenance is retained in the CSV.",
         "Missing mass uses missmass and missmass_recon.",
         "Kinematic availability: available, sentinel_only, or missing.",
         "Sentinel-only branches (for example all -999) retain blank metrics.",
-        "WARNING: negative fWeight, full relative error > 5%, or N_{eff} < 1000.",
+        "WARNING: negative fWeight, relative error > 5%, or N_{eff} < 1000.",
         "PENDING and SKIPPED inventory rows are not classified as problematic.",
     ])
     status_lines = []
@@ -1288,8 +1312,7 @@ def write_pdf(
         draw_graph_page(
             canvas, path, group, f"{context}: acceptance fractions", "Fraction",
             (
-                ("Delta-only", "Acceptance_fraction_delta", None),
-                ("Full-cut", "Acceptance_fraction_full", None),
+                ("calculated", "Acceptance_fraction", None),
             ),
             series_markers=(24, 20),
             nonnegative=True,
@@ -1298,23 +1321,21 @@ def write_pdf(
             canvas,
             path,
             group,
-            f"{context}: normalized yield: Delta-only and Full-cut",
+            f"{context}: normalized yield",
             "sum(fWeight)",
             (
-                ("Delta-only", "SimYield_delta", "SimYield_err_delta"),
-                ("Full-cut", "SimYield_full", "SimYield_err_full"),
+                ("calculated", "SimYield", "SimYield_err"),
             ),
             series_markers=(24, 20),
             nonnegative=False,
             logy=all(
                 float(row[column]) > 0
                 for row in group
-                for column in ("SimYield_delta", "SimYield_full")
+                for column in ("SimYield",)
             ),
         )
         draw_dual_panel_page(canvas, path, group, context)
-        draw_kinematic_page(canvas, path, group, context, "delta")
-        draw_kinematic_page(canvas, path, group, context, "full")
+        draw_kinematic_page(canvas, path, group, context, "selected")
     canvas.Print(path.as_posix() + "]")
 
 
@@ -1337,6 +1358,7 @@ def main() -> int:
     parser.add_argument("--t7-root", type=Path, default=DEFAULT_T7_ROOT)
     parser.add_argument("--phase", action="append", choices=PHASES, default=[])
     parser.add_argument("--reaction", action="append", choices=REACTIONS, default=[])
+    parser.add_argument("--limit", type=int, help="Process only the first N selected jobs")
     parser.add_argument("--no-pdf", action="store_true")
     parser.add_argument("--table-dir", type=Path, default=DEFAULT_TABLE_DIR)
     parser.add_argument("--pdf-dir", type=Path, default=DEFAULT_PDF_DIR)
@@ -1354,6 +1376,10 @@ def main() -> int:
     source_rows = filtered_manifest_rows(
         read_manifest(manifest), args.phase, args.reaction
     )
+    if args.limit is not None:
+        if args.limit < 1:
+            raise ValueError("--limit must be positive")
+        source_rows = source_rows[: args.limit]
     rows: List[Dict[str, object]] = []
     for index, source in enumerate(source_rows, start=1):
         row = inspect_manifest_row(source, t7_root)
