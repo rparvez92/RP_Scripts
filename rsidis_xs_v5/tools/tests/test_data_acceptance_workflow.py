@@ -46,6 +46,10 @@ class DataAcceptanceSummaryTests(unittest.TestCase):
         self.assertIn('results/Pass1/Tables/RP_get_good_coin_ev/', goodcoin)
         self.assertIn('/Volumes/T7/RSIDIS/Pass1/Data/ROOTfiles/SkimmedData', goodcoin)
         self.assertIn('"RP_Goodcoin,RP_Goodcoin_err,CoinCuts_entries,ransubcoin,"', goodcoin)
+        self.assertIn("IsPositron(row.input)", goodcoin)
+        self.assertIn("row.baseline.goodCoin < 0.0", goodcoin)
+        self.assertIn("row.baseline.goodCoin = 0.0", goodcoin)
+        self.assertIn("row.baseline.goodCoinErr = 0.0", goodcoin)
         self.assertNotIn("RP_Goodcoin_full", goodcoin)
 
     def test_goodcoin_baseline_row_is_valid(self):
@@ -87,6 +91,37 @@ class DataAcceptanceSummaryTests(unittest.TestCase):
         flagged = good_summary.flag_row(row)
         self.assertEqual(flagged["Yield_flag"], "TRUE")
 
+    def test_zero_floored_positron_goodcoin_is_not_problematic(self):
+        row = {
+            "CT_method": "PRIOR_ELEC_AVERAGE",
+            "CT_POS_ref_status": "OK",
+            "CT_POS_ref_count": "5",
+            "CTmean": "51.0", "CTmean_err": "0.1",
+            "CTsigma": "0.4", "CTsigma_err": "0.05",
+            "CTmean_residual": "0.2", "CTsigma_residual": "0.1",
+            "N_rndm_peak": "10", "RP_Goodcoin": "0.0",
+            "RP_Goodcoin_err": "0.0", "ransubcoin_by_RP_Goodcoin": "nan",
+            "Fit_status": "NOT_APPLICABLE",
+        }
+        flagged = good_summary.flag_row(row)
+        self.assertEqual(flagged["Yield_flag"], "FALSE")
+        self.assertEqual(flagged["Problematic"], "FALSE")
+
+    def test_zero_electron_goodcoin_remains_problematic(self):
+        row = {
+            "CT_method": "TWO_STAGE_GAUSSIAN_FIT",
+            "CT_POS_ref_status": "NOT_APPLICABLE",
+            "CT_POS_ref_count": "0",
+            "CTmean": "51.0", "CTmean_err": "0.1",
+            "CTsigma": "0.4", "CTsigma_err": "0.05",
+            "CTmean_residual": "0.2", "CTsigma_residual": "0.1",
+            "N_rndm_peak": "10", "RP_Goodcoin": "0.0",
+            "RP_Goodcoin_err": "0.0", "ransubcoin_by_RP_Goodcoin": "nan",
+            "Fit_status": "OK",
+        }
+        flagged = good_summary.flag_row(row)
+        self.assertEqual(flagged["Yield_flag"], "TRUE")
+
     def test_normyield_row_is_valid(self):
         row = {
             "Norm_status": "OK",
@@ -115,6 +150,19 @@ class DataAcceptanceSummaryTests(unittest.TestCase):
         flagged = norm_summary.flag_row(row)
         self.assertEqual(flagged["Normyield_ratio_flag"], "TRUE")
         self.assertIn("NORMYIELD_RATIO_DEVIATION_GT_30PCT", flagged["Problem_reason"])
+
+    def test_zero_floored_positron_normyield_is_not_problematic(self):
+        row = {
+            "CT_method": "PRIOR_ELEC_AVERAGE", "Norm_status": "OK",
+            "Norm_factor": "0.01", "RP_Normyield": "0.0",
+            "RP_Normyield_err": "0.0", "normyield": "1.0",
+            "normyield_by_RP_Normyield": "nan",
+            "normyield_by_RP_Normyield_err": "nan",
+        }
+        flagged = norm_summary.flag_row(row)
+        self.assertEqual(flagged["Yield_flag"], "FALSE")
+        self.assertEqual(flagged["Normyield_ratio_flag"], "FALSE")
+        self.assertEqual(flagged["Problematic"], "FALSE")
 
 
 if __name__ == "__main__":

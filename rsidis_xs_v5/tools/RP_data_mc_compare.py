@@ -9,11 +9,18 @@ import ctypes
 import math
 import os
 import tempfile
+from array import array
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, Iterable, List, Mapping, Sequence, Tuple
 
 import ROOT
+
+from RP_sidis_binning import (
+    AZIMUTHAL_BINNING_VERSION,
+    AZIMUTHAL_PHI_EDGES,
+    AZIMUTHAL_PT_EDGES,
+)
 
 ROOT.gROOT.SetBatch(True)
 ROOT.gStyle.SetOptStat(0)
@@ -53,25 +60,26 @@ DATA_DELTA = "H_gtr_dp>-8 && H_gtr_dp<8 && P_gtr_dp>-10 && P_gtr_dp<22"
 SIMC_DELTA = "hsdelta>-8 && hsdelta<8 && ssdelta>-10 && ssdelta<22"
 
 # Versioned fixed comparison bins. They intentionally extend beyond acceptance cuts.
-BINNING_VERSION = "RP_DMC_V7"
+BINNING_VERSION = "RP_DMC_V8"
 BINNING = {
-    "hdelta": (20, -12.0, 12.0, "HMS #delta", "%"),
-    "pdelta": (20, -15.0, 25.0, "SHMS #delta", "%"),
-    "hxp": (20, -0.20, 0.20, "HMS x'_{tar}", "rad"),
-    "hyp": (20, -0.15, 0.15, "HMS y'_{tar}", "rad"),
-    "pxp": (20, -0.20, 0.20, "SHMS x'_{tar}", "rad"),
-    "pyp": (20, -0.15, 0.15, "SHMS y'_{tar}", "rad"),
-    "hytar": (20, -5.0, 5.0, "HMS y_{tar}", "cm"),
-    "pytar": (20, -10.0, 10.0, "SHMS y_{tar}", "cm"),
-    "xbj": (20, 0.0, 0.6, "x_{bj}", ""),
-    "Q2": (20, 0.0, 6.0, "Q^{2}", "GeV^{2}"),
-    "W": (20, 0.0, 4.0, "W", "GeV"),
-    "z": (20, 0.0, 1.0, "z", ""),
-    "thetapq": (20, 0.0, 0.20, "#theta_{pq}", "rad"),
-    "phipq": (20, 0.0, 2.0 * math.pi, "#phi_{pq}", "rad"),
-    "pt": (20, 0.0, 0.6, "P_{t}", "GeV"),
-    "missmass": (20, 0.0, 4.0, "Missing mass", "GeV"),
+    "hdelta": (15, -12.0, 12.0, "HMS #delta", "%"),
+    "pdelta": (15, -15.0, 25.0, "SHMS #delta", "%"),
+    "hxp": (15, -0.20, 0.20, "HMS x'_{tar}", "rad"),
+    "hyp": (15, -0.15, 0.15, "HMS y'_{tar}", "rad"),
+    "pxp": (15, -0.20, 0.20, "SHMS x'_{tar}", "rad"),
+    "pyp": (15, -0.15, 0.15, "SHMS y'_{tar}", "rad"),
+    "hytar": (15, -5.0, 5.0, "HMS y_{tar}", "cm"),
+    "pytar": (15, -10.0, 10.0, "SHMS y_{tar}", "cm"),
+    "xbj": (15, 0.0, 0.6, "x_{bj}", ""),
+    "Q2": (15, 0.0, 6.0, "Q^{2}", "GeV^{2}"),
+    "W": (15, 0.0, 4.0, "W", "GeV"),
+    "z": (15, 0.0, 1.0, "z", ""),
+    "thetapq": (15, 0.0, 0.20, "#theta_{pq}", "rad"),
+    "phipq": (15, 0.0, 2.0 * math.pi, "#phi_{pq}", "rad"),
+    "pt": (15, 0.0, 0.6, "P_{t}", "GeV"),
+    "missmass": (15, 0.0, 4.0, "M_{X}", "GeV"),
 }
+POLAR_PT_BINS = 5
 ACCEPTANCE_VARIABLES = tuple(list(BINNING)[:8])
 PHYSICS_VARIABLES = tuple(list(BINNING)[8:])
 
@@ -142,6 +150,17 @@ def parse_norm_stem(path: Path) -> Dict[str, str]:
     if len(parts) != 6:
         raise ValueError(f"unexpected normalized-yield filename: {path.name}")
     return dict(zip(("Phase", "Pass", "Run_type", "Target", "Charge", "setting_id"), parts))
+
+
+def is_floored_positron_run(csv_path: Path, row: Mapping[str, str]) -> bool:
+    """Identify a positron run deliberately floored to zero upstream."""
+    return (
+        parse_norm_stem(csv_path)["Charge"] == "Pos"
+        and finite(row.get("RP_Normyield"))
+        and float(row["RP_Normyield"]) == 0.0
+        and finite(row.get("RP_Normyield_err"))
+        and float(row["RP_Normyield_err"]) == 0.0
+    )
 
 
 def setting_key(identity: Mapping[str, str]) -> Tuple[str, str, str, str]:
@@ -235,13 +254,20 @@ def make_hist(name: str, variable: str) -> ROOT.TH1D:
     return hist
 
 
-def make_polar_hist(name: str) -> ROOT.TH2D:
-    phi_bins, phi_low, phi_high, _, _ = BINNING["phipq"]
-    pt_bins, pt_low, pt_high, _, _ = BINNING["pt"]
-    hist = ROOT.TH2D(
-        name, ";#phi_{pq} [rad];P_{t} [GeV];Normalized yield",
-        phi_bins, phi_low, phi_high, pt_bins, pt_low, pt_high,
-    )
+def make_polar_hist(name: str, analysis_binning: bool = False) -> ROOT.TH2D:
+    if analysis_binning:
+        hist = ROOT.TH2D(
+            name, ";#phi_{pq} [rad];P_{t} [GeV];Normalized yield",
+            len(AZIMUTHAL_PHI_EDGES) - 1, array("d", AZIMUTHAL_PHI_EDGES),
+            len(AZIMUTHAL_PT_EDGES) - 1, array("d", AZIMUTHAL_PT_EDGES),
+        )
+    else:
+        phi_bins, phi_low, phi_high, _, _ = BINNING["phipq"]
+        _, pt_low, pt_high, _, _ = BINNING["pt"]
+        hist = ROOT.TH2D(
+            name, ";#phi_{pq} [rad];P_{t} [GeV];Normalized yield",
+            phi_bins, phi_low, phi_high, POLAR_PT_BINS, pt_low, pt_high,
+        )
     hist.Sumw2()
     hist.SetDirectory(0)
     return hist
@@ -303,9 +329,8 @@ def dataframe_polar_histogram(
     selection: str,
     weight_expression: str,
     prefix: str,
+    analysis_binning: bool = False,
 ) -> ROOT.TH2D:
-    phi_bins, phi_low, phi_high, _, _ = BINNING["phipq"]
-    pt_bins, pt_low, pt_high, _, _ = BINNING["pt"]
     frame = (
         ROOT.RDataFrame(tree_name, path.as_posix())
         .Filter(selection)
@@ -318,10 +343,19 @@ def dataframe_polar_histogram(
             "_rp_dmc_polar_phi>-998 && _rp_dmc_polar_pt>-998"
         )
     )
+    if analysis_binning:
+        model = (
+            f"{prefix}_polar", "", len(AZIMUTHAL_PHI_EDGES) - 1,
+            array("d", AZIMUTHAL_PHI_EDGES), len(AZIMUTHAL_PT_EDGES) - 1,
+            array("d", AZIMUTHAL_PT_EDGES),
+        )
+    else:
+        phi_bins, phi_low, phi_high, _, _ = BINNING["phipq"]
+        _, pt_low, pt_high, _, _ = BINNING["pt"]
+        model = (f"{prefix}_polar", "", phi_bins, phi_low, phi_high,
+                 POLAR_PT_BINS, pt_low, pt_high)
     action = frame.Histo2D(
-        (f"{prefix}_polar", "", phi_bins, phi_low, phi_high,
-         pt_bins, pt_low, pt_high),
-        "_rp_dmc_polar_phi", "_rp_dmc_polar_pt", "_rp_dmc_polar_weight",
+        model, "_rp_dmc_polar_phi", "_rp_dmc_polar_pt", "_rp_dmc_polar_weight"
     )
     hist = action.GetValue().Clone(f"{prefix}_polar_owned")
     hist.SetDirectory(0)
@@ -386,6 +420,10 @@ def class_histograms(
     expected = 0.0
     for row in valid:
         run = int(float(row["Run"]))
+        alpha = float(row["BCM2_Q"]) / total_charge
+        expected += alpha * float(row["RP_Normyield"])
+        if is_floored_positron_run(csv_path, row):
+            continue
         path = data_root_path(t7_root, parse_norm_stem(csv_path)["Phase"], run)
         if not path.is_file():
             reasons.append(f"DATA_ROOT_MISSING_RUN_{run}")
@@ -401,10 +439,8 @@ def class_histograms(
             f"({float(row['Norm_factor']):.17g})*({timing_weight})",
             f"{prefix}_{tier}_{run}",
         )
-        alpha = float(row["BCM2_Q"]) / total_charge
         for variable in variables:
             add_scaled(output[variable], run_hists[variable], alpha)
-        expected += alpha * float(row["RP_Normyield"])
     closure = output[variables[0]].Integral(
         0, output[variables[0]].GetNbinsX() + 1
     )
@@ -416,7 +452,8 @@ def class_histograms(
 
 
 def class_polar_histogram(
-    csv_path: Path, t7_root: Path, tier: str, prefix: str
+    csv_path: Path, t7_root: Path, tier: str, prefix: str,
+    analysis_binning: bool = False,
 ) -> Tuple[ROOT.TH2D, List[str]]:
     rows = read_csv(csv_path)
     valid = [
@@ -425,7 +462,7 @@ def class_polar_histogram(
         and finite(row.get("BCM2_Q")) and float(row["BCM2_Q"]) > 0
         and finite(row.get("RP_Normyield"))
     ]
-    output = make_polar_hist(f"{prefix}_{tier}_polar")
+    output = make_polar_hist(f"{prefix}_{tier}_polar", analysis_binning)
     excluded = [row.get("Run", "?") for row in rows if row.get("Norm_status") != "OK"]
     reasons = (["EXCLUDED_INVALID_NORM_RUNS=" + "|".join(excluded)] if excluded else [])
     if not valid:
@@ -433,6 +470,8 @@ def class_polar_histogram(
     total_charge = sum(float(row["BCM2_Q"]) for row in valid)
     for row in valid:
         run = int(float(row["Run"]))
+        if is_floored_positron_run(csv_path, row):
+            continue
         path = data_root_path(t7_root, parse_norm_stem(csv_path)["Phase"], run)
         if not path.is_file():
             reasons.append(f"DATA_ROOT_MISSING_RUN_{run}")
@@ -443,6 +482,7 @@ def class_polar_histogram(
             path, "T", DATA_EXPRESSIONS, selection,
             f"({float(row['Norm_factor']):.17g})*({timing_weight})",
             f"{prefix}_{tier}_{run}",
+            analysis_binning,
         )
         output.Add(run_hist, float(row["BCM2_Q"]) / total_charge)
     return output, reasons
@@ -512,9 +552,10 @@ def simc_histograms(
 
 
 def simc_polar_histogram(
-    catalog_row: Mapping[str, str], tier: str, prefix: str
+    catalog_row: Mapping[str, str], tier: str, prefix: str,
+    analysis_binning: bool = False,
 ) -> Tuple[ROOT.TH2D, List[str]]:
-    output = make_polar_hist(f"{prefix}_{tier}_polar")
+    output = make_polar_hist(f"{prefix}_{tier}_polar", analysis_binning)
     path = Path(catalog_row.get("Recon_root_path", ""))
     if catalog_row.get("QA_status") not in {"OK", "WARNING"}:
         return output, [f"SIMC_QA_{catalog_row.get('QA_status','MISSING')}"]
@@ -524,6 +565,7 @@ def simc_polar_histogram(
         return dataframe_polar_histogram(
             path, "h10", simc_expressions(catalog_row["Reaction"]),
             SIMC_DELTA, "static_cast<double>(fWeight)", prefix,
+            analysis_binning,
         ), []
     except Exception as error:
         return output, [f"SIMC_POLAR_HIST_FAILED={type(error).__name__}:{error}"]
@@ -1030,7 +1072,8 @@ def regular_bin_values(hist: ROOT.TH2) -> List[float]:
 
 
 def draw_polar_comparison(
-    canvas: ROOT.TCanvas, pdf: Path, data: ROOT.TH2D, mc: ROOT.TH2D
+    canvas: ROOT.TCanvas, pdf: Path, data: ROOT.TH2D, mc: ROOT.TH2D,
+    nominal_z: float, nominal_thetapq: float,
 ) -> None:
     """Draw corrected data, total MC, and supported-bin ratio in polar axes."""
     canvas.Clear()
@@ -1051,8 +1094,8 @@ def draw_polar_comparison(
     if absolute_high <= absolute_low:
         absolute_high = absolute_low + 1.0
     panels = (
-        (data, "Corrected data", absolute_low, absolute_high),
-        (mc, "MC total", absolute_low, absolute_high),
+        (data, "Corrected Data", absolute_low, absolute_high),
+        (mc, "MC Total", absolute_low, absolute_high),
         (ratio, "Data / MC (MC > 0)", 0.0, 2.0),
     )
     keepalive = [ratio]
@@ -1085,8 +1128,9 @@ def draw_polar_comparison(
     heading.SetTextSize(0.030)
     heading.DrawLatex(
         0.5, 0.14,
-        f"P_{{t}} vs #phi_{{pq}}: 20 #times 20 bins; "
-        f"ratio support {supported}/{data.GetNbinsX() * data.GetNbinsY()} bins",
+        f"P_{{t}} vs #phi_{{pq}}: {data.GetNbinsY()} #times {data.GetNbinsX()} bins; "
+        f"ratio support {supported}/{data.GetNbinsX() * data.GetNbinsY()} bins; "
+        f"z = {nominal_z:g}, #theta_{{pq}} = {nominal_thetapq:g} deg",
     )
     keepalive.append(heading)
     canvas._rp_polar_objects = keepalive
@@ -1166,9 +1210,14 @@ def process_setting(
     output_pdf = pdf_dir / f"{stem}.pdf"
     s_dummy = S_DUMMY[(phase, target)]
     setting_values = []
+    nominal_z = math.nan
+    nominal_thetapq = math.nan
     for source in files.values():
         source_rows = read_csv(source)
         if source_rows:
+            if not finite(nominal_z):
+                nominal_z = float(source_rows[0].get("z", "nan"))
+                nominal_thetapq = float(source_rows[0].get("thpq", "nan"))
             setting_values.extend(float(source_rows[0].get(field, "-999"))
                                   for field in ("x", "Q2", "z", "thpq"))
     if any(value == -999 for value in setting_values):
@@ -1317,7 +1366,8 @@ def process_setting(
             polar_data = combine_data(polar_classes, "polar", s_dummy)
             polar_total = add_mc_total(polar_components, "polar")
             draw_polar_comparison(
-                canvas, output_pdf, polar_data["final"], polar_total
+                canvas, output_pdf, polar_data["final"], polar_total,
+                nominal_z, nominal_thetapq,
             )
             for variable in variables:
                 draw_comparison_pair(

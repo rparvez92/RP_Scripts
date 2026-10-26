@@ -49,7 +49,7 @@ def calculator_identity(target: str, run_type: str) -> tuple[float, float, float
     return (*target_values[target], charges[run_type])
 
 
-def parse_calculator_output(output: str) -> tuple[float, float, float]:
+def parse_calculator_rows(output: str) -> list[tuple[float, float, float]]:
     candidates = []
     for line in output.splitlines():
         parts = line.split()
@@ -63,17 +63,27 @@ def parse_calculator_output(output: str) -> tuple[float, float, float]:
             candidates.append(values)
     if not candidates:
         raise ValueError("calculator output contains no phi/sighad/sigsemi row")
-    return candidates[-1]
+    return candidates
+
+
+def parse_calculator_output(output: str) -> tuple[float, float, float]:
+    return parse_calculator_rows(output)[-1]
 
 
 def run_calculator(executable: Path, values: tuple[float, ...]) -> tuple[float, float, float]:
+    return run_calculator_rows(executable, values)[-1]
+
+
+def run_calculator_rows(
+    executable: Path, values: tuple[float, ...]
+) -> list[tuple[float, float, float]]:
     result = subprocess.run(
         [str(executable)], input=" ".join(f"{value:.15g}" for value in values) + "\n",
         text=True, capture_output=True, check=False, cwd=executable.parent,
     )
     if result.returncode:
         raise RuntimeError(f"calc_semi_xsec exited {result.returncode}")
-    return parse_calculator_output(result.stdout)
+    return parse_calculator_rows(result.stdout)
 
 
 def calculator_commit(executable: Path) -> str:

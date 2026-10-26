@@ -17,6 +17,16 @@ import RP_data_mc_compare as compare  # noqa: E402
 
 
 class DataMcComparisonTests(unittest.TestCase):
+    def test_floored_positron_run_is_identified_by_zero_value_and_error(self):
+        path = Path("phase1_pass4_pim_LH2_Pos_GT001.csv")
+        self.assertTrue(compare.is_floored_positron_run(
+            path, {"RP_Normyield":"0", "RP_Normyield_err":"0"}))
+        self.assertFalse(compare.is_floored_positron_run(
+            path, {"RP_Normyield":"0", "RP_Normyield_err":"1"}))
+        self.assertFalse(compare.is_floored_positron_run(
+            Path("phase1_pass4_pim_LH2_Elec_GT001.csv"),
+            {"RP_Normyield":"0", "RP_Normyield_err":"0"}))
+
     def hist(self, name, value, error):
         result = compare.make_hist(name, "xbj")
         result.SetBinContent(1, value)
@@ -38,30 +48,38 @@ class DataMcComparisonTests(unittest.TestCase):
         self.assertIn("P_gtr_dp>-10", delta_tier)
         self.assertNotIn("H_gtr_th>", delta_tier)
 
-    def test_all_variables_use_twenty_bins_and_requested_ranges(self):
+    def test_all_variables_use_fifteen_bins_and_requested_ranges(self):
         self.assertTrue(compare.BINNING)
-        self.assertTrue(all(values[0] == 20 for values in compare.BINNING.values()))
-        self.assertEqual(compare.BINNING["xbj"][:3], (20, 0.0, 0.6))
-        self.assertEqual(compare.BINNING["Q2"][:3], (20, 0.0, 6.0))
-        self.assertEqual(compare.BINNING["W"][:3], (20, 0.0, 4.0))
-        self.assertEqual(compare.BINNING["thetapq"][:3], (20, 0.0, 0.2))
-        self.assertEqual(compare.BINNING["pt"][:3], (20, 0.0, 0.6))
-        self.assertEqual(compare.BINNING["pytar"][:3], (20, -10.0, 10.0))
-        self.assertEqual(compare.BINNING["missmass"][:3], (20, 0.0, 4.0))
-        self.assertEqual(compare.BINNING["hxp"][:3], (20, -0.20, 0.20))
-        self.assertEqual(compare.BINNING["hyp"][:3], (20, -0.15, 0.15))
-        self.assertEqual(compare.BINNING["pxp"][:3], (20, -0.20, 0.20))
-        self.assertEqual(compare.BINNING["pyp"][:3], (20, -0.15, 0.15))
+        self.assertTrue(all(values[0] == 15 for values in compare.BINNING.values()))
+        self.assertEqual(compare.BINNING["xbj"][:3], (15, 0.0, 0.6))
+        self.assertEqual(compare.BINNING["Q2"][:3], (15, 0.0, 6.0))
+        self.assertEqual(compare.BINNING["W"][:3], (15, 0.0, 4.0))
+        self.assertEqual(compare.BINNING["thetapq"][:3], (15, 0.0, 0.2))
+        self.assertEqual(compare.BINNING["pt"][:3], (15, 0.0, 0.6))
+        self.assertEqual(compare.BINNING["pytar"][:3], (15, -10.0, 10.0))
+        self.assertEqual(compare.BINNING["missmass"][:3], (15, 0.0, 4.0))
+        self.assertEqual(compare.BINNING["hxp"][:3], (15, -0.20, 0.20))
+        self.assertEqual(compare.BINNING["hyp"][:3], (15, -0.15, 0.15))
+        self.assertEqual(compare.BINNING["pxp"][:3], (15, -0.20, 0.20))
+        self.assertEqual(compare.BINNING["pyp"][:3], (15, -0.15, 0.15))
+        self.assertEqual(compare.BINNING["missmass"][3], "M_{X}")
         self.assertEqual((compare.CANVAS_WIDTH, compare.CANVAS_HEIGHT), (1800, 1200))
 
-    def test_polar_histogram_matches_phi_and_pt_1d_binning(self):
+    def test_polar_histogram_uses_fifteen_phi_by_five_pt_bins(self):
         hist = compare.make_polar_hist("polar_test")
         self.assertEqual(hist.GetNbinsX(), compare.BINNING["phipq"][0])
-        self.assertEqual(hist.GetNbinsY(), compare.BINNING["pt"][0])
+        self.assertEqual(hist.GetNbinsY(), 5)
         self.assertAlmostEqual(hist.GetXaxis().GetXmin(), compare.BINNING["phipq"][1])
         self.assertAlmostEqual(hist.GetXaxis().GetXmax(), compare.BINNING["phipq"][2])
         self.assertAlmostEqual(hist.GetYaxis().GetXmin(), compare.BINNING["pt"][1])
         self.assertAlmostEqual(hist.GetYaxis().GetXmax(), compare.BINNING["pt"][2])
+
+    def test_analysis_polar_histogram_is_shared_fifteen_by_five_binning(self):
+        hist = compare.make_polar_hist("analysis_polar_test", True)
+        self.assertEqual(hist.GetNbinsX(), 15)
+        self.assertEqual(hist.GetNbinsY(), 5)
+        self.assertAlmostEqual(hist.GetXaxis().GetXmax(), 2 * math.pi)
+        self.assertAlmostEqual(hist.GetYaxis().GetXmax(), .5)
 
     def test_recently_adopted_pid_cuts(self):
         self.assertIn("P_gtr_p<=2.9", compare.PID_CUT)

@@ -353,11 +353,17 @@ represented by a zero histogram and identified with `ZERO_CORRECTION_CLASS`
 instead of leaving the setting `PENDING`; a missing required SIMC component is
 an error.
 
-All per-setting comparison variables use 20 fixed bins with variable-specific
-ranges. `P_t` spans 0--0.6 GeV. The PDF places a 20-by-20 polar
+In `RP_get_good_coin_ev`, a finite negative random-subtracted `RP_Goodcoin` is
+floored to zero for positron runs only. `RP_Goodcoin_err` is also set to zero
+for those floored runs, so both zeroes propagate to `RP_Normyield` and
+`RP_Normyield_err`; electron runs are not floored.
+
+All per-setting 1D comparison variables use 15 fixed bins with variable-specific
+ranges. `P_t` spans 0--0.6 GeV. The PDF places a 5-`P_t`-by-15-`phipq` polar
 `P_t`-versus-phi page immediately after the normalized-yield correction page;
 corrected data and total MC share one color scale, while Data/MC is shown only
-in bins with positive MC support. Missing mass spans 0--4 GeV, with reconstructed negative values counted
+in bins with positive MC support. The page also reports the setting's nominal
+`z` and `thpq`. Missing mass is labeled `M_X` and spans 0--4 GeV, with reconstructed negative values counted
 as underflow. Data or MC flow above 2% receives a `*_FLOW_GT_2PCT_*` warning.
 PDF pages use the whole wide canvas for the baseline comparison and
 report `S_dummy` to four decimal places. CSV
@@ -410,3 +416,82 @@ coordinate. The overview axes use fixed ranges `0 <= z <= 1` and
 use the concise `Q2` and `thpq` labels, and PDF
 provenance is relative to `RP_Scripts/`. Inputs and outputs contain no full-cut
 or tier labels.
+
+---
+
+## 13) Combine nominal-theta-pq settings and study azimuthal coverage
+
+```bash
+python3 tools/RP_build_thpq_combination.py
+python3 tools/RP_combine_thpq_yields.py
+python3 tools/RP_azimuthal_coverage_study.py
+```
+
+The first step assigns every available setting to a fixed-kinematics group
+defined by phase, pass, pion charge, target, `x`, `Q2`, and shared nominal `z`.
+Nominal `thpq` is intentionally excluded from the key. Group IDs use fixed
+numeric formatting, for example `1501x0p25Q23p3z0p36`. The audit map, one-row
+group summary, and problematic rows are written under
+`results/Pass1/Tables/RP_thpq_combination/`.
+
+The second step sums corrected data and reaction-separated SIMC across every
+contributing nominal-`thpq` setting, bin by bin, on the shared grid of five
+`P_t` bins by 15 `phipq` bins. It propagates independent statistical errors in
+quadrature and writes all 75 bins per group under
+`results/Pass1/Tables/RP_combine_thpq_yields/`. Provenance columns retain all
+contributing setting IDs and nominal `thpq` values.
+
+Coverage is evaluated only after those sums. Complete bin-level and curve-level
+CSVs under `results/Pass1/Tables/RP_azimuthal_coverage_study/` report the
+independent-bin masks, longest contiguous circular passing range,
+harmonic-design rank and condition, and explicit decision reasons. PDFs are
+written as `z_*/<combination_group_id>.pdf` directly under the matching
+coverage-study PDF directory, replacing the former setting-wise results. Page one places polar Data/MC maps before and
+after all coverage requirements side by side; rejected bins are absent from
+the after map. Page two compares the combined corrected-data and total-MC
+`phipq` projections before and after selection, with Data/MC ratio subpads.
+The after projection sums only surviving `P_t`-by-`phipq` cells. Page three
+retains the five individual `P_t` pads.
+
+The coverage policy is versioned as `RP_AZIMUTHAL_COVERAGE_V6_THPQ_COMBINED`.
+Its defaults require positive corrected data and MC, MC relative uncertainty
+at most 30%, data/MC relative uncertainty at most 30%, at least `pi` radians of
+contiguous coverage, design rank three, and weighted-design condition at most
+100. A data/MC ratio outside `[0.5,1.5]` is a warning rather than a rejection.
+All thresholds have command-line options.
+
+Curve rows also report the unweighted and weighted harmonic-design conditions, coefficient
+uncertainties, and coefficient correlations. These are diagnostics for studying
+fit stability versus accepted angular span and do not yet alter approval.
+
+These steps use the shared analysis binning in `tools/RP_sidis_binning.py`.
+
+---
+
+## 14) Extract and fit SIDIS azimuthal distributions
+
+```bash
+python3 tools/RP_sidis_azimuthal_analysis.py
+```
+
+This post-combination, coverage-controlled workflow writes cross-section and multiplicity point,
+problematic, fit-parameter, and fit-parameter-problematic CSVs under
+`results/Pass1/Tables/RP_sidis_azimuthal_analysis/`, plus one multipage PDF per
+observable and nominal `z` under matching `PDFs/z_*` directories. It consumes
+the combined-`thpq` yields and combined coverage decisions from section 13;
+each output row retains the contributing setting IDs and nominal `thpq` values.
+
+Each page contains the five `P_t` bins `[0,0.1)`, `[0.1,0.2)`, `[0.2,0.3)`,
+`[0.3,0.4)`, and `[0.4,0.5]` GeV. Fifteen half-open phi bins cover `[0,2 pi)`;
+an angle at exactly `2 pi` is canonicalized to zero. The current
+`calc_semi_xsec` is evaluated with 15 phi bins at each `P_t`-bin center. Each
+extracted point uses the model cross section and multiplicity returned at its
+matching phi-bin center.
+
+The fitted forms are `C_0 + C_1 cos(phi) + C_2 cos(2 phi)` for cross section and
+`M_0 + M_1 cos(phi) + M_2 cos(2 phi)` for multiplicity. The indices 0, 1, and 2
+identify the constant, `cos(phi)`, and `cos(2 phi)` basis coefficients. Only bins in an approved curve's
+selected contiguous coverage mask enter the fit. Excluded finite points remain
+visible as open gray markers. Every point and fit row records the coverage
+binning version, policy version, mask/status, and decision reasons. Missing or
+rejected coverage decisions fail closed and cannot silently enter a fit.

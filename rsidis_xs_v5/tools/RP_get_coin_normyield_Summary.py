@@ -59,6 +59,7 @@ def tf(value: bool) -> str:
 
 def flag_row(row: Dict[str, str]) -> Dict[str, str]:
     status = row.get("Norm_status", "").strip()
+    is_positron = row.get("CT_method", "").strip() == "PRIOR_ELEC_AVERAGE"
     rp_normyield = finite(row.get("RP_Normyield", ""))
     rp_normyield_err = finite(row.get("RP_Normyield_err", ""))
     normfactor = finite(row.get("Norm_factor", ""))
@@ -67,9 +68,8 @@ def flag_row(row: Dict[str, str]) -> Dict[str, str]:
     ratio_err = finite(row.get("normyield_by_RP_Normyield_err", ""))
 
     normalization_flag = status != "OK"
-    yield_flag = (
-        rp_normyield is None
-        or rp_normyield <= 0.0
+    yield_flag = rp_normyield is None or (
+        rp_normyield < 0.0 if is_positron else rp_normyield <= 0.0
     )
     numeric_flag = (
         normfactor is None
@@ -82,7 +82,7 @@ def flag_row(row: Dict[str, str]) -> Dict[str, str]:
     # A missing legacy replay result is not a failure of the new normalization.
     # Apply the comparison threshold only when the replay normyield is usable.
     comparison_available = replay_normyield is not None and replay_normyield != -999.0
-    ratio_flag = comparison_available and (
+    ratio_flag = comparison_available and not (is_positron and rp_normyield == 0.0) and (
         ratio is None or abs(ratio - 1.0) > 0.30
     )
 

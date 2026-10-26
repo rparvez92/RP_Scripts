@@ -566,6 +566,15 @@ void CountWindows(TH1D* hist, OutputRow& row, TierCounts& counts,
 }
 
 void FinalizeCounts(OutputRow& row) {
+  // A negative random-subtracted positron count is a low-statistics
+  // fluctuation, not a physical negative positron yield.  Floor both the
+  // positron central value and its uncertainty before they are written and
+  // propagated into RP_Normyield.
+  if (IsPositron(row.input) && std::isfinite(row.baseline.goodCoin) &&
+      row.baseline.goodCoin < 0.0) {
+    row.baseline.goodCoin = 0.0;
+    row.baseline.goodCoinErr = 0.0;
+  }
   if (row.input.replayCtmean != -999.0 &&
       std::isfinite(row.input.replayCtmean) && std::isfinite(row.fit.mean)) {
     row.ctmeanResidual = row.input.replayCtmean - row.fit.mean;
@@ -741,6 +750,8 @@ void DrawMetadataPage3(TCanvas* canvas, const std::string& pdfPath) {
   AddMetadataLine(box, "N_rndm_peak = 10 (five RF cells on each side)");
   AddMetadataLine(box, "Rndm_mean = N_rndm_total / N_rndm_peak");
   AddMetadataLine(box, "RP_Goodcoin = N_coin - Rndm_mean");
+  AddMetadataLine(box, "For positron runs only, negative RP_Goodcoin is floored to zero.");
+  AddMetadataLine(box, "RP_Goodcoin_err is also set to zero for a floored positron run.");
   AddMetadataLine(box, "Goodcoin_err = sqrt(N_coin + "
                        "N_rndm_total / N_rndm_peak^{2})");
   AddMetadataLine(box, " ");

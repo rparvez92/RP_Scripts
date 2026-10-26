@@ -111,9 +111,12 @@ def flag_row(row: Dict[str, str]) -> Dict[str, str]:
     except (TypeError, ValueError):
         random_window_flag = True
 
-    yield_flag = (
-        goodcoin is None
-        or goodcoin <= 0.0
+    # A zero positron yield is an accepted policy result: negative calculated
+    # RP_Goodcoin values are floored to zero upstream.  Electron yields must
+    # remain strictly positive, and nonfinite values are invalid for either
+    # charge.
+    yield_flag = goodcoin is None or (
+        goodcoin < 0.0 if is_positron_reference else goodcoin <= 0.0
     )
 
     reasons: List[str] = []
