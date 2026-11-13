@@ -34,7 +34,7 @@ PROVENANCE_FIELDS = (
 REACTIONS = dmc.REACTIONS
 MODEL_POLICY = "CALC_SEMI_XSEC_AT_15_PHI_BIN_CENTERS"
 Z_COLORS = {0.36: ROOT.kRed + 1, 0.50: ROOT.kGreen + 2,
-            0.52: ROOT.kGreen + 2, 0.67: ROOT.kBlue + 1, 0.90: ROOT.kBlack}
+            0.52: ROOT.kGreen - 7, 0.67: ROOT.kBlue + 1, 0.90: ROOT.kBlack}
 REJECTION_CODES = {
     "INSUFFICIENT_ANGULAR_SPAN": 1,
     "DESIGN_RANK_BELOW_3": 2,
@@ -51,6 +51,8 @@ POINT_FIELDS = [
     "Observable_units", "Coverage_binning_version", "Coverage_policy_version",
     "Coverage_bin_status", "Coverage_bin_reason", "Coverage_independent_pass",
     "Coverage_selected_contiguous", "Coverage_curve_status", "Coverage_curve_reason",
+    "Coverage_curve_n_selected", "Coverage_curve_min_selected_span_rad",
+    "Coverage_design_rank", "Coverage_weighted_design_condition",
     "Used_in_fit", "Point_status", "Point_reason",
 ]
 FIT_COMMON = [
@@ -60,6 +62,8 @@ FIT_COMMON = [
     "Model_value", "Model_units", "Model_Pt_GeV", "Model_phi_policy",
     "Coverage_binning_version", "Coverage_policy_version",
     "Coverage_curve_status", "Coverage_curve_reason", "Coverage_selected_mask",
+    "Coverage_curve_n_selected", "Coverage_curve_min_selected_span_rad",
+    "Coverage_design_rank", "Coverage_weighted_design_condition",
 ]
 FIT_DIAGNOSTICS = [
     "Cov_00", "Cov_01", "Cov_02", "Cov_11", "Cov_12", "Cov_22",
@@ -94,6 +98,19 @@ def load_coverage(bin_path: Path, curve_path: Path):
     if len(bins)!=len(bin_rows) or len(curves)!=len(curve_rows):
         raise ValueError("duplicate coverage decision key")
     return bins,curves
+
+
+def full_2pi_curve(curve) -> bool:
+    """Require an approved curve whose complete 15-bin ring survives."""
+    if curve is None or curve.get("Curve_status") != "APPROVED": return False
+    total=len(PHI_EDGES)-1
+    try:
+        n_total=int(curve.get("N_phi_bins_total",0)); n_selected=int(curve.get("N_selected",0))
+        min_span=float(curve.get("Min_selected_span_rad",math.nan))
+    except (TypeError,ValueError): return False
+    surviving=str(curve.get("Surviving_mask",""))
+    return (n_total==total and n_selected==total and surviving=="1"*total
+            and math.isclose(min_span,2*math.pi,rel_tol=0,abs_tol=1e-12))
 
 
 def atomic_csv(path: Path, fields, rows) -> None:
@@ -165,8 +182,10 @@ def fit_curve(points, observable):
     result.update(N_points_extracted=extracted,N_points_usable=n,N_points_fitted=n,
                   N_phi_bins_total=len(PHI_EDGES)-1,Phi_bin_mask="".join("1" if any(p["phipq_bin"]==i and p["Used_in_fit"]==1 for p in points) else "0" for i in range(1,len(PHI_EDGES))),
                   Phi_coverage_rad=n*2*math.pi/(len(PHI_EDGES)-1),Phi_coverage_fraction=n/(len(PHI_EDGES)-1))
-    if n<3:
-        result.update(Fit_status="NOT_FITTED",Fit_reason="NO_USABLE_PHI_POINTS" if n==0 else "INSUFFICIENT_PHI_POINTS",Fit_line_style="none")
+    required=len(PHI_EDGES)-1
+    if n!=required:
+        reason="NO_USABLE_PHI_POINTS" if n==0 else "FULL_2PI_COVERAGE_REQUIRED"
+        result.update(Fit_status="NOT_FITTED",Fit_reason=reason,Fit_line_style="none")
         return result
     phi=np.array([number(row["phipq_center"]) for row in usable],dtype=float)
     y=np.array([number(row["Extracted_value"]) for row in usable],dtype=float)
@@ -312,9 +331,11 @@ def extract_group(group_rows,calculator,coverage_bins,coverage_curves):
             if bin_coverage is None: reasons.append("COVERAGE_BIN_MISSING")
             if curve_coverage is None: reasons.append("COVERAGE_CURVE_MISSING")
             selected=bin_coverage is not None and bin_coverage.get("Survives_all_requirements")=="1"
-            approved=curve_coverage is not None and curve_coverage.get("Curve_status")=="APPROVED"
+            approved=full_2pi_curve(curve_coverage)
             if bin_coverage is not None and not selected: reasons.append("OUTSIDE_APPROVED_CONTIGUOUS_RANGE")
-            if curve_coverage is not None and not approved: reasons.append("COVERAGE_CURVE_REJECTED")
+            if curve_coverage is not None and not approved:
+                reasons.append("COVERAGE_CURVE_REJECTED" if curve_coverage.get("Curve_status")!="APPROVED"
+                               else "COVERAGE_NOT_FULL_2PI")
             usable=(combination_ok and finite(value) and finite(error) and error>0
                     and mc>0 and mod>0 and selected and approved)
             row={field:"" for field in POINT_FIELDS}
@@ -336,6 +357,10 @@ def extract_group(group_rows,calculator,coverage_bins,coverage_curves):
                 "Coverage_selected_contiguous":int(selected),
                 "Coverage_curve_status":curve_coverage.get("Curve_status","") if curve_coverage else "MISSING",
                 "Coverage_curve_reason":curve_coverage.get("Curve_reason","") if curve_coverage else "COVERAGE_CURVE_MISSING",
+                "Coverage_curve_n_selected":curve_coverage.get("N_selected","") if curve_coverage else "",
+                "Coverage_curve_min_selected_span_rad":curve_coverage.get("Min_selected_span_rad","") if curve_coverage else "",
+                "Coverage_design_rank":curve_coverage.get("Design_rank","") if curve_coverage else "",
+                "Coverage_weighted_design_condition":curve_coverage.get("Weighted_design_condition","") if curve_coverage else "",
                 "Used_in_fit":int(usable),"Point_status":"WARNING" if reasons else "OK",
                 "Point_reason":";".join(sorted(set(reasons))),
             })
@@ -365,7 +390,9 @@ def draw_pdf(path,observable,point_rows,fit_rows):
     canvas.Clear(); text.DrawLatex(.05,.93,f"RP SIDIS {title} vs #phi_{{pq}}"); text.DrawLatex(.05,.86,f"Baseline PID + Delta-only acceptance; {len(PHI_EDGES)-1} #phi bins; five P_{{t}} bins")
     text.DrawLatex(.05,.79,"Filled points: approved contiguous coverage; open gray: excluded diagnostic points")
     text.DrawLatex(.05,.72,"Fits use only curves approved by the versioned azimuthal coverage study")
-    formula="C_{0} + C_{1} cos(#phi) + C_{2} cos(2#phi)" if observable=="sigma" else "M_{0} + M_{1} cos(#phi) + M_{2} cos(2#phi)"
+    formula=("#sigma = C_{0} + C_{1} cos(#phi_{pq}) + C_{2} cos(2#phi_{pq})"
+             if observable=="sigma" else
+             "M = M_{0} + M_{1} cos(#phi_{pq}) + M_{2} cos(2#phi_{pq})")
     text.DrawLatex(.05,.65,"Fit: "+formula)
     text.DrawLatex(.05,.58,f"Model phi policy: {MODEL_POLICY}"); canvas.Print(str(path))
     for group,members in sorted(groups.items()):
@@ -430,7 +457,7 @@ def draw_pdf(path,observable,point_rows,fit_rows):
         offscale=ROOT.TGraph(); offscale.SetMarkerStyle(26); offscale.SetMarkerColor(ROOT.kGray+1); legend.AddEntry(offscale,"Excluded, off scale","p")
         legend.SetY1(.57); legend.SetY2(.90); legend.Draw()
         text2=ROOT.TLatex(); text2.SetNDC(); text2.SetTextFont(42); text2.SetTextSize(.038)
-        text2.DrawLatex(.10,.51,"Fit rejection codes:"); text2.DrawLatex(.10,.44,"1  accepted #Delta#phi < #pi")
+        text2.DrawLatex(.10,.51,"Fit rejection codes:"); text2.DrawLatex(.10,.44,"1  accepted #Delta#phi < 2#pi")
         text2.DrawLatex(.10,.37,"2  harmonic design rank < 3"); text2.DrawLatex(.10,.30,"3  weighted condition > 100")
         first=members[0]
         text2.DrawLatex(.10,.21,", ".join(group[:4])); text2.DrawLatex(.10,.15,f"x={group[4]}, Q2={group[5]}")
@@ -454,7 +481,8 @@ def main():
     parser.add_argument("--no-pdf",action="store_true"); args=parser.parse_args()
     coverage_bins,coverage_curves=load_coverage(args.coverage_bins,args.coverage_curves)
     grouped=defaultdict(list)
-    for row in dmc.read_csv(args.combined_yields): grouped[row["Combination_group_id"]].append(row)
+    for row in dmc.read_csv(args.combined_yields):
+        if row.get("Pass")=="pass5": grouped[row["Combination_group_id"]].append(row)
     keys=sorted(grouped)
     if args.group: keys=[key for key in keys if key in set(args.group)]
     all_points={"sigma":[],"multiplicity":[]}
@@ -469,7 +497,7 @@ def main():
         for row in points: curves[(str(row["Combination_group_id"]),int(row["Pt_bin"]))].append(row)
         fits=[]
         for key,curve in sorted(curves.items(),key=lambda item:str(item[0])):
-            first=curve[0]; fit={field:"" for field in fit_fields}; fit.update({field:first[field] for field in (*PROVENANCE_FIELDS,*GROUP_FIELDS,"z","Pt_bin","Pt_low","Pt_high","Pt_high_closed","Model_value","Model_units","Model_Pt_GeV","Model_phi_policy","Coverage_binning_version","Coverage_policy_version","Coverage_curve_status","Coverage_curve_reason")}); fit["Coverage_selected_mask"]="".join("1" if row["Coverage_selected_contiguous"]==1 else "0" for row in sorted(curve,key=lambda row:int(row["phipq_bin"]))); fit.update(fit_curve(curve,observable))
+            first=curve[0]; fit={field:"" for field in fit_fields}; fit.update({field:first[field] for field in (*PROVENANCE_FIELDS,*GROUP_FIELDS,"z","Pt_bin","Pt_low","Pt_high","Pt_high_closed","Model_value","Model_units","Model_Pt_GeV","Model_phi_policy","Coverage_binning_version","Coverage_policy_version","Coverage_curve_status","Coverage_curve_reason","Coverage_curve_n_selected","Coverage_curve_min_selected_span_rad","Coverage_design_rank","Coverage_weighted_design_condition")}); fit["Coverage_selected_mask"]="".join("1" if row["Coverage_selected_contiguous"]==1 else "0" for row in sorted(curve,key=lambda row:int(row["phipq_bin"]))); fit.update(fit_curve(curve,observable))
             if first["Coverage_curve_status"]!="APPROVED":
                 reasons=set(filter(None,str(fit["Fit_reason"]).split(";"))); reasons.add("COVERAGE_CURVE_NOT_APPROVED")
                 if first["Coverage_curve_reason"]: reasons.update(filter(None,str(first["Coverage_curve_reason"]).split(";")))

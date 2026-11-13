@@ -45,6 +45,8 @@ DEFAULT_COMBINED_YIELDS = (
     Path(__file__).resolve().parents[1]
     / "results/Pass1/Tables/RP_combine_thpq_yields/RP_combined_thpq_yields.csv"
 )
+DEFAULT_SIMC_CATALOG = dmc.DEFAULT_SIMC_CATALOG
+PETERS_MIN_PREDICTED_COUNTS = 4.0
 
 BIN_FIELDS = [
     *IDENTITY, "x", "Q2", "thpq", "z", "Pt_bin", "Pt_low", "Pt_high",
@@ -270,7 +272,9 @@ def finalize_curve(rows: list[dict[str, object]], min_span: float,
         coefficient_correlation=[covariance[i,j]/math.sqrt(covariance[i,i]*covariance[j,j]) for i,j in ((0,1),(0,2),(1,2))]
     span = len(selected) * 2 * math.pi / len(mask)
     reasons = []
-    if span < min_span:
+    if (len(selected) < len(mask) if math.isclose(min_span, 2 * math.pi,
+                                                  rel_tol=0, abs_tol=1e-12)
+            else span + 1e-12 < min_span):
         reasons.append("INSUFFICIENT_ANGULAR_SPAN")
     if rank < 3:
         reasons.append("DESIGN_RANK_BELOW_3")
@@ -466,8 +470,9 @@ COMBINED_BIN_FIELDS = [
     "Pt_high", "Pt_high_closed", "phipq_bin", "phipq_low", "phipq_high",
     "phipq_center", "Binning_version", "Policy_version", "Max_MC_rel_err",
     "Max_Ratio_rel_err", "Ratio_warning_low", "Ratio_warning_high", "Y_Data",
-    "Y_Data_err", "Data_rel_err", *(item for reaction in dmc.REACTIONS for item in
+    "Y_Data_err", "N_Data_events", "N_MC_events", "Data_rel_err", *(item for reaction in dmc.REACTIONS for item in
     (f"Y_MC_{reaction}", f"Y_MC_{reaction}_err")), "Y_MC", "Y_MC_err",
+    "SIMC_predicted_counts_sidis", "SIMC_predicted_counts_total", "Peters_filter_pass",
     "MC_rel_err", "Data_by_MC", "Data_by_MC_err", "Ratio_rel_err",
     "MC_support_pass", "Ratio_precision_pass", "Independent_pass",
     "Selected_contiguous", "Survives_all_requirements", "Bin_status", "Bin_reason",
@@ -501,7 +506,10 @@ def finalize_combined_curve(rows, min_span, max_condition):
         correlation = [covariance[i,j]/math.sqrt(covariance[i,i]*covariance[j,j])
                        for i,j in ((0,1),(0,2),(1,2))]
     span = len(selected) * 2 * math.pi / len(mask); reasons = []
-    if span < min_span: reasons.append("INSUFFICIENT_ANGULAR_SPAN")
+    if (len(selected) < len(mask) if math.isclose(min_span, 2 * math.pi,
+                                                  rel_tol=0, abs_tol=1e-12)
+            else span + 1e-12 < min_span):
+        reasons.append("INSUFFICIENT_ANGULAR_SPAN")
     if rank < 3: reasons.append("DESIGN_RANK_BELOW_3")
     elif not finite(weighted_condition) or weighted_condition > max_condition:
         reasons.append("WEIGHTED_DESIGN_CONDITION_ABOVE_LIMIT")
@@ -570,6 +578,55 @@ def evaluate_combined_group(source_rows, options):
     return rows, curves
 
 
+def pass5_groups(rows):
+    grouped=defaultdict(list)
+    for row in rows:
+        if row.get("Pass")=="pass5": grouped[row["Combination_group_id"]].append(row)
+    return grouped
+
+
+def experimental_exposure(rows):
+    """Return sum(1/Norm_factor) for valid target-electron runs."""
+    return sum(1/float(row["Norm_factor"]) for row in rows
+               if row.get("Norm_status")=="OK" and finite(row.get("Norm_factor"))
+               and float(row["Norm_factor"])>0)
+
+
+def peters_predictions(source_rows,norm_groups,catalog):
+    """Calculate predicted SIDIS/total data counts setting by setting."""
+    first=source_rows[0]; group_id=first["Combination_group_id"]
+    sidis=make_hist(group_id+"_peters_sidis"); total=make_hist(group_id+"_peters_total")
+    reasons=[]
+    for setting in first["Contributing_setting_ids"].split("|"):
+        base=(first["Phase"],first["Pass"],first["Run_type"],setting)
+        files=norm_groups.get(base,{})
+        target_e=files.get((first["Target"],"Elec"))
+        if target_e is None:
+            reasons.append(f"{setting}:MISSING_TARGET_ELECTRON_DATA"); continue
+        exposure=experimental_exposure(dmc.read_csv(target_e))
+        if not finite(exposure) or exposure<=0:
+            reasons.append(f"{setting}:NO_VALID_EXPERIMENTAL_EXPOSURE"); continue
+        key=(first["Phase"],first["Pass"],first["Run_type"],first["Target"],setting)
+        for reaction in dmc.applicable_reactions(first["Run_type"]):
+            source=catalog.get((*key,reaction))
+            if source is None:
+                reasons.append(f"{setting}:MISSING_MC={reaction}"); continue
+            hist,found=simc_class(source,f"{group_id}_{setting}_{reaction}_peters")
+            reasons.extend(f"{setting}:{reason}" for reason in found)
+            total.Add(hist,exposure)
+            if reaction=="sidis": sidis.Add(hist,exposure)
+    output={}
+    for ipt in range(1,len(PT_EDGES)):
+        for iphi in range(1,len(PHI_EDGES)):
+            signal=sidis.GetBinContent(iphi,ipt); all_mc=total.GetBinContent(iphi,ipt)
+            output[(ipt,iphi)]={
+                "SIMC_predicted_counts_sidis":signal,
+                "SIMC_predicted_counts_total":all_mc,
+                "Peters_filter_pass":int(finite(signal) and signal>=PETERS_MIN_PREDICTED_COUNTS),
+            }
+    return output,sorted(set(reasons))
+
+
 def blank_ratio_hist(name):
     hist = make_hist(name)
     for ix in range(1, hist.GetNbinsX()+1):
@@ -593,6 +650,89 @@ def wrapped_items(prefix, values, width=95):
         else: current+=piece
     if current.strip(): lines.append(current)
     return lines
+
+
+def quantity_hist(rows,field,name,ztitle,nonnegative=False):
+    hist=make_hist(name); hist.GetZaxis().SetTitle(ztitle)
+    values=[]
+    for row in rows:
+        if not finite(row.get(field)): continue
+        value=float(row[field]); hist.SetBinContent(int(row["phipq_bin"]),int(row["Pt_bin"]),value)
+        values.append(value)
+    if values:
+        low=0.0 if nonnegative else min(0.0,min(values))
+        high=max(values)
+        if high<=low: high=low+1.0
+        hist.SetMinimum(low); hist.SetMaximum(high)
+    for axis in (hist.GetXaxis(),hist.GetYaxis()):
+        axis.SetTitle(""); axis.SetLabelSize(0); axis.SetTickLength(0)
+    return hist
+
+
+def draw_quantity_pair_page(canvas,path,rows,left_spec,right_spec,footer):
+    """Draw two independently scaled 5x15 polar quantities."""
+    canvas.Clear(); canvas.cd(); owned=[]
+    specs=(left_spec,right_spec)
+    for index,(field,title,ztitle,nonnegative) in enumerate(specs):
+        hist=quantity_hist(rows,field,f"{field}_{rows[0]['Combination_group_id']}",ztitle,nonnegative)
+        x1=.02+index*.49; pad=ROOT.TPad(f"quantity_pair_{field}_{index}","",x1,.20,x1+.465,.90)
+        pad.SetLeftMargin(.06); pad.SetRightMargin(.16); pad.SetTopMargin(.05); pad.SetBottomMargin(.06)
+        pad.Draw(); pad.cd(); hist.Draw("COLZ POL")
+        angular=ROOT.TLatex(); angular.SetNDC(); angular.SetTextFont(42); angular.SetTextSize(.038); angular.SetTextAlign(22)
+        angular.DrawLatex(.80,.50,"0#circ"); angular.DrawLatex(.45,.86,"90#circ")
+        angular.DrawLatex(.12,.50,"180#circ"); angular.DrawLatex(.45,.14,"270#circ")
+        if index==0:
+            radial=ROOT.TLatex(); radial.SetNDC(); radial.SetTextFont(42); radial.SetTextSize(.026); radial.SetTextAlign(12)
+            for ring,value in enumerate((.1,.2,.3,.4,.5),1):
+                fraction=ring/5
+                radial.DrawLatex(.45-.262*fraction+.006,.50+.304*fraction,f"{value:.1f}")
+            radial.DrawLatex(.12,.85,"P_{t} [GeV]")
+            owned.append(radial)
+        canvas.cd(); label=ROOT.TLatex(); label.SetNDC(); label.SetTextFont(62); label.SetTextAlign(22); label.SetTextSize(.032)
+        label.DrawLatex(x1+.2325,.94,title); owned.extend((hist,pad,angular,label))
+    first=rows[0]; text=ROOT.TLatex(); text.SetNDC(); text.SetTextFont(42); text.SetTextSize(.026)
+    text.DrawLatex(.04,.145,footer)
+    text.DrawLatex(.04,.095,f"{first['Phase']}, {first['Pass']}, {first['Run_type']}, {first['Target']}; x = {float(first['x']):g}; Q^{{2}} = {float(first['Q2']):g} GeV^{{2}}; z = {float(first['z']):g}.")
+    owned.append(text); canvas._quantity_pair_owned=owned; canvas.Print(str(path))
+
+
+def draw_peters_page(canvas,path,rows):
+    """Show predicted SIDIS counts before and after the four-count filter."""
+    before=quantity_hist(rows,"SIMC_predicted_counts_sidis","peters_before",
+                         "Predicted SIDIS counts",True)
+    after=make_hist("peters_after"); after.GetZaxis().SetTitle("Predicted SIDIS counts")
+    for axis in (after.GetXaxis(),after.GetYaxis()):
+        axis.SetTitle(""); axis.SetLabelSize(0); axis.SetTickLength(0)
+    for row in rows:
+        if int(row["Peters_filter_pass"]):
+            after.SetBinContent(int(row["phipq_bin"]),int(row["Pt_bin"]),
+                                float(row["SIMC_predicted_counts_sidis"]))
+    before.SetMinimum(0); after.SetMinimum(0); after.SetMaximum(before.GetMaximum())
+    for hist in (before,after):
+        hist.GetZaxis().SetLabelSize(.030); hist.GetZaxis().SetTitleSize(.038)
+        hist.GetZaxis().SetTitleOffset(1.35)
+    canvas.Clear(); canvas.cd(); owned=[before,after]
+    for index,(hist,title) in enumerate(((before,"Before Peters Filter"),(after,"After Peters Filter"))):
+        x1=.02+index*.49; pad=ROOT.TPad(f"peters_filter_{index}","",x1,.20,x1+.465,.90)
+        pad.SetLeftMargin(.06); pad.SetRightMargin(.20); pad.SetTopMargin(.05); pad.SetBottomMargin(.06)
+        pad.Draw(); pad.cd(); hist.Draw("COLZ POL")
+        angular=ROOT.TLatex(); angular.SetNDC(); angular.SetTextFont(42); angular.SetTextSize(.038); angular.SetTextAlign(22)
+        angular.DrawLatex(.80,.50,"0#circ"); angular.DrawLatex(.45,.86,"90#circ")
+        angular.DrawLatex(.12,.50,"180#circ"); angular.DrawLatex(.45,.14,"270#circ")
+        if index==0:
+            radial=ROOT.TLatex(); radial.SetNDC(); radial.SetTextFont(42); radial.SetTextSize(.026); radial.SetTextAlign(12)
+            for ring,value in enumerate((.1,.2,.3,.4,.5),1):
+                fraction=ring/5
+                radial.DrawLatex(.45-.262*fraction+.006,.50+.304*fraction,f"{value:.1f}")
+            radial.DrawLatex(.12,.85,"P_{t} [GeV]"); owned.append(radial)
+        canvas.cd(); label=ROOT.TLatex(); label.SetNDC(); label.SetTextFont(62); label.SetTextAlign(22); label.SetTextSize(.034)
+        label.DrawLatex(x1+.2325,.94,title); owned.extend((pad,angular,label))
+    first=rows[0]; passed=sum(int(row["Peters_filter_pass"]) for row in rows)
+    text=ROOT.TLatex(); text.SetNDC(); text.SetTextFont(42); text.SetTextSize(.026)
+    text.DrawLatex(.04,.145,f"Peters Filter: predicted SIDIS counts #geq {PETERS_MIN_PREDICTED_COUNTS:g}; {passed}/{len(rows)} cells pass. Both panels use the same color scale.")
+    text.DrawLatex(.04,.095,f"{first['Combination_group_id']}: {first['Phase']}, {first['Pass']}, {first['Run_type']}, {first['Target']}; x={float(first['x']):g}, Q^{{2}}={float(first['Q2']):g} GeV^{{2}}, z={float(first['z']):g}.")
+    text.DrawLatex(.04,.055,"settings: "+first["Contributing_setting_ids"].replace("|",", ")+"; nominal #theta_{pq} [deg]: "+first["Contributing_thpq_deg"].replace("|",", "))
+    owned.append(text); canvas._peters_owned=owned; canvas.Print(str(path))
 
 
 def phi_projection(rows, accepted_only, prefix):
@@ -668,7 +808,97 @@ def draw_phi_comparison_page(canvas,path,rows):
     canvas._phi_projection_owned=owned; canvas.Print(str(path))
 
 
-def draw_combined_pdf(path, rows, curves, options):
+def group_event_scatter(rows,norm_groups,root_dir):
+    """Return raw and physics-cut target-electron event coordinates."""
+    first=rows[0]; raw_phi=[]; raw_pt=[]; cut_phi=[]; cut_pt=[]; reasons=[]
+    columns=("P_gtr_p","P_hgcer_npeSum","P_aero_npeSum","P_cal_etottracknorm",
+             "H_cer_npeSum","H_cal_etottracknorm","H_gtr_dp","P_gtr_dp")
+    for setting in first["Contributing_setting_ids"].split("|"):
+        files=norm_groups.get((first["Phase"],first["Pass"],first["Run_type"],setting),{})
+        source=files.get((first["Target"],"Elec"))
+        if source is None:
+            reasons.append(f"{setting}:MISSING_TARGET_ELECTRON_DATA"); continue
+        for row in dmc.read_csv(source):
+            if row.get("Norm_status")!="OK": continue
+            run=int(float(row["Run"])); root=dmc.data_root_path(root_dir,first["Phase"],run)
+            if not root.is_file(): reasons.append(f"{setting}:DATA_ROOT_MISSING_RUN_{run}"); continue
+            timing=dmc.timing_weight_expression(row)
+            frame=(ROOT.RDataFrame("T",str(root)).Filter(f"({timing})>0")
+                   .Define("_rp_scatter_phi","fmod(fmod((double)P_kin_secondary_ph_xq,2*TMath::Pi())+2*TMath::Pi(),2*TMath::Pi())")
+                   .Define("_rp_scatter_pt","abs((double)pt)")
+                   .Filter("std::isfinite(_rp_scatter_phi) && std::isfinite(_rp_scatter_pt) && _rp_scatter_pt>=0 && _rp_scatter_pt<=0.5"))
+            arrays=frame.AsNumpy(["_rp_scatter_phi","_rp_scatter_pt",*columns])
+            phi=np.asarray(arrays["_rp_scatter_phi"],dtype=float)
+            pt=np.asarray(arrays["_rp_scatter_pt"],dtype=float)
+            raw_phi.append(phi); raw_pt.append(pt)
+            mask=((np.asarray(arrays["P_gtr_p"])<=2.9) | (np.asarray(arrays["P_hgcer_npeSum"])>1))
+            mask &= np.asarray(arrays["P_aero_npeSum"])>2
+            mask &= np.asarray(arrays["P_cal_etottracknorm"])<.8
+            mask &= np.asarray(arrays["H_cer_npeSum"])>2
+            mask &= np.asarray(arrays["H_cal_etottracknorm"])>.7
+            mask &= (np.asarray(arrays["H_gtr_dp"])>-8) & (np.asarray(arrays["H_gtr_dp"])<8)
+            mask &= (np.asarray(arrays["P_gtr_dp"])>-10) & (np.asarray(arrays["P_gtr_dp"])<22)
+            cut_phi.append(phi[mask]); cut_pt.append(pt[mask])
+    join=lambda chunks: np.concatenate(chunks).astype("d",copy=False) if chunks else np.asarray([],dtype="d")
+    return (join(raw_phi),join(raw_pt)),(join(cut_phi),join(cut_pt)),sorted(set(reasons))
+
+
+def draw_event_scatter_page(canvas,path,rows,norm_groups,root_dir):
+    raw,cut,reasons=group_event_scatter(rows,norm_groups,root_dir)
+    canvas.Clear(); canvas.cd(); owned=[]
+    for index,((phi,pt),title) in enumerate(((raw,"Central-window events before physics cuts"),
+                                             (cut,"Events after current physics cuts"))):
+        x1=.025+index*.49; pad=ROOT.TPad(f"event_scatter_{index}","",x1,.18,x1+.46,.89)
+        pad.SetLeftMargin(.08); pad.SetRightMargin(.08); pad.SetTopMargin(.06); pad.SetBottomMargin(.06)
+        pad.SetFrameLineColor(ROOT.kBlack); pad.SetFrameLineWidth(2)
+        pad.Draw(); pad.cd()
+        frame=ROOT.TH2D(f"event_scatter_frame_{index}","",10,-.56,.56,10,-.56,.56)
+        frame.SetStats(0)
+        for axis in (frame.GetXaxis(),frame.GetYaxis()):
+            axis.SetLabelSize(0); axis.SetTickLength(0); axis.SetTitle("")
+        frame.Draw("AXIS")
+        if len(phi):
+            graph=ROOT.TGraph(len(phi),pt*np.cos(phi),pt*np.sin(phi))
+        else:
+            graph=ROOT.TGraph(1,np.asarray([0.0],dtype="d"),np.asarray([0.0],dtype="d"))
+            graph.SetMarkerSize(0)
+        graph.SetTitle(""); graph.SetMarkerStyle(7); graph.SetMarkerColor(ROOT.kBlack)
+        graph.Draw("P SAME")
+        guides=[]
+        for angle in range(0,360,45):
+            theta=math.radians(angle); line=ROOT.TLine(0,0,.5*math.cos(theta),.5*math.sin(theta))
+            line.SetLineColor(ROOT.kGray+1); line.SetLineWidth(1); line.Draw(); guides.append(line)
+        for radius in (.1,.2,.3,.4,.5):
+            circle=ROOT.TEllipse(0,0,radius,radius)
+            circle.SetFillStyle(0); circle.SetLineColor(ROOT.kGray+1 if radius<.5 else ROOT.kBlack)
+            circle.SetLineWidth(1 if radius<.5 else 2); circle.Draw(); guides.append(circle)
+        graph.Draw("P SAME")
+        labels=ROOT.TLatex(); label_primitives=[]
+        labels.SetTextFont(42); labels.SetTextSize(.031); labels.SetTextAlign(22)
+        for angle,text_value in ((0,"0#circ"),(90,"90#circ"),(180,"180#circ"),(270,"270#circ")):
+            theta=math.radians(angle)
+            label_primitives.append(labels.DrawLatex(.535*math.cos(theta),.535*math.sin(theta),text_value))
+        labels.SetTextSize(.025); labels.SetTextAlign(22)
+        theta=math.radians(135)
+        for radius in (.1,.2,.3,.4,.5):
+            cx=radius*math.cos(theta); cy=radius*math.sin(theta)
+            box=ROOT.TBox(cx-.025,cy-.014,cx+.025,cy+.014)
+            box.SetFillColor(ROOT.kWhite); box.SetLineColor(ROOT.kWhite); box.Draw(); guides.append(box)
+            label_primitives.append(labels.DrawLatex(cx,cy,f"{radius:.1f}"))
+        labels.SetTextAlign(12)
+        label_primitives.append(labels.DrawLatex(-.50,.50,"P_{t} [GeV]"))
+        canvas.cd(); label=ROOT.TLatex(); label.SetNDC(); label.SetTextFont(62); label.SetTextAlign(22); label.SetTextSize(.031)
+        label.DrawLatex(x1+.23,.94,title)
+        owned.extend((pad,frame,graph,labels,label,*guides,*label_primitives))
+    first=rows[0]; text=ROOT.TLatex(); text.SetNDC(); text.SetTextFont(42); text.SetTextSize(.026)
+    text.DrawLatex(.04,.135,f"Raw entries: {len(raw[0])}; after PID + HMS/SHMS momentum cuts: {len(cut[0])}.")
+    text.DrawLatex(.04,.095,f"{first['Combination_group_id']}: {first['Phase']}, {first['Pass']}, {first['Run_type']}, {first['Target']}; x={float(first['x']):g}, Q^{{2}}={float(first['Q2']):g} GeV^{{2}}, z={float(first['z']):g}.")
+    text.DrawLatex(.04,.055,"settings: "+first["Contributing_setting_ids"].replace("|",", ")+"; nominal #theta_{pq} [deg]: "+first["Contributing_thpq_deg"].replace("|",", "))
+    if reasons: text.DrawLatex(.55,.135,"warnings: "+", ".join(reasons[:2]))
+    owned.append(text); canvas._event_scatter_owned=owned; canvas.Print(str(path))
+
+
+def draw_combined_pdf(path, rows, curves, options, norm_groups, root_dir):
     path.parent.mkdir(parents=True, exist_ok=True)
     before, after = blank_ratio_hist("coverage_before"), blank_ratio_hist("coverage_after")
     for row in rows:
@@ -678,7 +908,10 @@ def draw_combined_pdf(path, rows, curves, options):
         if int(row["Survives_all_requirements"]):
             after.SetBinContent(ix, iy, float(row["Data_by_MC"]))
     first=rows[0]; canvas=ROOT.TCanvas("c_combined_coverage","combined coverage",1800,1200)
-    canvas.Print(str(path)+"["); canvas.Clear(); owned=[before,after]
+    canvas.Print(str(path)+"[")
+    draw_event_scatter_page(canvas,path,rows,norm_groups,root_dir)
+    draw_peters_page(canvas,path,rows)
+    canvas.Clear(); owned=[before,after]
     for index,(hist,title) in enumerate(((before,"Before coverage selection"),(after,"After all coverage requirements"))):
         x1=.02+index*.49; pad=ROOT.TPad(f"combined_polar_{index}","",x1,.23,x1+.465,.90)
         pad.SetLeftMargin(.06); pad.SetRightMargin(.16); pad.SetTopMargin(.05); pad.SetBottomMargin(.06)
@@ -706,7 +939,11 @@ def draw_combined_pdf(path, rows, curves, options):
     text.DrawLatex(.04,.140,f"Curve approval: accepted #Delta#phi #geq {span_label}, harmonic design rank = 3, weighted condition #leq {options.max_design_condition:g}.")
     text.DrawLatex(.04,.085,f"Shared kinematics: {first['Phase']}, {first['Pass']}, {first['Run_type']}, {first['Target']}; x = {float(first['x']):g}; Q^{{2}} = {float(first['Q2']):g} GeV^{{2}}; z = {float(first['z']):g}.")
     owned.append(text); canvas._combined_polar_owned=owned; canvas.Print(str(path))
-    draw_phi_comparison_page(canvas,path,rows)
+    # Temporarily disabled pending the Pass-5 event-coverage decision.
+    # draw_phi_comparison_page(canvas,path,rows)
+    # The individual-Pt page calculation/drawing block is retained below but
+    # temporarily bypassed at this return point for the same reason.
+    canvas.Print(str(path)+"]"); canvas.Close(); return
     meta=[f"{first['Combination_group_id']}: {first['Phase']}, {first['Pass']}, {first['Run_type']}, {first['Target']}",
           f"x = {float(first['x']):g}, Q2 = {float(first['Q2']):g} GeV^{{2}}, shared z = {float(first['z']):g}"]
     meta += wrapped_items("settings: ", first["Contributing_setting_ids"].split("|"))
@@ -745,6 +982,9 @@ def draw_combined_pdf(path, rows, curves, options):
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--combined-yields", type=Path, default=DEFAULT_COMBINED_YIELDS)
+    parser.add_argument("--norm-dir", type=Path, default=dmc.DEFAULT_NORM_DIR)
+    parser.add_argument("--simc-catalog", type=Path, default=DEFAULT_SIMC_CATALOG)
+    parser.add_argument("--t7-root", type=Path, default=dmc.DEFAULT_T7_ROOT)
     parser.add_argument("--table-dir", type=Path, default=DEFAULT_TABLE_DIR)
     parser.add_argument("--pdf-dir", type=Path, default=DEFAULT_PDF_DIR)
     parser.add_argument("--group", action="append", default=[])
@@ -752,18 +992,25 @@ def main() -> int:
     parser.add_argument("--max-ratio-rel-err", type=float, default=.30)
     parser.add_argument("--ratio-warning-low", type=float, default=.5)
     parser.add_argument("--ratio-warning-high", type=float, default=1.5)
-    parser.add_argument("--min-selected-span", type=float, default=math.pi)
+    parser.add_argument("--min-selected-span", type=float, default=2 * math.pi)
     parser.add_argument("--max-design-condition", type=float, default=100.0)
     parser.add_argument("--no-pdf", action="store_true")
     args = parser.parse_args()
-    grouped=defaultdict(list)
-    for row in dmc.read_csv(args.combined_yields): grouped[row["Combination_group_id"]].append(row)
+    grouped=pass5_groups(dmc.read_csv(args.combined_yields))
+    norm_groups=dmc.discover_norm_files(args.norm_dir)
+    catalog={tuple(row[field] for field in
+                   ("Phase","Pass","Run_type","Target","setting_id","Reaction")):row
+             for row in dmc.read_csv(args.simc_catalog)}
     if args.group: grouped={key:value for key,value in grouped.items() if key in set(args.group)}
     all_rows=[]; all_curves=[]
     for index,(group_id,source) in enumerate(sorted(grouped.items()),1):
+        predictions,_=peters_predictions(source,norm_groups,catalog)
+        for row in source:
+            row.update(predictions[(int(row["Pt_bin"]),int(row["phipq_bin"]))])
         rows,curves=evaluate_combined_group(source,args); all_rows.extend(rows); all_curves.extend(curves)
         if not args.no_pdf:
-            draw_combined_pdf(args.pdf_dir/z_directory(rows[0]["z"])/f"{group_id}.pdf",rows,curves,args)
+            draw_combined_pdf(args.pdf_dir/z_directory(rows[0]["z"])/f"{group_id}.pdf",
+                              rows,curves,args,norm_groups,args.t7_root)
         print(f"[{index}/{len(grouped)}] OK: {group_id}")
     atomic_csv(args.table_dir / "RP_azimuthal_coverage_bins.csv", COMBINED_BIN_FIELDS, all_rows)
     atomic_csv(args.table_dir / "RP_azimuthal_coverage_curves.csv", COMBINED_CURVE_FIELDS, all_curves)

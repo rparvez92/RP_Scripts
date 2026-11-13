@@ -55,6 +55,25 @@ class AzimuthalCoverageStudyTests(unittest.TestCase):
         self.assertEqual(mc.GetBinContent(1), 4)
         self.assertEqual(mc.GetBinError(1), 2)
 
+    def test_coverage_groups_are_pass5_only(self):
+        rows = [
+            {"Combination_group_id": "g4", "Pass": "pass4"},
+            {"Combination_group_id": "g5", "Pass": "pass5"},
+        ]
+        grouped = coverage.pass5_groups(rows)
+        self.assertEqual(list(grouped), ["g5"])
+
+    def test_experimental_exposure_inverts_run_normalization(self):
+        rows = [
+            {"Norm_status": "OK", "Norm_factor": "0.02"},
+            {"Norm_status": "OK", "Norm_factor": "0.01"},
+            {"Norm_status": "ERROR", "Norm_factor": "0.001"},
+        ]
+        self.assertEqual(coverage.experimental_exposure(rows), 150.0)
+
+    def test_peters_threshold_is_inclusive(self):
+        self.assertEqual(coverage.PETERS_MIN_PREDICTED_COUNTS, 4.0)
+
     def test_missing_optional_correction_is_warning_not_rejection(self):
         result = coverage.classify_bin(
             10.0, 1.0, 10.0, 1.0, [], ["ZERO_CORRECTION_CLASS=target_p"],
@@ -75,10 +94,16 @@ class AzimuthalCoverageStudyTests(unittest.TestCase):
                        "Pt_bin":1,"Pt_low":0,"Pt_high":.1,"Pt_high_closed":0,
                        "Binning_version":"v","Policy_version":"p"})
         for row in rows: row.update(common)
-        curve=coverage.finalize_combined_curve(rows,math.pi,100)
+        curve=coverage.finalize_combined_curve(rows,2*math.pi,100)
         self.assertEqual(curve["Curve_status"],"APPROVED")
         self.assertEqual(curve["N_surviving"],15)
         self.assertTrue(all(row["Survives_all_requirements"]==1 for row in rows))
+
+        rows[7]["Independent_pass"]=0
+        curve=coverage.finalize_combined_curve(rows,2*math.pi,100)
+        self.assertEqual(curve["Curve_status"],"REJECTED")
+        self.assertEqual(curve["N_surviving"],0)
+        self.assertIn("INSUFFICIENT_ANGULAR_SPAN",curve["Curve_reason"])
 
 
 if __name__ == "__main__":

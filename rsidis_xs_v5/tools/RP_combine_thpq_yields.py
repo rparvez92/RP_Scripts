@@ -23,6 +23,7 @@ FIELDS = [
     "Contributing_setting_ids", "Contributing_thpq_deg", "Pt_bin", "Pt_low",
     "Pt_high", "Pt_high_closed", "phipq_bin", "phipq_low", "phipq_high",
     "phipq_center", "Binning_version", "Y_Data", "Y_Data_err",
+    "N_Data_events", "N_MC_events",
     *(item for reaction in dmc.REACTIONS for item in
       (f"Y_MC_{reaction}", f"Y_MC_{reaction}_err")),
     "Y_MC", "Y_MC_err", "Data_by_MC", "Data_by_MC_err",
@@ -35,9 +36,42 @@ def finite(value: object) -> bool:
     except (TypeError, ValueError): return False
 
 
+def data_event_occupancy(path, root_dir, prefix):
+    """Count unweighted target-electron events in the central timing window."""
+    rows = [row for row in dmc.read_csv(path) if row.get("Norm_status") == "OK"
+            and finite(row.get("BCM2_Q")) and float(row["BCM2_Q"]) > 0]
+    output=coverage.make_hist(prefix); reasons=[]
+    for row in rows:
+        run=int(float(row["Run"])); root=dmc.data_root_path(
+            root_dir,dmc.parse_norm_stem(path)["Phase"],run)
+        if not root.is_file(): reasons.append(f"DATA_ROOT_MISSING_RUN_{run}"); continue
+        timing=dmc.timing_weight_expression(row)
+        selection=f"({dmc.PID_CUT}) && ({dmc.DATA_DELTA}) && ({timing})>0"
+        output.Add(coverage.dataframe_hist(
+            root,"T","P_kin_secondary_ph_xq","abs(pt)",selection,"1.0",f"{prefix}_{run}"))
+    return output,reasons
+
+
+def simc_event_occupancy(row,prefix):
+    """Count unweighted reconstructed SIMC events after acceptance cuts."""
+    output=coverage.make_hist(prefix); path=Path(row.get("Recon_root_path",""))
+    if row.get("QA_status") not in {"OK","WARNING"}:
+        return output,[f"SIMC_QA_{row.get('QA_status','MISSING')}"]
+    if not path.is_file(): return output,["SIMC_ROOT_MISSING"]
+    expressions=dmc.simc_expressions(row["Reaction"])
+    try:
+        return coverage.dataframe_hist(
+            path,"h10",expressions["phipq"],expressions["pt"],
+            dmc.SIMC_DELTA,"1.0",prefix),[]
+    except Exception as error:
+        return output,[f"SIMC_OCCUPANCY_FAILED={type(error).__name__}:{error}"]
+
+
 def combine_group(group_id, members, norm_groups, catalog, root_dir):
     first = members[0]
     data_total = coverage.make_hist(f"{group_id}_data")
+    data_events = coverage.make_hist(f"{group_id}_data_events")
+    mc_events = coverage.make_hist(f"{group_id}_mc_events")
     components = {reaction: coverage.make_hist(f"{group_id}_{reaction}")
                   for reaction in dmc.REACTIONS}
     structural, advisory = [], []
@@ -46,6 +80,14 @@ def combine_group(group_id, members, norm_groups, catalog, root_dir):
                member["Target"], member["setting_id"])
         base = (key[0], key[1], key[2], key[4])
         files = norm_groups.get(base, {})
+        target_e=(key[3],"Elec")
+        if target_e in files:
+            occupancy,found=data_event_occupancy(
+                files[target_e],root_dir,f"{group_id}_{key[4]}_data_events")
+            data_events.Add(occupancy)
+            structural.extend(f"{key[4]}:{reason}" for reason in found)
+        else:
+            structural.append(f"{key[4]}:MISSING_TARGET_ELECTRON_DATA")
         categories = {
             "target_e": (key[3], "Elec"), "target_p": (key[3], "Pos"),
             "dummy_e": ("DUMMY", "Elec"), "dummy_p": ("DUMMY", "Pos"),
@@ -73,6 +115,10 @@ def combine_group(group_id, members, norm_groups, catalog, root_dir):
                 source, f"{group_id}_{key[4]}_{reaction}")
             structural.extend(f"{key[4]}:{reason}" for reason in reasons)
             components[reaction].Add(hist)
+            occupancy,found=simc_event_occupancy(
+                source,f"{group_id}_{key[4]}_{reaction}_events")
+            structural.extend(f"{key[4]}:{reason}" for reason in found)
+            mc_events.Add(occupancy)
     reasons = sorted(set(structural + advisory))
     status = "ERROR" if structural else "WARNING" if advisory else "OK"
     settings = "|".join(member["setting_id"] for member in members)
@@ -99,6 +145,8 @@ def combine_group(group_id, members, norm_groups, catalog, root_dir):
                 "phipq_center": (phi_low + phi_high) / 2,
                 "Binning_version": AZIMUTHAL_BINNING_VERSION,
                 "Y_Data": data, "Y_Data_err": data_error, "Y_MC": mc,
+                "N_Data_events": data_events.GetBinContent(iphi,ipt),
+                "N_MC_events": mc_events.GetBinContent(iphi,ipt),
                 "Y_MC_err": mc_error, "Data_by_MC": ratio,
                 "Data_by_MC_err": ratio_error, "Combination_status": status,
                 "Combination_reason": ";".join(reasons),

@@ -13,7 +13,7 @@ import RP_sidis_azimuthal_analysis as azimuth  # noqa: E402
 def curve(n, normalization=2.0, amplitude=0.25, second=-0.1):
     rows=[]
     for index in range(1, n + 1):
-        phi=(index - 0.5) * math.pi / 3.0
+        phi=(index - 0.5) * 2 * math.pi / 15
         value=normalization * (1 + amplitude * math.cos(phi) + second * math.cos(2 * phi))
         rows.append({"Used_in_fit":1, "phipq_bin":index, "phipq_center":phi,
                      "Extracted_value":value, "Extracted_err":0.1})
@@ -61,24 +61,30 @@ class SidisAzimuthalAnalysisTests(unittest.TestCase):
         self.assertEqual(result["Fit_status"], "NOT_FITTED")
         self.assertEqual(result["Fit_line_style"], "none")
 
-    def test_three_points_give_dashed_ndf_zero_fit(self):
+    def test_three_points_are_not_fitted_without_full_coverage(self):
         result=azimuth.fit_curve(curve(3), "sigma")
-        self.assertEqual(result["NDF"], 0)
-        self.assertEqual(result["Fit_line_style"], "dashed")
-        self.assertAlmostEqual(result["C_0"], 2.0)
-        self.assertAlmostEqual(result["C_1"], 0.5)
-        self.assertAlmostEqual(result["C_2"], -0.2)
+        self.assertEqual(result["Fit_status"], "NOT_FITTED")
+        self.assertEqual(result["Fit_reason"], "FULL_2PI_COVERAGE_REQUIRED")
 
-    def test_four_points_give_solid_multiplicity_fit(self):
-        result=azimuth.fit_curve(curve(4), "multiplicity")
+    def test_fifteen_points_give_solid_multiplicity_fit(self):
+        result=azimuth.fit_curve(curve(15), "multiplicity")
         self.assertEqual(result["Fit_line_style"], "solid")
         self.assertAlmostEqual(result["M_0"], 2.0)
         self.assertAlmostEqual(result["M_1"], 0.5)
         self.assertAlmostEqual(result["M_2"], -0.2)
 
+    def test_full_2pi_curve_requires_all_fifteen_surviving_bins(self):
+        row={"Curve_status":"APPROVED","N_phi_bins_total":"15","N_selected":"15",
+             "Surviving_mask":"1"*15,"Min_selected_span_rad":str(2*math.pi)}
+        self.assertTrue(azimuth.full_2pi_curve(row))
+        row["Surviving_mask"]="1"*14+"0"
+        self.assertFalse(azimuth.full_2pi_curve(row))
+
     def test_approved_z_palette(self):
         self.assertEqual(azimuth.z_color(.36), azimuth.ROOT.kRed + 1)
-        self.assertEqual(azimuth.z_color(.50), azimuth.z_color(.52))
+        self.assertEqual(azimuth.z_color(.50), azimuth.ROOT.kGreen + 2)
+        self.assertEqual(azimuth.z_color(.52), azimuth.ROOT.kGreen - 7)
+        self.assertNotEqual(azimuth.z_color(.50), azimuth.z_color(.52))
         self.assertEqual(azimuth.z_color(.67), azimuth.ROOT.kBlue + 1)
         self.assertEqual(azimuth.z_color(.90), azimuth.ROOT.kBlack)
 

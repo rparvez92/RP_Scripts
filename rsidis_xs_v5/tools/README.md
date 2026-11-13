@@ -441,21 +441,31 @@ quadrature and writes all 75 bins per group under
 `results/Pass1/Tables/RP_combine_thpq_yields/`. Provenance columns retain all
 contributing setting IDs and nominal `thpq` values.
 
-Coverage is evaluated only after those sums. Complete bin-level and curve-level
+Coverage is evaluated only after those sums and is produced only for Pass 5.
+The all-pass combined-yield table remains the upstream source for later
+constrained Pass-3/Pass-4 analysis. Complete bin-level and curve-level
 CSVs under `results/Pass1/Tables/RP_azimuthal_coverage_study/` report the
 independent-bin masks, longest contiguous circular passing range,
 harmonic-design rank and condition, and explicit decision reasons. PDFs are
 written as `z_*/<combination_group_id>.pdf` directly under the matching
-coverage-study PDF directory, replacing the former setting-wise results. Page one places polar Data/MC maps before and
-after all coverage requirements side by side; rejected bins are absent from
-the after map. Page two compares the combined corrected-data and total-MC
-`phipq` projections before and after selection, with Data/MC ratio subpads.
-The after projection sums only surviving `P_t`-by-`phipq` cells. Page three
-retains the five individual `P_t` pads.
+coverage-study PDF directory. Page one is a black-and-white event-level polar
+scatter comparison: central-window target-electron entries before physics cuts
+on the left and the same entries after the current PID plus HMS/SHMS momentum
+cuts on the right. Every marker is one event; no normalization, subtraction, or
+sampling is applied. Page two is a color polar comparison before and after the
+Peters Filter: the plotted quantity is the predicted SIDIS count, obtained by
+multiplying each setting's normalized SIDIS SIMC yield by that setting's
+experimental target-electron exposure, and a cell survives when the combined
+prediction is at least four counts. The unfiltered and filtered panels share
+one color scale. Page three retains the existing polar Data/MC maps before
+and after all coverage requirements. The Peters page is diagnostic and does
+not alter the existing coverage decisions. The 1D `phipq` projection page and five
+individual-`P_t`-pad page are temporarily disabled in the source pending the
+Pass-5 coverage-policy decision.
 
 The coverage policy is versioned as `RP_AZIMUTHAL_COVERAGE_V6_THPQ_COMBINED`.
 Its defaults require positive corrected data and MC, MC relative uncertainty
-at most 30%, data/MC relative uncertainty at most 30%, at least `pi` radians of
+at most 30%, data/MC relative uncertainty at most 30%, full `2*pi` coverage of
 contiguous coverage, design rank three, and weighted-design condition at most
 100. A data/MC ratio outside `[0.5,1.5]` is a warning rather than a rejection.
 All thresholds have command-line options.
@@ -480,6 +490,10 @@ problematic, fit-parameter, and fit-parameter-problematic CSVs under
 observable and nominal `z` under matching `PDFs/z_*` directories. It consumes
 the combined-`thpq` yields and combined coverage decisions from section 13;
 each output row retains the contributing setting IDs and nominal `thpq` values.
+Only Pass-5 combination groups are processed. A harmonic fit is performed only
+when the coverage table approves the curve under the full-`2*pi` policy and all
+15 phi bins survive. Rejected rings remain in the point and fit-audit tables
+with explicit `NOT_FITTED` reasons.
 
 Each page contains the five `P_t` bins `[0,0.1)`, `[0.1,0.2)`, `[0.2,0.3)`,
 `[0.3,0.4)`, and `[0.4,0.5]` GeV. Fifteen half-open phi bins cover `[0,2 pi)`;
@@ -488,10 +502,32 @@ an angle at exactly `2 pi` is canonicalized to zero. The current
 extracted point uses the model cross section and multiplicity returned at its
 matching phi-bin center.
 
-The fitted forms are `C_0 + C_1 cos(phi) + C_2 cos(2 phi)` for cross section and
-`M_0 + M_1 cos(phi) + M_2 cos(2 phi)` for multiplicity. The indices 0, 1, and 2
+The fitted forms are `sigma = C_0 + C_1 cos(phipq) + C_2 cos(2 phipq)` and
+`M = M_0 + M_1 cos(phipq) + M_2 cos(2 phipq)`. The indices 0, 1, and 2
 identify the constant, `cos(phi)`, and `cos(2 phi)` basis coefficients. Only bins in an approved curve's
 selected contiguous coverage mask enter the fit. Excluded finite points remain
 visible as open gray markers. Every point and fit row records the coverage
 binning version, policy version, mask/status, and decision reasons. Missing or
 rejected coverage decisions fail closed and cannot silently enter a fit.
+
+---
+
+## 15) Plot extracted SIDIS harmonic coefficients
+
+```bash
+python3 tools/RP_sidis_coefficient_plots.py
+```
+
+This stage consumes the existing Pass-5 fit tables without refitting. It writes
+a unified coefficient/audit table under
+`results/Pass1/Tables/RP_sidis_coefficient_plots/`. Direct coefficients,
+covariance-propagated normalized modulations, and fit/coverage diagnostics are
+plotted versus `P_t`. Only approved full-`2*pi`, 15-bin fits become coefficient
+points; rejected rings remain in the audit table and appear as not-fitted
+markers. Filled points denote `OK` fits and open points denote fit warnings.
+All per-family cross-section and multiplicity PDFs are written directly under
+`results/Pass1/PDFs/RP_sidis_coefficient_plots/`, without observable
+subdirectories. The displayed persistent colors are red (`z=0.36`), green
+(`z=0.50`), light green (`z=0.52`), and blue (`z=0.67`).
+The coefficient PDFs intentionally omit `z=0.90`; those rows remain in the
+unified CSV for audit and possible later use.
