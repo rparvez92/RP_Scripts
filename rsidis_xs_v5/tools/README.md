@@ -433,6 +433,10 @@ Nominal `thpq` is intentionally excluded from the key. Group IDs use fixed
 numeric formatting, for example `1501x0p25Q23p3z0p36`. The audit map, one-row
 group summary, and problematic rows are written under
 `results/Pass1/Tables/RP_thpq_combination/`.
+The current combination policy admits only nominal `thpq < 5.2` degrees.
+Settings at `5.2`, `8.5`, and `11.7` degrees are retained in the audit map with
+status `EXCLUDED` and reason `THPQ_AT_OR_ABOVE_ANALYSIS_LIMIT`, but they do not
+contribute to group summaries or combined yields.
 
 The second step sums corrected data and reaction-separated SIMC across every
 contributing nominal-`thpq` setting, bin by bin, on the shared grid of five

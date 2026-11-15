@@ -14,7 +14,9 @@ from typing import Iterable, Mapping
 
 import RP_data_mc_compare as dmc
 
-POLICY_VERSION = "RP_THPQ_COMBINATION_V1"
+POLICY_VERSION = "RP_THPQ_COMBINATION_V2_THPQ_LT_5P2"
+MAX_THPQ_EXCLUSIVE_DEG = 5.2
+THPQ_EXCLUSION_REASON = "THPQ_AT_OR_ABOVE_ANALYSIS_LIMIT"
 GROUP_FIELDS = ("Phase", "Pass", "Run_type", "Target", "x", "Q2", "z")
 MAP_FIELDS = [
     "Combination_group_id", "Combination_policy_version", *GROUP_FIELDS,
@@ -53,6 +55,7 @@ def combination_group_id(row: Mapping[str, object]) -> str:
 def build_rows(
     model_rows: Iterable[Mapping[str, str]],
     available: set[tuple[str, str, str, str, str]] | None = None,
+    max_thpq_exclusive: float = MAX_THPQ_EXCLUSIVE_DEG,
 ) -> tuple[list[dict], list[dict]]:
     candidates = []
     for model in model_rows:
@@ -77,12 +80,17 @@ def build_rows(
         groups[key].append(row)
     mapping, summaries = [], []
     seen_ids: dict[str, tuple[str, ...]] = {}
-    for key, members in sorted(groups.items()):
-        members.sort(key=lambda row: (float(row["thpq_nominal_deg"]), row["setting_id"]))
-        group_id = combination_group_id(members[0])
+    for key, all_members in sorted(groups.items()):
+        all_members.sort(key=lambda row: (float(row["thpq_nominal_deg"]), row["setting_id"]))
+        group_id = combination_group_id(all_members[0])
+        members = [row for row in all_members
+                   if float(row["thpq_nominal_deg"]) < max_thpq_exclusive]
+        excluded = [row for row in all_members
+                    if float(row["thpq_nominal_deg"]) >= max_thpq_exclusive]
         reasons = []
         energies = {token(row["Ebeam_GeV"], 4) for row in members if finite(row["Ebeam_GeV"])}
-        if len(energies) != 1 or len(energies) != len({token(row["Ebeam_GeV"], 4) for row in members}):
+        if members and (len(energies) != 1 or
+                        len(energies) != len({token(row["Ebeam_GeV"], 4) for row in members})):
             reasons.append("INCONSISTENT_OR_NONFINITE_EBEAM")
         settings = [str(row["setting_id"]) for row in members]
         if len(settings) != len(set(settings)):
@@ -100,6 +108,16 @@ def build_rows(
                           Contributor_index=index, N_contributors=len(members),
                           Combination_status=status, Combination_reason=reason)
             mapping.append(mapped)
+        for member in excluded:
+            mapped = {field: "" for field in MAP_FIELDS}
+            mapped.update(member, Combination_group_id=group_id,
+                          Combination_policy_version=POLICY_VERSION,
+                          Contributor_index="", N_contributors=len(members),
+                          Combination_status="EXCLUDED",
+                          Combination_reason=THPQ_EXCLUSION_REASON)
+            mapping.append(mapped)
+        if not members:
+            continue
         summary = {field: "" for field in SUMMARY_FIELDS}
         summary.update({field: members[0][field] for field in (*GROUP_FIELDS, "Ebeam_GeV")})
         summary.update(
@@ -143,8 +161,12 @@ def main() -> int:
     atomic_csv(args.output_dir / "RP_thpq_combination_groups.csv", SUMMARY_FIELDS, summaries)
     problematic = [row for row in mapping if row["Combination_status"] != "OK"]
     atomic_csv(args.output_dir / "RP_thpq_combination_Problematic.csv", MAP_FIELDS, problematic)
-    print(f"Groups: {len(summaries)}; contributors: {len(mapping)}; problematic: {len(problematic)}")
-    return 1 if problematic else 0
+    contributors = sum(row["Combination_status"] == "OK" for row in mapping)
+    excluded = sum(row["Combination_status"] == "EXCLUDED" for row in mapping)
+    errors = sum(row["Combination_status"] == "ERROR" for row in mapping)
+    print(f"Groups: {len(summaries)}; contributors: {contributors}; "
+          f"excluded: {excluded}; errors: {errors}")
+    return 1 if errors else 0
 
 
 if __name__ == "__main__":
