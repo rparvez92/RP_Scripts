@@ -658,3 +658,28 @@ Separation and problematic-separation tables are written under
 `results/Pass1/Tables/RP_sidis_pass5_anchored_LT_separation/`. Family-level
 `C_0^(p)`-versus-epsilon PDFs are written by `z` under the corresponding PDF
 directory.
+
+---
+
+## 21) Perform the global reduced-cross-section fit
+
+```bash
+python3 tools/RP_sidis_global_reduced_xsec_fit.py
+```
+
+This independent four-parameter method simultaneously fits every usable
+Pass-3, Pass-4, and Pass-5 point in an epsilon family and `P_t` bin:
+
+`sigma_red = C_0 + epsilon C_1 + sqrt(2 epsilon (1+epsilon)) C_2 cos(phi) + epsilon C_3 cos(2 phi)`.
+
+The physics aliases are `C_0=F_T`, `C_1=F_L`,
+`C_2=F_UU^cos(phi)`, and `C_3=F_UU^cos(2 phi)`. Unlike the Pass-5-anchored
+method, Pass 3 contributes directly to the extraction. All passes use the
+agreed point-level data/MC requirements; the combined global design, rather
+than an inherited single-pass coverage decision, determines extractability.
+Fits require design rank four and weighted design condition at most 100.
+
+Unified point and four-parameter fit tables are written under
+`results/Pass1/Tables/RP_sidis_global_reduced_xsec_fit/`. Family-level
+diagnostic PDFs showing the common global solution at each pass epsilon are
+written by `z` under the corresponding PDF directory.
