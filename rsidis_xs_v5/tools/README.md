@@ -605,3 +605,30 @@ written by `z` under the matching `PDFs` stage directory. Existing laboratory
 cross-section and coefficient products are neither read as fit inputs nor
 overwritten. This stage establishes only the Pass-5 anchor; it does not yet
 perform constrained lower-pass fits or an L/T separation.
+
+---
+
+## 19) Fit epsilon-scaled lower-pass reduced cross sections
+
+```bash
+python3 tools/RP_fit_sidis_reduced_xsec_lower_passes.py
+```
+
+For every approved Pass-5 anchor, this stage fixes the lower-pass harmonic
+terms using their exact epsilon prefactors and fits only `C_0^(p)`. Pass-5
+coefficient covariance is propagated as a correlated contribution to the
+lower-pass generalized least-squares fit. Pass-4 is fitted for every L/T-ready
+family; Pass-3 is fitted where it exists and remains the validation member of
+the Pass-5-anchored method.
+
+Lower-pass points use the agreed positive-data/positive-MC, 30% MC-relative-
+uncertainty, and 30% data/MC-relative-uncertainty requirements. A data/MC ratio
+outside `[0.5,1.5]` remains a warning. No full-azimuth coverage requirement is
+imposed on Pass 3 or Pass 4 because their harmonic terms are fixed rather than
+independently extracted.
+
+Point and fit tables are written under
+`results/Pass1/Tables/RP_fit_sidis_reduced_xsec_lower_passes/`; family-level
+diagnostic PDFs are written by `z` under the matching PDF directory. This
+stage does not yet perform the final L/T separation of `C_0^(p)` versus
+epsilon.
