@@ -561,3 +561,26 @@ The member table, family summary, and problematic-family summary are written
 under `results/Pass1/Tables/RP_sidis_epsilon_family_map/`. This stage does not
 calculate reduced cross sections, select phi points, fit harmonics, create
 plots, or perform an L/T separation.
+
+---
+
+## 17) Extract reduced SIDIS cross sections
+
+```bash
+python3 tools/RP_extract_sidis_reduced_xsec.py
+```
+
+This table-only stage joins the cross-pass epsilon-family members to their
+combined-`thpq` yields. At each of the five analysis-`P_t` bin centers it runs
+`calc_semi_xsec` at all 15 phi-bin centers, forms the existing laboratory
+extraction from the data/MC ratio, and divides both the model and extracted
+laboratory cross sections by the versioned `K_red` normalization. Every row
+contains the family identity, phase/pass provenance, kinematics,
+normalization factors, laboratory quantities, reduced quantities, units, and
+reconstruction diagnostics.
+
+Point, problematic-point, and per-member summary tables are written under
+`results/Pass1/Tables/RP_extract_sidis_reduced_xsec/`. This transformation does
+not apply azimuthal-coverage decisions, fit harmonics, perform an L/T
+separation, or create PDFs. Families that are not L/T-ready remain available
+for audit but cannot become separation inputs merely by passing this stage.
