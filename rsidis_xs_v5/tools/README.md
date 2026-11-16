@@ -632,3 +632,29 @@ Point and fit tables are written under
 diagnostic PDFs are written by `z` under the matching PDF directory. This
 stage does not yet perform the final L/T separation of `C_0^(p)` versus
 epsilon.
+
+---
+
+## 20) Perform the Pass-5-anchored L/T separation
+
+```bash
+python3 tools/RP_sidis_pass5_anchored_LT_separation.py
+```
+
+For each epsilon family and `P_t` bin, this stage solves
+`C_0^(p) = F_T + epsilon_p F_L` using the Pass-4 and Pass-5 points. With two
+separation points the line is exactly determined; the reported `F_T`/`F_L`
+covariance is obtained by transforming the complete correlated `C_0`
+covariance. Correlations induced by the shared Pass-5 harmonic anchor are
+retained.
+
+When a fitted Pass-3 point exists, it is compared with the Pass-4/Pass-5 line
+as a validation measurement and never enters the extraction of `F_T` or
+`F_L`. Its residual uncertainty includes its covariance with both separation
+points. A validation pull beyond three standard deviations is recorded as a
+warning.
+
+Separation and problematic-separation tables are written under
+`results/Pass1/Tables/RP_sidis_pass5_anchored_LT_separation/`. Family-level
+`C_0^(p)`-versus-epsilon PDFs are written by `z` under the corresponding PDF
+directory.
