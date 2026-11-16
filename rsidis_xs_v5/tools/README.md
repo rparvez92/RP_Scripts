@@ -535,3 +535,29 @@ subdirectories. The displayed persistent colors are red (`z=0.36`), green
 (`z=0.50`), light green (`z=0.52`), and blue (`z=0.67`).
 The coefficient PDFs intentionally omit `z=0.90`; those rows remain in the
 unified CSV for audit and possible later use.
+
+---
+
+## 16) Build cross-pass epsilon families
+
+```bash
+python3 tools/RP_build_sidis_epsilon_family_map.py
+```
+
+This metadata-only stage consumes the all-pass combined-`thpq` yield table and
+maps matching measurements using pion charge, target, `x`, `Q2`, and `z` as
+the family key. Phase is retained as member provenance rather than used as a
+family-key field, so no yields are combined and each pass keeps its measured
+beam energy. The reduced-cross-section kernel calculates the corresponding
+central electron kinematics and epsilon for every member.
+
+A family is `LT_READY` when it contains unique Pass-4 and Pass-5 members with
+distinct epsilon values. A matching Pass-3 member changes the status to
+`LT_READY_PASS3_VALIDATION`, reflecting the Pass-5-anchored separation policy
+in which Pass 3 is an independent validation point. Incomplete or ambiguous
+families remain in the audit tables as `NOT_LT_READY` with explicit reasons.
+
+The member table, family summary, and problematic-family summary are written
+under `results/Pass1/Tables/RP_sidis_epsilon_family_map/`. This stage does not
+calculate reduced cross sections, select phi points, fit harmonics, create
+plots, or perform an L/T separation.
