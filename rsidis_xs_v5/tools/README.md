@@ -683,3 +683,27 @@ Unified point and four-parameter fit tables are written under
 `results/Pass1/Tables/RP_sidis_global_reduced_xsec_fit/`. Family-level
 diagnostic PDFs showing the common global solution at each pass epsilon are
 written by `z` under the corresponding PDF directory.
+
+---
+
+## 22) Plot the global reduced structure functions
+
+```bash
+python3 tools/RP_sidis_reduced_structure_function_plots.py
+```
+
+This presentation stage plots the four coefficients from the independent
+global fit versus `P_t`, with separate colors for each `z` bin:
+`C_0=F_T`, `C_1=F_L`, `C_2=F_UU^cos(phi)`, and
+`C_3=F_UU^cos(2 phi)`. One six-pad PDF is produced for every pion-charge,
+target, `x`, and `Q2` setting under
+`results/Pass1/PDFs/RP_sidis_reduced_structure_function_plots/`. These are
+new reduced-cross-section products; the existing laboratory coefficient
+plots are not modified.
+
+The unified CSV under the matching `Tables` stage directory also joins the
+global and Pass-5-anchored `F_T` and `F_L` results and records their central
+differences. It intentionally does not calculate a comparison pull or
+significance: both methods reuse measurements, and their cross-method
+covariance is not yet available. Treating the two results as independent
+would therefore give an unjustified uncertainty on their difference.
