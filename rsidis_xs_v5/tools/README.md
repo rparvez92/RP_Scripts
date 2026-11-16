@@ -584,3 +584,24 @@ Point, problematic-point, and per-member summary tables are written under
 not apply azimuthal-coverage decisions, fit harmonics, perform an L/T
 separation, or create PDFs. Families that are not L/T-ready remain available
 for audit but cannot become separation inputs merely by passing this stage.
+
+---
+
+## 18) Fit the Pass-5 reduced-cross-section anchor
+
+```bash
+python3 tools/RP_fit_sidis_reduced_xsec_pass5.py
+```
+
+This stage selects the Pass-5 member of every L/T-ready epsilon family and
+joins its reduced-cross-section points to the existing versioned Pass-5
+coverage decisions. A fit is performed only when the complete 15-bin,
+full-`2*pi` ring is approved. The fitted form is
+`sigma_red = C_0^(5) + C_1^(5) cos(phi) + C_2^(5) cos(2 phi)`.
+
+Annotated point tables and fit-parameter tables are written under
+`results/Pass1/Tables/RP_fit_sidis_reduced_xsec_pass5/`. Diagnostic PDFs are
+written by `z` under the matching `PDFs` stage directory. Existing laboratory
+cross-section and coefficient products are neither read as fit inputs nor
+overwritten. This stage establishes only the Pass-5 anchor; it does not yet
+perform constrained lower-pass fits or an L/T separation.
