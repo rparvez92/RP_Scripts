@@ -22,7 +22,7 @@ from typing import Dict, List, Mapping, MutableMapping, Sequence, Set, Tuple
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_DIR = SCRIPT_DIR.parent
+PROJECT_DIR = SCRIPT_DIR.parent.parent
 BIGTABLE_DIR = PROJECT_DIR / "bigtable"
 
 PHASE_CONFIG = {

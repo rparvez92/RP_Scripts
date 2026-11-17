@@ -13,7 +13,7 @@ Fixes:
      a short debug snippet.
 
 Usage:
-  python3 tools/build_sigma_model.py --settings_root settings \
+  python3 tools/Legacy/build_sigma_model.py --settings_root settings \
     --calc_exe ../../simc_gfortran/util/sidisxsec/calc_semi_xsec --nphibin 1
 """
 

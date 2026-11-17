@@ -21,7 +21,7 @@ from typing import Dict, List, Mapping, Sequence, Tuple
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_DIR = SCRIPT_DIR.parent
+PROJECT_DIR = SCRIPT_DIR.parent.parent
 DEFAULT_LEAF_ROOT = PROJECT_DIR / "bigtable"
 DEFAULT_SIMC_DIR = PROJECT_DIR.parents[1] / "simc_gfortran"
 

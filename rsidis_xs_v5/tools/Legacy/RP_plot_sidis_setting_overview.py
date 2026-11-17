@@ -72,7 +72,7 @@ def derive_pt(p_pion: float, theta_deg: float) -> float:
 
 def relative_source(path: Path) -> str:
     """Format provenance relative to the RP_Scripts repository root."""
-    repository = Path(__file__).resolve().parents[2]
+    repository = Path(__file__).resolve().parents[3]
     try:
         return path.resolve().relative_to(repository).as_posix()
     except ValueError:
@@ -309,7 +309,7 @@ def draw_pdf(path: Path, rows, extraction_path: Path, model_path: Path, quantity
 
 
 def main() -> int:
-    project=Path(__file__).resolve().parents[1]
+    project=Path(__file__).resolve().parents[2]
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--extraction",type=Path,default=project/"results/Pass1/Tables/RP_extract_sidis_xsec/RP_extract_sidis_xsec_Summary.csv")
     parser.add_argument("--model",type=Path,default=project/"results/Pass1/Tables/RP_sidis_model/RP_sidis_model.csv")

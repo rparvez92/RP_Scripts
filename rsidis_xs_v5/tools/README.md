@@ -1,6 +1,8 @@
 # tools/ (v5)
 
-This folder contains the scripts used to generate the v5 settings tree, build per-setting sigma models, create overlay group files, and batch-run ROOT macros.
+This folder contains the current Pass1 SIDIS analysis tools. Historical settings-tree, simulation-production, and redundant setting-overview scripts are archived in `Legacy/`. See [Legacy/README.md](Legacy/README.md) for the dependency audit and script inventory.
+
+Sections 0–6 and 8 below document historical setup/production workflows; section 12 is an archived, redundant plot. They are retained for reference and are not required steps of the current Pass1 analysis. The current analysis uses `filter_pass1_sidis_bigtable.py` for setting CSVs and `JLab_upstream_forks/simc_gfortran/util/batch_job/simc_job_list_pass1.csv` for the SIMC catalog and model stages.
 
 ## 0) Directory layout assumed
 
@@ -33,7 +35,7 @@ Each leaf directory contains:
 
 Example:
 ```bash
-python3 tools/generate_settings_tree_v5.py \
+python3 tools/Legacy/generate_settings_tree_v5.py \
   --bigtable /path/to/rsidis_bigtable_pass0.csv \
   --outdir   settings \
   --targets  LH2 LD2
@@ -47,7 +49,7 @@ python3 tools/generate_settings_tree_v5.py \
 
 Example:
 ```bash
-python3 tools/build_sigma_model.py \
+python3 tools/Legacy/build_sigma_model.py \
   --settings_root settings \
   --calc_exe /path/to/sigma_calc_executable \
   --nphibin 1
@@ -66,7 +68,7 @@ Output file is created at:
 
 Example (your case):
 ```bash
-python3 tools/make_groups_z_overlay.py \
+python3 tools/Legacy/make_groups_z_overlay.py \
   --settings-root settings \
   --groups-root   groups \
   --pass          pass4 \
@@ -94,7 +96,7 @@ Notes:
 
 Example:
 ```bash
-python3 tools/batch_driver_v2.py \
+python3 tools/Legacy/batch_driver_v2.py \
   --settings settings \
   --results  results \
   --root-macro macros/PlotCoinXsec.C \
@@ -127,17 +129,17 @@ and creates project-local symlinks. It does not copy the large ROOT files.
 
 Preview:
 ```bash
-python3 tools/structure_SimROOTfiles.py
+python3 tools/Legacy/structure_SimROOTfiles.py
 ```
 
 Create symlinks:
 ```bash
-python3 tools/structure_SimROOTfiles.py --execute
+python3 tools/Legacy/structure_SimROOTfiles.py --execute
 ```
 
 If stale or wrong symlinks already exist:
 ```bash
-python3 tools/structure_SimROOTfiles.py --execute --replace
+python3 tools/Legacy/structure_SimROOTfiles.py --execute --replace
 ```
 
 ---
@@ -147,7 +149,7 @@ python3 tools/structure_SimROOTfiles.py --execute --replace
 After your macro writes an `xsec_phipq.csv`, you can verify it contains required columns:
 
 ```bash
-python3 tools/validate_output_schema.py results/.../xsec_phipq.csv
+python3 tools/Legacy/validate_output_schema.py results/.../xsec_phipq.csv
 ```
 
 ---
@@ -198,13 +200,13 @@ ID filenames under `results/Pass1/{PDFs,Tables}/RP_get_coin_normyield/`.
 From `rsidis_xs_v5/`, preview the inputs derived from the settings tree:
 
 ```bash
-python3 tools/generate_simc_inputs.py --dry-run
+python3 tools/Legacy/generate_simc_inputs.py --dry-run
 ```
 
 Generate the `.inp` files and manifest in the macOS SIMC checkout:
 
 ```bash
-python3 tools/generate_simc_inputs.py
+python3 tools/Legacy/generate_simc_inputs.py
 ```
 
 Preview all manifest jobs with a short validation run size:
@@ -398,10 +400,10 @@ correction scales the central SIDIS cross-section and multiplicity models.
 
 ---
 
-## 12) Build the setting-integrated SIDIS overview
+## 12) Archived: setting-integrated SIDIS overview
 
 ```bash
-python3 tools/RP_plot_sidis_setting_overview.py
+python3 tools/Legacy/RP_plot_sidis_setting_overview.py
 ```
 
 The overview joins the Pass1 extraction summary to the setting-ID model catalog

@@ -12,7 +12,7 @@ Each line in the group file is:
   <label> <relative/path/to/manifest.json>
 
 Example:
-  python3 tools/make_groups_z_overlay.py \
+  python3 tools/Legacy/make_groups_z_overlay.py \
     --settings-root settings \
     --groups-root   groups \
     --pass          pass4 \
@@ -26,7 +26,7 @@ Example:
 
 Special case: pass5 pi-sidis LD2 has no z0p36 thpq2 setting in the bigtable,
 so create the available 3-point group explicitly:
-  python3 tools/make_groups_z_overlay.py \
+  python3 tools/Legacy/make_groups_z_overlay.py \
     --settings-root settings \
     --groups-root   groups \
     --pass          pass5 \

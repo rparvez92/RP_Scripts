@@ -11,8 +11,8 @@ from pathlib import Path
 TOOLS_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS_DIR))
 
-import generate_simc_inputs as generator  # noqa: E402
-import filter_bigtable as filterer  # noqa: E402
+from Legacy import generate_simc_inputs as generator  # noqa: E402
+from Legacy import filter_bigtable as filterer  # noqa: E402
 import run_simc_batch as batch  # noqa: E402
 
 

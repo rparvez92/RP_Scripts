@@ -6,7 +6,7 @@ from pathlib import Path
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 
-import RP_plot_sidis_setting_overview as overview  # noqa: E402
+from Legacy import RP_plot_sidis_setting_overview as overview  # noqa: E402
 
 
 def model(setting, z, theta, pt):

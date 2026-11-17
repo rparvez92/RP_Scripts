@@ -16,13 +16,13 @@ project-local layout with symlinks, without copying the large ROOT files.
 Examples, from rsidis_xs_v5/:
 
   # Preview only
-  python3 tools/structure_SimROOTfiles.py
+  python3 tools/Legacy/structure_SimROOTfiles.py
 
   # Create symlinks
-  python3 tools/structure_SimROOTfiles.py --execute
+  python3 tools/Legacy/structure_SimROOTfiles.py --execute
 
   # Replace existing wrong/broken symlinks
-  python3 tools/structure_SimROOTfiles.py --execute --replace
+  python3 tools/Legacy/structure_SimROOTfiles.py --execute --replace
 """
 
 from __future__ import annotations
