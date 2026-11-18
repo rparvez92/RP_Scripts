@@ -595,9 +595,8 @@ not apply azimuthal-coverage decisions, fit harmonics, perform an L/T
 separation, or create PDFs. Families that are not L/T-ready remain available
 for audit but cannot become separation inputs merely by passing this stage.
 
-The lower-pass and L/T stages below still encode the previous reduced-observable
-column convention and must not be run until they are updated in their own
-commits.
+The L/T stage below still encodes the previous reduced-observable column
+convention and must not be run until it is updated in its own commit.
 
 ---
 
@@ -628,14 +627,15 @@ perform constrained lower-pass fits or an L/T separation.
 
 ---
 
-## 19) Fit epsilon-scaled lower-pass reduced cross sections
+## 19) Fit epsilon-scaled lower-pass virtual-photon cross sections
 
 ```bash
 python3 tools/RP_fit_sidis_reduced_xsec_lower_passes.py
 ```
 
-For every approved Pass-5 anchor, this stage fixes the lower-pass harmonic
-terms using their exact epsilon prefactors and fits only `C_0^(p)`. Pass-5
+For every acceptable Pass-5 virtual-photon anchor, this stage fixes the
+lower-pass harmonic terms using their exact epsilon prefactors and fits only
+`C_0^(p)`. Pass-5
 coefficient covariance is propagated as a correlated contribution to the
 lower-pass generalized least-squares fit. Pass-4 is fitted for every L/T-ready
 family; Pass-3 is fitted where it exists and remains the validation member of
@@ -646,6 +646,12 @@ uncertainty, and 30% data/MC-relative-uncertainty requirements. A data/MC ratio
 outside `[0.5,1.5]` remains a warning. No full-azimuth coverage requirement is
 imposed on Pass 3 or Pass 4 because their harmonic terms are fixed rather than
 independently extracted.
+
+All fitted coefficients are reported in `ub/GeV/sr`. For pass `p`, their
+physical meanings are `C_0^(p)=sigma_T+epsilon_p sigma_L`,
+`C_1^(p)=sqrt(2 epsilon_p(1+epsilon_p)) sigma_LT`, and
+`C_2^(p)=epsilon_p sigma_TT`. Only `C_0^(p)` floats; the latter two are fixed
+from the Pass-5 coefficients after scaling their virtual-photon prefactors.
 
 Point and fit tables are written under
 `results/Pass1/Tables/RP_fit_sidis_reduced_xsec_lower_passes/`; family-level
