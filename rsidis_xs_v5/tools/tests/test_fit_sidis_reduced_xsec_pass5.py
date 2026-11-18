@@ -13,8 +13,10 @@ def points():
         phi=.5*(low+high); error=.05
         rows.append({**{field:"test" for field in (*stage.FAMILY_FIELDS,*stage.PROVENANCE_FIELDS)},
                      "Combination_group_id":"g5","Pt_bin":"1","phipq_bin":str(index),
-                     "phipq_center":str(phi),"Reduced_data_xsec":str(2+.3*math.cos(phi)-.1*math.cos(2*phi)),
-                     "Reduced_data_xsec_err":str(error),"Reduction_status":"OK",
+                     "phipq_center":str(phi),"Virtual_photon_data_xsec":str(2+.3*math.cos(phi)-.1*math.cos(2*phi)),
+                     "Virtual_photon_data_xsec_err":str(error),"Reduction_status":"OK",
+                     "Convention_version":"hand-v1","Cross_section_level":"BORN",
+                     "Virtual_photon_xsec_units":"ub/GeV/sr",
                      "Member_pass":"pass5","Family_status":"LT_READY","epsilon":"0.7",
                      "Pt_low":"0","Pt_high":"0.1","Pt_high_closed":"0"})
     return rows
@@ -37,6 +39,8 @@ class ReducedPass5FitTests(unittest.TestCase):
         self.assertAlmostEqual(fit["C_1_pass5"],.3,places=12)
         self.assertAlmostEqual(fit["C_2_pass5"],-.1,places=12)
         self.assertEqual(fit["Weighted_design_rank"],3)
+        self.assertEqual(fit["Coefficient_units"],"ub/GeV/sr")
+        self.assertEqual(fit["C_0_interpretation"],"sigma_T+epsilon_5*sigma_L")
 
     def test_rejected_coverage_is_not_fitted(self):
         bins,curves=coverage(); curves[("g5",1)]["Curve_status"]="REJECTED"

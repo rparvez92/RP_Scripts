@@ -595,23 +595,29 @@ not apply azimuthal-coverage decisions, fit harmonics, perform an L/T
 separation, or create PDFs. Families that are not L/T-ready remain available
 for audit but cannot become separation inputs merely by passing this stage.
 
-The downstream Pass-5 and lower-pass reduced-cross-section stages below still
-encode the previous reduced-observable column convention and must not be run
-until they are updated in their own commits.
+The lower-pass and L/T stages below still encode the previous reduced-observable
+column convention and must not be run until they are updated in their own
+commits.
 
 ---
 
-## 18) Fit the Pass-5 reduced-cross-section anchor
+## 18) Fit the Pass-5 Born virtual-photon cross section
 
 ```bash
 python3 tools/RP_fit_sidis_reduced_xsec_pass5.py
 ```
 
 This stage selects the Pass-5 member of every L/T-ready epsilon family and
-joins its reduced-cross-section points to the existing versioned Pass-5
+joins its Born virtual-photon points to the existing versioned Pass-5
 coverage decisions. A fit is performed only when the complete 15-bin,
 full-`2*pi` ring is approved. The fitted form is
-`sigma_red = C_0^(5) + C_1^(5) cos(phi) + C_2^(5) cos(2 phi)`.
+`sigma_gamma* = C_0^(5) + C_1^(5) cos(phi) + C_2^(5) cos(2 phi)`.
+
+The coefficients are reported in `ub/GeV/sr` and mean
+`C_0^(5)=sigma_T+epsilon_5 sigma_L`,
+`C_1^(5)=sqrt(2 epsilon_5(1+epsilon_5)) sigma_LT`, and
+`C_2^(5)=epsilon_5 sigma_TT`, with each virtual-photon response differential
+in `dP_pi dOmega_pi`. Pass 5 alone does not separate `sigma_T` and `sigma_L`.
 
 Annotated point tables and fit-parameter tables are written under
 `results/Pass1/Tables/RP_fit_sidis_reduced_xsec_pass5/`. Diagnostic PDFs are

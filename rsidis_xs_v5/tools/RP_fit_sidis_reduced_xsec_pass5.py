@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fit coverage-approved Pass-5 reduced SIDIS cross sections versus phi."""
+"""Fit coverage-approved Pass-5 Born virtual-photon SIDIS cross sections."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ ROOT.gROOT.SetBatch(True); ROOT.gStyle.SetOptStat(0); ROOT.gStyle.SetOptTitle(0)
 ROOT.gStyle.SetGridColor(ROOT.kGray + 1); ROOT.gStyle.SetGridStyle(3)
 ROOT.TGaxis.SetMaxDigits(3)
 
-POLICY_VERSION = "RP_FIT_REDUCED_XSEC_PASS5_V1"
+POLICY_VERSION = "RP_FIT_VIRTUAL_PHOTON_XSEC_PASS5_V2"
 FAMILY_FIELDS = (
     "Epsilon_family_id", "Epsilon_family_policy_version", "Family_status",
     "Family_reason", "Run_type", "Target", "x", "Q2", "z", "N_members",
@@ -47,6 +47,9 @@ FIT_FIELDS = [
     *FAMILY_FIELDS, *PROVENANCE_FIELDS, "epsilon", "Pt_bin", "Pt_low",
     "Pt_high", "Pt_high_closed", "Coverage_policy_version",
     "Coverage_curve_status", "Coverage_curve_reason", "Coverage_selected_mask",
+    "Convention_version", "Cross_section_level", "Virtual_photon_xsec_units",
+    "Coefficient_units", "C_0_interpretation", "C_1_interpretation",
+    "C_2_interpretation",
     "N_phi_bins_total", "N_points_fitted", "Phi_coverage_rad",
     "Weighted_design_rank", "Weighted_design_condition", "C_0_pass5",
     "C_0_pass5_err", "C_1_pass5", "C_1_pass5_err", "C_2_pass5",
@@ -115,9 +118,9 @@ def annotate_points(points: Sequence[Mapping[str, object]],
         if curve is not None and not approved: reasons.append("COVERAGE_CURVE_NOT_FULL_2PI_APPROVED")
         reduction_ok = source.get("Reduction_status") in {"OK", "WARNING"}
         if not reduction_ok: reasons.append("REDUCTION_POINT_NOT_USABLE")
-        value = number(source.get("Reduced_data_xsec")); error = number(source.get("Reduced_data_xsec_err"))
-        if not finite(value): reasons.append("NONFINITE_REDUCED_VALUE")
-        if not finite(error) or error <= 0: reasons.append("NONPOSITIVE_REDUCED_UNCERTAINTY")
+        value = number(source.get("Virtual_photon_data_xsec")); error = number(source.get("Virtual_photon_data_xsec_err"))
+        if not finite(value): reasons.append("NONFINITE_VIRTUAL_PHOTON_VALUE")
+        if not finite(error) or error <= 0: reasons.append("NONPOSITIVE_VIRTUAL_PHOTON_UNCERTAINTY")
         usable = reduction_ok and finite(value) and finite(error) and error > 0 and survives and approved
         row.update({
             "Coverage_policy_version": bin_decision.get("Policy_version", "") if bin_decision else "",
@@ -141,11 +144,17 @@ def fit_curve(points: Sequence[Mapping[str, object]]) -> dict[str, object]:
     for field in (*FAMILY_FIELDS, *PROVENANCE_FIELDS, "epsilon", "Pt_bin",
                   "Pt_low", "Pt_high", "Pt_high_closed",
                   "Coverage_policy_version", "Coverage_curve_status",
-                  "Coverage_curve_reason", "Coverage_selected_mask"):
+                  "Coverage_curve_reason", "Coverage_selected_mask",
+                  "Convention_version", "Cross_section_level",
+                  "Virtual_photon_xsec_units"):
         result[field] = first.get(field, "")
     n = len(curve); result.update(
         N_phi_bins_total=len(PHI_EDGES)-1, N_points_fitted=n,
         Phi_coverage_rad=n * 2 * math.pi / (len(PHI_EDGES)-1),
+        Coefficient_units="ub/GeV/sr",
+        C_0_interpretation="sigma_T+epsilon_5*sigma_L",
+        C_1_interpretation="sqrt(2*epsilon_5*(1+epsilon_5))*sigma_LT",
+        C_2_interpretation="epsilon_5*sigma_TT",
         Fit_policy_version=POLICY_VERSION,
     )
     if n != len(PHI_EDGES) - 1:
@@ -154,8 +163,8 @@ def fit_curve(points: Sequence[Mapping[str, object]]) -> dict[str, object]:
         ), Fit_line_style="none")
         return result
     phi = np.asarray([number(row["phipq_center"]) for row in curve])
-    values = np.asarray([number(row["Reduced_data_xsec"]) for row in curve])
-    errors = np.asarray([number(row["Reduced_data_xsec_err"]) for row in curve])
+    values = np.asarray([number(row["Virtual_photon_data_xsec"]) for row in curve])
+    errors = np.asarray([number(row["Virtual_photon_data_xsec_err"]) for row in curve])
     design = np.column_stack((np.ones(n), np.cos(phi), np.cos(2 * phi)))
     weighted = design / errors[:, None]
     rank = int(np.linalg.matrix_rank(weighted)); condition = float(np.linalg.cond(weighted))
@@ -186,9 +195,9 @@ def fit_curve(points: Sequence[Mapping[str, object]]) -> dict[str, object]:
 def graph(rows, usable, marker, color):
     result = ROOT.TGraphErrors(); index = 0
     for row in rows:
-        if bool(int(row["Used_in_fit"])) != usable or not finite(row["Reduced_data_xsec"]): continue
-        result.SetPoint(index, number(row["phipq_center"]), number(row["Reduced_data_xsec"]))
-        result.SetPointError(index, 0, number(row["Reduced_data_xsec_err"], 0)); index += 1
+        if bool(int(row["Used_in_fit"])) != usable or not finite(row["Virtual_photon_data_xsec"]): continue
+        result.SetPoint(index, number(row["phipq_center"]), number(row["Virtual_photon_data_xsec"]))
+        result.SetPointError(index, 0, number(row["Virtual_photon_data_xsec_err"], 0)); index += 1
     result.SetMarkerStyle(marker); result.SetMarkerColor(color); result.SetLineColor(color)
     return result
 
@@ -204,15 +213,15 @@ def draw_pdf(path: Path, groups: Sequence[tuple[list[dict], list[dict]]]) -> Non
         canvas.Clear(); canvas.Divide(3,2,.002,.002); owned=[]
         for pt_bin in range(1,6):
             pad=canvas.cd(pt_bin); pad.SetGridx(); pad.SetGridy(); pad.SetMargin(.15,.04,.15,.11)
-            rows=by_pt[pt_bin]; usable=[r for r in rows if int(r["Used_in_fit"]) and finite(r["Reduced_data_xsec"])]
-            scale=usable or [r for r in rows if finite(r["Reduced_data_xsec"])]
-            lows=[number(r["Reduced_data_xsec"])-number(r["Reduced_data_xsec_err"],0) for r in scale]
-            highs=[number(r["Reduced_data_xsec"])+number(r["Reduced_data_xsec_err"],0) for r in scale]
+            rows=by_pt[pt_bin]; usable=[r for r in rows if int(r["Used_in_fit"]) and finite(r["Virtual_photon_data_xsec"])]
+            scale=usable or [r for r in rows if finite(r["Virtual_photon_data_xsec"])]
+            lows=[number(r["Virtual_photon_data_xsec"])-number(r["Virtual_photon_data_xsec_err"],0) for r in scale]
+            highs=[number(r["Virtual_photon_data_xsec"])+number(r["Virtual_photon_data_xsec_err"],0) for r in scale]
             low=min(lows+[0.0]); high=max(highs+[1e-12]); span=max(high-low,1e-12)
             frame=ROOT.TH1D(f"rf_{abs(hash((first['Combination_group_id'],pt_bin)))}","",60,0,2*math.pi)
             frame.SetMinimum(min(0,low-.1*span)); frame.SetMaximum(high+.18*span)
             frame.SetLineColorAlpha(ROOT.kWhite,0); frame.GetXaxis().SetTitle("#phi_{pq} [rad]")
-            frame.GetYaxis().SetTitle("#sigma_{red} [GeV^{-2}]"); frame.Draw()
+            frame.GetYaxis().SetTitle("#sigma [#mub/(GeV sr)]"); frame.Draw()
             label=ROOT.TLatex(); label.SetNDC(); label.SetTextSize(.043)
             relation="#leq" if pt_bin==5 else "<"
             label.DrawLatex(.20,.92,f"{PT_EDGES[pt_bin-1]:.1f} #leq P_{{T}} {relation} {PT_EDGES[pt_bin]:.1f} GeV")
@@ -230,7 +239,7 @@ def draw_pdf(path: Path, groups: Sequence[tuple[list[dict], list[dict]]]) -> Non
                 notice.DrawLatex(.55,.82,"Not fitted - coverage rejected"); owned.append(notice)
             owned.extend((frame,label,zero,good,bad))
         pad=canvas.cd(6); pad.Clear(); text=ROOT.TLatex(); text.SetNDC(); text.SetTextSize(.038)
-        lines=["Pass-5 anchor: reduced SIDIS xsec",f"{first['Run_type']} / {first['Target']}",
+        lines=["Pass-5 Born virtual-photon SIDIS xsec",f"{first['Run_type']} / {first['Target']}",
                f"x={number(first['x']):.3g}, Q^{{2}}={number(first['Q2']):.3g} GeV^{{2}}, z={number(first['z']):.3g}",
                f"E={number(first['Ebeam_GeV']):.5g} GeV, #epsilon={number(first['epsilon']):.5f}",
                f"Family: {first['Epsilon_family_id']}","Fit: C_{0}^{(5)} + C_{1}^{(5)} cos#phi + C_{2}^{(5)} cos2#phi"]
@@ -238,8 +247,7 @@ def draw_pdf(path: Path, groups: Sequence[tuple[list[dict], list[dict]]]) -> Non
         valid=ROOT.TMarker(.09,.38,20); valid.SetNDC(True); valid.SetMarkerColor(ROOT.kBlue+1); valid.Draw()
         invalid=ROOT.TMarker(.09,.30,24); invalid.SetNDC(True); invalid.SetMarkerColor(ROOT.kGray+2); invalid.Draw()
         line=ROOT.TLine(.07,.22,.12,.22); line.SetNDC(True); line.SetLineColor(ROOT.kRed+1); line.SetLineWidth(2); line.Draw()
-        text.DrawLatex(.14,.365,"Used in fit"); text.DrawLatex(.14,.285,"Excluded diagnostic point"); text.DrawLatex(.14,.205,"Pass-5 harmonic fit")
-        text.SetTextSize(.030); text.DrawLatex(.05,.10,str(first["Coverage_policy_version"])); text.DrawLatex(.05,.05,POLICY_VERSION)
+        text.DrawLatex(.14,.365,"Used in fit"); text.DrawLatex(.14,.285,"Excluded diagnostic point"); text.DrawLatex(.14,.205,"Virtual-photon harmonic fit")
         owned.extend((text,valid,invalid,line)); canvas._reduced_fit_owned=owned; canvas.Print(str(path))
     canvas.Print(str(path)+"]"); canvas.Close()
 
@@ -257,10 +265,10 @@ def main() -> int:
     points=annotate_points(raw,bins,curves); grouped=defaultdict(list)
     for row in points: grouped[curve_key(row)].append(row)
     fits=[fit_curve(sorted(rows,key=lambda r:int(r["phipq_bin"]))) for _,rows in sorted(grouped.items())]
-    point_fields=list(points[0]); atomic_csv(args.table_dir/"RP_sidis_reduced_xsec_pass5_points.csv",point_fields,points)
-    atomic_csv(args.table_dir/"RP_sidis_reduced_xsec_pass5_points_Problematic.csv",point_fields,[r for r in points if r["Fit_point_status"]!="USABLE"])
-    atomic_csv(args.table_dir/"RP_sidis_reduced_xsec_pass5_fit_parameters.csv",FIT_FIELDS,fits)
-    atomic_csv(args.table_dir/"RP_sidis_reduced_xsec_pass5_fit_parameters_Problematic.csv",FIT_FIELDS,[r for r in fits if r["Fit_status"]!="OK"])
+    point_fields=list(points[0]); atomic_csv(args.table_dir/"RP_sidis_virtual_photon_pass5_points.csv",point_fields,points)
+    atomic_csv(args.table_dir/"RP_sidis_virtual_photon_pass5_points_Problematic.csv",point_fields,[r for r in points if r["Fit_point_status"]!="USABLE"])
+    atomic_csv(args.table_dir/"RP_sidis_virtual_photon_pass5_fit_parameters.csv",FIT_FIELDS,fits)
+    atomic_csv(args.table_dir/"RP_sidis_virtual_photon_pass5_fit_parameters_Problematic.csv",FIT_FIELDS,[r for r in fits if r["Fit_status"]!="OK"])
     if not args.no_pdf:
         by_group=defaultdict(list); fit_group=defaultdict(list)
         for row in points: by_group[row["Combination_group_id"]].append(row)
@@ -268,7 +276,7 @@ def main() -> int:
         for z in sorted({row["z"] for row in points},key=float):
             groups=[(by_group[key],fit_group[key]) for key in sorted(by_group) if by_group[key][0]["z"]==z]
             zdir="z_"+f"{float(z):.2f}".replace(".","p")
-            draw_pdf(args.pdf_dir/zdir/"RP_sidis_reduced_xsec_pass5_vs_phipq.pdf",groups)
+            draw_pdf(args.pdf_dir/zdir/"RP_sidis_virtual_photon_pass5_vs_phipq.pdf",groups)
     print("Points:",len(points),Counter(r["Fit_point_status"] for r in points))
     print("Fits:",len(fits),Counter(r["Fit_status"] for r in fits)); return 0
 
