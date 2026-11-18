@@ -595,9 +595,6 @@ not apply azimuthal-coverage decisions, fit harmonics, perform an L/T
 separation, or create PDFs. Families that are not L/T-ready remain available
 for audit but cannot become separation inputs merely by passing this stage.
 
-The L/T stage below still encodes the previous reduced-observable column
-convention and must not be run until it is updated in its own commit.
-
 ---
 
 ## 18) Fit the Pass-5 Born virtual-photon cross section
@@ -668,19 +665,47 @@ python3 tools/RP_sidis_pass5_anchored_LT_separation.py
 ```
 
 For each epsilon family and `P_t` bin, this stage solves
-`C_0^(p) = F_T + epsilon_p F_L` using the Pass-4 and Pass-5 points. With two
-separation points the line is exactly determined; the reported `F_T`/`F_L`
+`C_0^(p) = sigma_T + epsilon_p sigma_L` using the Pass-4 and Pass-5 points.
+Here `sigma_T` and `sigma_L` are Born virtual-photon response cross sections
+differential in `dP_pi dOmega_pi` and reported in `ub/GeV/sr`. With two
+separation points the line is exactly determined; the reported response
 covariance is obtained by transforming the complete correlated `C_0`
 covariance. Correlations induced by the shared Pass-5 harmonic anchor are
 retained.
 
 When a fitted Pass-3 point exists, it is compared with the Pass-4/Pass-5 line
-as a validation measurement and never enters the extraction of `F_T` or
-`F_L`. Its residual uncertainty includes its covariance with both separation
+as a validation measurement and never enters the extraction of `sigma_T` or
+`sigma_L`. Its residual uncertainty includes its covariance with both separation
 points. A validation pull beyond three standard deviations is recorded as a
 warning.
 
+The tables record the Hand-flux convention, Born level, response units, and
+the exact `C_0` relation alongside the separation and validation results. They
+also report `R=sigma_L/sigma_T` with its uncertainty propagated from the full
+correlated `sigma_T`/`sigma_L` covariance. Each separated plot labels its
+slope (`sigma_L`), intercept (`sigma_T`), and ratio in the bottom-right corner.
 Separation and problematic-separation tables are written under
 `results/Pass1/Tables/RP_sidis_pass5_anchored_LT_separation/`. Family-level
 `C_0^(p)`-versus-epsilon PDFs are written by `z` under the corresponding PDF
 directory.
+
+---
+
+## 21) Plot the separated L/T ratio
+
+```bash
+python3 tools/RP_sidis_LT_ratio_plots.py
+```
+
+This stage reads only successful (`OK` or `WARNING`) Pass-5-anchored
+separations and tabulates `R=sigma_L/sigma_T` with its full correlated
+uncertainty. It produces three independent multipage PDFs: `R` versus `z` at
+fixed run type, target, `x`, `Q2`, and `P_t` bin; `R` versus `Q2` at fixed run
+type, target, `z`, and `P_t` bin (with `x` identified by color because the
+available settings couple `x` and `Q2`); and `R` versus `P_t^2` at fixed run
+type, target, `x`, `Q2`, and `z`. Filled markers denote `OK` separations and
+open markers denote separation warnings.
+
+The auditable point table is written under
+`results/Pass1/Tables/RP_sidis_LT_ratio_plots/`; the three PDFs are written
+under the matching `PDFs` stage directory.

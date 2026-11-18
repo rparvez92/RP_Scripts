@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Perform Pass-4/Pass-5 L/T separation with optional Pass-3 validation."""
+"""Separate virtual-photon sigma_T and sigma_L with Pass 4 and Pass 5."""
 
 from __future__ import annotations
 
@@ -15,16 +15,18 @@ from RP_sidis_binning import AZIMUTHAL_PT_EDGES as PT_EDGES
 ROOT.gROOT.SetBatch(True);ROOT.gStyle.SetOptStat(0);ROOT.gStyle.SetOptTitle(0)
 ROOT.gStyle.SetGridColor(ROOT.kGray+1);ROOT.gStyle.SetGridStyle(3);ROOT.TGaxis.SetMaxDigits(3)
 
-POLICY_VERSION="RP_PASS5_ANCHORED_LT_V1"
+POLICY_VERSION="RP_PASS5_ANCHORED_VIRTUAL_PHOTON_LT_V2"
 VALID_FITS={"OK","WARNING"}
 IDENTITY=("Epsilon_family_id","Epsilon_family_policy_version","Family_status","Family_reason",
           "Run_type","Target","x","Q2","z","N_members","Pass_pattern","Has_pass3",
           "Has_pass4","Has_pass5","N_distinct_epsilon","Epsilon_min","Epsilon_max","Epsilon_span")
-FIELDS=[*IDENTITY,"Pt_bin","Pt_low","Pt_high","Pt_high_closed","Pass3_fit_status",
+FIELDS=[*IDENTITY,"Convention_version","Cross_section_level","Virtual_photon_xsec_units",
+        "Response_units","C_0_relation","Pt_bin","Pt_low","Pt_high","Pt_high_closed","Pass3_fit_status",
         "Pass4_fit_status","Pass5_fit_status","epsilon_pass3","epsilon_pass4","epsilon_pass5",
         "C_0_pass3","C_0_pass3_err","C_0_pass4","C_0_pass4_err","C_0_pass5","C_0_pass5_err",
-        "Cov_C0_pass4_pass5","Cov_C0_pass3_pass4","Cov_C0_pass3_pass5","F_T","F_T_err",
-        "F_L","F_L_err","Cov_FT_FL","Correlation_FT_FL","Pass3_predicted_C0",
+        "Cov_C0_pass4_pass5","Cov_C0_pass3_pass4","Cov_C0_pass3_pass5","sigma_T","sigma_T_err",
+        "sigma_L","sigma_L_err","Cov_sigmaT_sigmaL","Correlation_sigmaT_sigmaL",
+        "R_sigmaL_over_sigmaT","R_sigmaL_over_sigmaT_err","Pass3_predicted_C0",
         "Pass3_prediction_err","Pass3_validation_residual","Pass3_validation_err",
         "Pass3_validation_pull","Pass3_validation_status","Separation_method","Separation_status",
         "Separation_reason","Separation_policy_version"]
@@ -73,7 +75,12 @@ def lower_lower_covariance(left,right,anchor):
 def separate(anchor,pass4,pass3=None):
     first=anchor;result={field:"" for field in FIELDS}
     for field in (*IDENTITY,"Pt_bin","Pt_low","Pt_high","Pt_high_closed"):result[field]=first.get(field,"")
-    result.update(Pass5_fit_status=anchor.get("Fit_status",""),Pass4_fit_status=pass4.get("Fit_status","") if pass4 else "MISSING",
+    result.update(Convention_version=anchor.get("Convention_version",""),
+                  Cross_section_level=anchor.get("Cross_section_level",""),
+                  Virtual_photon_xsec_units=anchor.get("Virtual_photon_xsec_units",""),
+                  Response_units=anchor.get("Coefficient_units",anchor.get("Virtual_photon_xsec_units","")),
+                  C_0_relation="C_0^(p)=sigma_T+epsilon_p*sigma_L",
+                  Pass5_fit_status=anchor.get("Fit_status",""),Pass4_fit_status=pass4.get("Fit_status","") if pass4 else "MISSING",
                   Pass3_fit_status=pass3.get("Fit_status","") if pass3 else "MISSING",Separation_method="PASS4_PASS5_EXACT",
                   Separation_policy_version=POLICY_VERSION)
     if anchor.get("Fit_status") not in VALID_FITS:
@@ -91,13 +98,19 @@ def separate(anchor,pass4,pass3=None):
     if np.linalg.matrix_rank(covariance)<2:
         result.update(Separation_status="ERROR",Separation_reason="SINGULAR_C0_COVARIANCE",Pass3_validation_status="UNAVAILABLE");return result
     inverse_design=np.linalg.inv(design);parameters=inverse_design@values;parameter_covariance=inverse_design@covariance@inverse_design.T
-    ft,fl=parameters;ft_error=math.sqrt(max(0,parameter_covariance[0,0]));fl_error=math.sqrt(max(0,parameter_covariance[1,1]))
-    correlation=parameter_covariance[0,1]/(ft_error*fl_error) if ft_error>0 and fl_error>0 else math.nan
+    sigma_t,sigma_l=parameters;sigma_t_error=math.sqrt(max(0,parameter_covariance[0,0]));sigma_l_error=math.sqrt(max(0,parameter_covariance[1,1]))
+    correlation=parameter_covariance[0,1]/(sigma_t_error*sigma_l_error) if sigma_t_error>0 and sigma_l_error>0 else math.nan
+    ratio=sigma_l/sigma_t if sigma_t!=0 else math.nan
+    ratio_gradient=np.array([-sigma_l/(sigma_t*sigma_t),1./sigma_t]) if sigma_t!=0 else np.array([math.nan,math.nan])
+    ratio_variance=float(ratio_gradient@parameter_covariance@ratio_gradient) if sigma_t!=0 else math.nan
+    ratio_error=math.sqrt(max(0,ratio_variance)) if finite(ratio_variance) else math.nan
     reasons=[]
-    if ft<0:reasons.append("NEGATIVE_FT")
-    if fl<0:reasons.append("NEGATIVE_FL")
-    result.update(F_T=ft,F_T_err=ft_error,F_L=fl,F_L_err=fl_error,Cov_FT_FL=parameter_covariance[0,1],
-                  Correlation_FT_FL=correlation,Separation_status="WARNING" if reasons else "OK",Separation_reason=";".join(reasons))
+    if sigma_t<0:reasons.append("NEGATIVE_SIGMA_T")
+    if sigma_l<0:reasons.append("NEGATIVE_SIGMA_L")
+    result.update(sigma_T=sigma_t,sigma_T_err=sigma_t_error,sigma_L=sigma_l,sigma_L_err=sigma_l_error,
+                  Cov_sigmaT_sigmaL=parameter_covariance[0,1],Correlation_sigmaT_sigmaL=correlation,
+                  R_sigmaL_over_sigmaT=ratio,R_sigmaL_over_sigmaT_err=ratio_error,
+                  Separation_status="WARNING" if reasons else "OK",Separation_reason=";".join(reasons))
     if not pass3 or pass3.get("Fit_status") not in VALID_FITS:
         result["Pass3_validation_status"]="UNAVAILABLE";return result
     e3=number(pass3["epsilon"]);c3=number(pass3["C_0"]);v3=number(pass3["C_0_err"])**2
@@ -130,35 +143,41 @@ def draw_pdf(path,rows):
                 epsilon=number(row.get(f"epsilon_{pas}"));value=number(row.get(f"C_0_{pas}"));error=number(row.get(f"C_0_{pas}_err"))
                 if finite(epsilon) and finite(value):points.append((pas,epsilon,value,error,color,marker))
             lows=[v-e for _,_,v,e,_,_ in points];highs=[v+e for _,_,v,e,_,_ in points];low=min(lows+[0]);high=max(highs+[1e-12]);span=max(high-low,1e-12)
-            frame=ROOT.TH1D(f"ltf_{abs(hash((family,pt)))}","",50,.15,.9);frame.SetMinimum(min(0,low-.15*span));frame.SetMaximum(high+.2*span);frame.SetLineColorAlpha(ROOT.kWhite,0);frame.GetXaxis().SetTitle("#epsilon");frame.GetYaxis().SetTitle("C_{0}^{(p)} [GeV^{-2}]");frame.Draw()
+            frame=ROOT.TH1D(f"ltf_{abs(hash((family,pt)))}","",50,.15,.9);frame.SetMinimum(min(0,low-.15*span));frame.SetMaximum(high+.2*span);frame.SetLineColorAlpha(ROOT.kWhite,0);frame.GetXaxis().SetTitle("#epsilon");frame.GetYaxis().SetTitle("C_{0}^{(p)} [#mub/(GeV sr)]");frame.Draw()
             label=ROOT.TLatex();label.SetNDC();label.SetTextSize(.043);relation="#leq" if pt==5 else "<";label.DrawLatex(.20,.92,f"{PT_EDGES[pt-1]:.1f} #leq P_{{T}} {relation} {PT_EDGES[pt]:.1f} GeV")
             if row["Separation_status"] in {"OK","WARNING"}:
-                line=ROOT.TF1(f"ltline_{abs(hash((family,pt)))}","[0]+[1]*x",.15,.9);line.SetParameters(number(row["F_T"]),number(row["F_L"]));line.SetLineColor(ROOT.kRed+1);line.SetLineWidth(2);line.Draw("SAME");owned.append(line)
+                line=ROOT.TF1(f"ltline_{abs(hash((family,pt)))}","[0]+[1]*x",.15,.9);line.SetParameters(number(row["sigma_T"]),number(row["sigma_L"]));line.SetLineColor(ROOT.kRed+1);line.SetLineWidth(2);line.Draw("SAME");owned.append(line)
             else:
                 notice=ROOT.TLatex();notice.SetNDC();notice.SetTextAlign(22);notice.SetTextSize(.04);notice.SetTextColorAlpha(ROOT.kGray+2,.65);notice.DrawLatex(.55,.82,"Not separated");owned.append(notice)
             for pas,epsilon,value,error,color,marker in points:
                 graph=ROOT.TGraphErrors();graph.SetPoint(0,epsilon,value);graph.SetPointError(0,0,error);graph.SetMarkerStyle(marker);graph.SetMarkerColor(color);graph.SetLineColor(color);graph.SetMarkerSize(1.15);graph.Draw("P SAME");owned.append(graph)
+            if row["Separation_status"] in {"OK","WARNING"}:
+                values=ROOT.TLatex();values.SetNDC();values.SetTextAlign(31);values.SetTextSize(.027);values.SetTextColor(ROOT.kGray+3)
+                values.DrawLatex(.94,.30,f"#sigma_{{L}} = {number(row['sigma_L']):.3g} #pm {number(row['sigma_L_err']):.2g}")
+                values.DrawLatex(.94,.245,f"#sigma_{{T}} = {number(row['sigma_T']):.3g} #pm {number(row['sigma_T_err']):.2g}")
+                values.DrawLatex(.94,.19,f"R = {number(row['R_sigmaL_over_sigmaT']):.3g} #pm {number(row['R_sigmaL_over_sigmaT_err']):.2g}")
+                owned.append(values)
             owned.extend((frame,label))
         first=members[0];pad=canvas.cd(6);pad.Clear();text=ROOT.TLatex();text.SetNDC();text.SetTextSize(.038)
-        lines=["Pass-5 anchored L/T separation",f"{first['Run_type']} / {first['Target']}",f"x={number(first['x']):.3g}, Q^{{2}}={number(first['Q2']):.3g} GeV^{{2}}, z={number(first['z']):.3g}",f"Family: {family}","C_{0}^{(p)} = F_{T} + #epsilon_{p} F_{L}","Pass 4 + Pass 5: separation","Pass 3: validation only"]
+        lines=["Pass-5 anchored virtual-photon L/T separation",f"{first['Run_type']} / {first['Target']}",f"x={number(first['x']):.3g}, Q^{{2}}={number(first['Q2']):.3g} GeV^{{2}}, z={number(first['z']):.3g}",f"Family: {family}","C_{0}^{(p)} = #sigma_{T} + #epsilon_{p} #sigma_{L}","Pass 4 + Pass 5: separation","Pass 3: validation only"]
         for i,line in enumerate(lines):text.DrawLatex(.05,.94-.068*i,line)
         y=.39
         for pas,color,marker,labeltext in (("pass3",ROOT.kOrange+7,24,"Pass 3 validation"),("pass4",ROOT.kGreen+2,20,"Pass 4 separation"),("pass5",ROOT.kBlue+1,20,"Pass 5 separation")):
             markerobj=ROOT.TMarker(.09,y,marker);markerobj.SetNDC(True);markerobj.SetMarkerColor(color);markerobj.Draw();text.DrawLatex(.14,y-.015,labeltext);owned.append(markerobj);y-=.07
-        text.SetTextSize(.030);text.DrawLatex(.05,.08,"Red line: extracted F_{T} + #epsilon F_{L}");text.DrawLatex(.05,.035,POLICY_VERSION);owned.append(text);canvas._lt_owned=owned;canvas.Print(str(path))
+        text.SetTextSize(.030);text.DrawLatex(.05,.06,"Red line: extracted #sigma_{T} + #epsilon #sigma_{L}");owned.append(text);canvas._lt_owned=owned;canvas.Print(str(path))
     canvas.Print(str(path)+"]");canvas.Close()
 
 
 def main():
     project=Path(__file__).resolve().parents[1];parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--pass5-fits",type=Path,default=project/"results/Pass1/Tables/RP_fit_sidis_reduced_xsec_pass5/RP_sidis_reduced_xsec_pass5_fit_parameters.csv")
-    parser.add_argument("--lower-fits",type=Path,default=project/"results/Pass1/Tables/RP_fit_sidis_reduced_xsec_lower_passes/RP_sidis_reduced_xsec_lower_pass_fit_parameters.csv")
+    parser.add_argument("--pass5-fits",type=Path,default=project/"results/Pass1/Tables/RP_fit_sidis_reduced_xsec_pass5/RP_sidis_virtual_photon_pass5_fit_parameters.csv")
+    parser.add_argument("--lower-fits",type=Path,default=project/"results/Pass1/Tables/RP_fit_sidis_reduced_xsec_lower_passes/RP_sidis_virtual_photon_lower_pass_fit_parameters.csv")
     parser.add_argument("--table-dir",type=Path,default=project/"results/Pass1/Tables/RP_sidis_pass5_anchored_LT_separation")
     parser.add_argument("--pdf-dir",type=Path,default=project/"results/Pass1/PDFs/RP_sidis_pass5_anchored_LT_separation");parser.add_argument("--no-pdf",action="store_true");args=parser.parse_args()
     anchors={(r["Epsilon_family_id"],int(r["Pt_bin"])):r for r in read_csv(args.pass5_fits)};lower={(r["Epsilon_family_id"],r["Member_pass"],int(r["Pt_bin"])):r for r in read_csv(args.lower_fits)}
     rows=[]
     for (family,pt),anchor in sorted(anchors.items()):rows.append(separate(anchor,lower.get((family,"pass4",pt)),lower.get((family,"pass3",pt))))
-    atomic_csv(args.table_dir/"RP_sidis_pass5_anchored_LT_separation.csv",FIELDS,rows);atomic_csv(args.table_dir/"RP_sidis_pass5_anchored_LT_separation_Problematic.csv",FIELDS,[r for r in rows if r["Separation_status"]!="OK"])
+    atomic_csv(args.table_dir/"RP_sidis_pass5_anchored_virtual_photon_LT_separation.csv",FIELDS,rows);atomic_csv(args.table_dir/"RP_sidis_pass5_anchored_virtual_photon_LT_separation_Problematic.csv",FIELDS,[r for r in rows if r["Separation_status"]!="OK"])
     if not args.no_pdf:
         for z in sorted({r["z"] for r in rows},key=float):
             selected=[r for r in rows if r["z"]==z];zdir="z_"+f"{float(z):.2f}".replace(".","p");draw_pdf(args.pdf_dir/zdir/"RP_sidis_pass5_anchored_LT_separation.pdf",selected)
