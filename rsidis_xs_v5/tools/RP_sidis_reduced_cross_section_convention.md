@@ -1,146 +1,240 @@
-# SIMC-native reduced SIDIS cross-section convention
+# Hand-flux Born SIDIS virtual-photon cross-section convention
 
-Version: `RP_REDUCED_XSEC_SIMC_LAB_V1`
+Version: `RP_VIRTUAL_PHOTON_XSEC_HAND_V1`
 
-This note records the convention implemented by
-`RP_sidis_reduced_kinematics.py`. It is derived from the central, non-Fermi
-calculation in `simc_gfortran/semi_physics.f`; it does not modify SIMC or
-`calc_semi_xsec`.
+This document defines the convention implemented by
+`RP_sidis_reduced_kinematics.py` and `RP_extract_sidis_reduced_xsec.py`. It is
+based on the actual `calc_semi_xsec.f` call to `peepiX` in
+`simc_gfortran/semi_physics.f`. Neither Fortran source is modified by this
+analysis step.
 
-All energies and momenta below are expressed in GeV. The symbol `Q2` in the
-Python implementation denotes the positive quantity \(Q^2\) in GeV\(^2\).
+All energies and momenta below are in GeV. `Q2` denotes positive (Q^2).
 
-## Central SIMC laboratory cross section
+## 1. Cross section returned by SIMC
 
-SIMC calculates
+`peepiX` first constructs
 
 \[
-\frac{d^6\sigma_{\rm lab}}
- {dE'\,d\Omega_{e'}\,dE_h\,d\Omega_h}
+\frac{d^5\sigma}
+ {dE'\,d\Omega_{e'}\,dz\,dP_T^2\,d\phi_{pq}}
 =
 (\hbar c)^2 10^4
 \frac{4\alpha^2E'^2}{Q^4}
 \left[
-W_2\cos^2\frac{\theta_e}{2}
-+2W_1\sin^2\frac{\theta_e}{2}
+\frac{F_2^A}{\nu}\cos^2\frac{\theta_e}{2}
++\frac{2F_1^A}{M_{\rm struck}}\sin^2\frac{\theta_e}{2}
 \right]
-\mathcal M_h
-J_h,
+\mathcal H_\pi,
 \]
 
-with
+where
 
 \[
-J_h=
+\mathcal H_\pi=
+R_h(A,z)\,
+\frac{d\sigma_{\rm frag}}{dz}\,
+\frac{b(z)e^{-b(z)P_T^2}}{2\pi}.
+\]
+
+It then multiplies by
+
+\[
+J_{\rm SIMC}=
 \left|\frac{\partial(z,P_T^2)}
-{\partial(E_h,\cos\theta_{pq})}\right|
-=\frac{2p_h^2\cos\theta_{pq}}{\nu}
+{\partial(E_\pi,\cos\theta_{pq})}\right|
+=\frac{2P_\pi^2\cos\theta_{pq}}{\nu}
 \]
 
-for the forward central kinematics used by the analysis. The factor \(10^4\)
-converts fm\(^2\) to microbarns after \(\hbar c\) is expressed in GeV fm.
-
-The central kinematics are
+and returns
 
 \[
-\nu=\frac{Q^2}{2Mx},\quad E'=E-\nu,\quad
-Q^2=4EE'\sin^2\frac{\theta_e}{2},
+\frac{d^6\sigma_{\rm lab}}
+ {dE'\,d\Omega_{e'}\,dE_\pi\,d\Omega_\pi}
+\]
+
+in `microbarn/GeV^2/sr^2` after the output conversion performed by
+`calc_semi_xsec.f`. The final SIMC differential is therefore in (E_\pi),
+not (P_\pi).
+
+The current SIMC SIDIS model has no explicit \(\cos\phi_{pq}\) or
+\(\cos2\phi_{pq}\) terms. Its central model cross section is consequently
+constant across the requested phi centers.
+
+## 2. Required pion-variable Jacobian
+
+The desired Hand-flux decomposition uses
+
+\[
+\frac{d^6\sigma}
+ {dE'\,d\Omega_{e'}\,dP_\pi\,d\Omega_\pi}.
+\]
+
+Because
+
+\[
+E_\pi=\sqrt{P_\pi^2+m_\pi^2},
+\qquad
+\frac{dE_\pi}{dP_\pi}=\frac{P_\pi}{E_\pi},
+\]
+
+the required transformation is
+
+\[
+\frac{d^6\sigma}
+ {dE'\,d\Omega_{e'}\,dP_\pi\,d\Omega_\pi}
+=
+\frac{P_\pi}{E_\pi}
+\frac{d^6\sigma}
+ {dE'\,d\Omega_{e'}\,dE_\pi\,d\Omega_\pi}.
+\]
+
+The dimensionless conversion Jacobian is therefore
+
+\[
+J_{E_\pi\rightarrow P_\pi}=P_\pi/E_\pi.
+\]
+
+SIMC's internal (J_{\rm SIMC}) must not be inverted for this convention.
+Doing so would produce a differential in (z,P_T^2,\phi_{pq}), not the
+required differential in (P_\pi,\Omega_\pi).
+
+## 3. Central kinematics and target mass
+
+The central stationary-nucleon quantities are
+
+\[
+\nu=\frac{Q^2}{2M_px},\qquad E'=E-\nu,
 \]
 
 \[
-E_h=z\nu,\quad p_h=\sqrt{E_h^2-m_h^2},\quad
-P_T=p_h\sin\theta_{pq}.
+W^2=M_p^2+2M_p\nu-Q^2,
 \]
-
-The constants in the Python module reproduce `simc_gfortran/constants.inc`:
-
-- \(\alpha=1/137.0359895\),
-- \(\hbar c=0.197327053\) GeV fm,
-- \(M=0.93827231\) GeV,
-- \(m_{\pi^\pm}=0.13957018\) GeV.
-
-## Transformation to the transverse/longitudinal basis
-
-SIMC uses
 
 \[
-W_1=\frac{F_1}{M},\qquad W_2=\frac{F_2}{\nu}.
+E_\pi=z\nu,\qquad P_\pi=\sqrt{E_\pi^2-m_\pi^2}.
 \]
 
-Define
+Both `calc_semi_xsec.f` and full SIMC set `targ%Mtar_struck=Mp` for the
+semi-inclusive model. Consequently this central convention uses
 
 \[
-\gamma=\frac{2Mx}{Q},\qquad
-F_T=2xF_1,\qquad
-F_L=(1+\gamma^2)F_2-2xF_1,
+M=M_p
 \]
 
-and
+for both LH2 and LD2. LD2 enters the model through its proton-plus-neutron
+PDF and inclusive-structure-function content and its nuclear factors; the
+deuteron mass is not substituted into the central SIDIS electron kinematics.
+
+If LD2 Fermi motion is enabled, full SIMC changes event-level (x) through
+(P\cdot q) and applies an additional event-level flux factor. That
+correction remains part of the radiated SIMC yield and is not absorbed into
+the central Hand flux reported by this table.
+
+## 4. Virtual-photon polarization
 
 \[
 \varepsilon=
-\left[1+2\left(1+\frac{\nu^2}{Q^2}\right)
-\tan^2\frac{\theta_e}{2}\right]^{-1}.
+\left[
+1+2\left(1+\frac{\nu^2}{Q^2}\right)
+\tan^2\frac{\theta_e}{2}
+\right]^{-1}.
 \]
 
-Direct algebra gives
+The implementation verifies this against
 
 \[
-W_2\cos^2\frac{\theta_e}{2}
-+2W_1\sin^2\frac{\theta_e}{2}
-=
-\frac{\cos^2(\theta_e/2)}
-{\nu\varepsilon(1+\gamma^2)}
-\left(F_T+\varepsilon F_L\right).
-\]
-
-The same \(\varepsilon\) is obtained from
-
-\[
-y=\frac{\nu}{E},\qquad
 \varepsilon=
 \frac{1-y-\gamma^2y^2/4}
-{1-y+y^2/2+\gamma^2y^2/4}.
+ {1-y+y^2/2+\gamma^2y^2/4},
+\quad y=\frac{\nu}{E},\quad \gamma=\frac{2M_px}{Q}.
 \]
 
-## Reduced normalization
+## 5. Hand flux
 
-The convention therefore defines
+The adopted flux is exactly
 
 \[
-K_{\rm base}=
-(\hbar c)^2 10^4
-\frac{4\alpha^2E'^2}{Q^4}J_h,
+\Gamma_{\rm Hand}=
+\frac{\alpha}{2\pi^2}
+\frac{E'}{E}
+\frac{1}{Q^2}
+\frac{1}{1-\varepsilon}
+\frac{W^2-M_p^2}{2M_p}.
 \]
+
+The Hand equivalent photon energy is
 
 \[
-A_{\rm lab}=
-\frac{\cos^2(\theta_e/2)}
-{\nu\varepsilon(1+\gamma^2)},
+K_{\rm Hand}=\frac{W^2-M_p^2}{2M_p}=\nu(1-x).
 \]
 
-and
+The central flux has units `GeV^-1`.
+
+## 6. Extracted Born virtual-photon cross section
+
+The laboratory data cross section is obtained using the existing ratio
+method,
 
 \[
-K_{\rm red}=K_{\rm base}A_{\rm lab}.
+\sigma_{\rm lab,Born}^{\rm data}=
+\frac{Y_{\rm data}}{Y_{\rm MC}^{\rm rad}}
+\sigma_{\rm lab,Born}^{\rm SIMC,central}.
 \]
 
-The reduced cross section is
+The virtual-photon cross section is
 
 \[
-\sigma_{\rm red}
-=\frac{\sigma_{\rm lab}}{K_{\rm red}}
-=\left(F_T+\varepsilon F_L\right)\mathcal M_h.
+\boxed{
+\frac{d^3\sigma_{\gamma^*,\rm Born}}
+ {dP_\pi\,d\Omega_\pi}
+=
+\frac{P_\pi/E_\pi}{\Gamma_{\rm Hand}}
+\frac{d^6\sigma_{\rm lab,Born}}
+ {dE'\,d\Omega_{e'}\,dE_\pi\,d\Omega_\pi}
+}.
 \]
 
-When uncertainty in the kinematic normalization is neglected, its statistical
-uncertainty is
+Its units are `microbarn/GeV/sr`. With central kinematic uncertainties
+neglected, the statistical uncertainty is multiplied by the same factor.
+
+The reconstruction identity is
 
 \[
-\delta\sigma_{\rm red}
-=\frac{\delta\sigma_{\rm lab}}{K_{\rm red}}.
+\sigma_{\rm lab,Born}^{(dE_\pi)}=
+\frac{E_\pi}{P_\pi}\Gamma_{\rm Hand}
+\sigma_{\gamma^*,\rm Born}.
 \]
 
-This version applies only to the central stationary-nucleon convention. The
-event-dependent Fermi-motion flux correction used by some deuterium SIMC runs
-is intentionally outside its scope.
+## 7. Born and radiative treatment
+
+`calc_semi_xsec.f` calls `peepiX` directly and does not invoke SIMC's
+radiation generator. Its central value is therefore the Born model cross
+section at the supplied vertex kinematics.
+
+When radiation is enabled in full SIMC, `generate_rad` changes event
+kinematics and multiplies `main%gen_weight` by the radiative weight. The MC
+yield is thus a radiative convolution of the Born `peepiX` model. In the
+ratio method above, the radiated MC yield supplies the radiative correction,
+while the central multiplier remains Born. No second radiative correction is
+applied in this extraction stage.
+
+## 8. Azimuthal decomposition
+
+The extracted observable follows
+
+\[
+\begin{aligned}
+\frac{d^3\sigma_{\gamma^*}}
+ {dP_\pi\,d\Omega_\pi}
+={}&\frac{d^3\sigma_T}{dP_\pi\,d\Omega_\pi}
++\varepsilon\frac{d^3\sigma_L}{dP_\pi\,d\Omega_\pi}\\
+&+\sqrt{2\varepsilon(1+\varepsilon)}
+\frac{d^3\sigma_{LT}}{dP_\pi\,d\Omega_\pi}\cos\phi_{pq}\\
+&+\varepsilon
+\frac{d^3\sigma_{TT}}{dP_\pi\,d\Omega_\pi}\cos2\phi_{pq}.
+\end{aligned}
+\]
+
+The flux and Jacobian are evaluated from the central kinematics of each
+epsilon-family member and analysis (P_T) bin. No event-averaged flux is
+claimed by this convention.

@@ -566,7 +566,7 @@ plots, or perform an L/T separation.
 
 ---
 
-## 17) Extract reduced SIDIS cross sections
+## 17) Extract Born SIDIS virtual-photon cross sections
 
 ```bash
 python3 tools/RP_extract_sidis_reduced_xsec.py
@@ -575,17 +575,29 @@ python3 tools/RP_extract_sidis_reduced_xsec.py
 This table-only stage joins the cross-pass epsilon-family members to their
 combined-`thpq` yields. At each of the five analysis-`P_t` bin centers it runs
 `calc_semi_xsec` at all 15 phi-bin centers, forms the existing laboratory
-extraction from the data/MC ratio, and divides both the model and extracted
-laboratory cross sections by the versioned `K_red` normalization. Every row
-contains the family identity, phase/pass provenance, kinematics,
-normalization factors, laboratory quantities, reduced quantities, units, and
-reconstruction diagnostics.
+Born extraction from the data/radiated-MC ratio, converts SIMC's
+`dE_pi` differential to `dP_pi` with `P_pi/E_pi`, and divides by the central
+Hand virtual-photon flux. The result is
+`d^3 sigma_(gamma*,Born)/(dP_pi dOmega_pi)` in `ub/GeV/sr`. Both LH2 and LD2
+use the central proton struck-mass convention implemented by SIMC; LD2 Fermi
+motion remains an event-level contribution to the radiated MC yield.
+
+Every row records the family identity, phase/pass provenance, central
+kinematics, `W^2`, epsilon, Hand equivalent energy and flux, pion-variable
+Jacobian, original and transformed laboratory quantities, virtual-photon
+quantities, units, convention identifiers, and a reconstruction diagnostic.
+The complete convention is documented in
+`tools/RP_sidis_reduced_cross_section_convention.md`.
 
 Point, problematic-point, and per-member summary tables are written under
 `results/Pass1/Tables/RP_extract_sidis_reduced_xsec/`. This transformation does
 not apply azimuthal-coverage decisions, fit harmonics, perform an L/T
 separation, or create PDFs. Families that are not L/T-ready remain available
 for audit but cannot become separation inputs merely by passing this stage.
+
+The downstream Pass-5 and lower-pass reduced-cross-section stages below still
+encode the previous reduced-observable column convention and must not be run
+until they are updated in their own commits.
 
 ---
 

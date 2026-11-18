@@ -60,9 +60,21 @@ class ExtractReducedXsecTests(unittest.TestCase):
         self.assertEqual(len(points), 75)
         first = points[0]
         self.assertEqual(first["Reduction_status"], "OK")
-        self.assertAlmostEqual(first["Extracted_lab_xsec"], 1.6)
-        self.assertAlmostEqual(first["Reduced_data_xsec"] * first["K_red_ub"], 1.6)
-        self.assertAlmostEqual(first["Reduced_data_xsec_err"] * first["K_red_ub"], 0.2)
+        self.assertEqual(first["Cross_section_level"], "BORN")
+        self.assertAlmostEqual(first["Extracted_lab_xsec_dEpi"], 1.6)
+        self.assertAlmostEqual(
+            first["Extracted_lab_xsec_dPpi"],
+            1.6 * first["dEpi_dPpi"],
+        )
+        self.assertAlmostEqual(
+            first["Virtual_photon_data_xsec"],
+            first["Extracted_lab_xsec_dPpi"] / first["Gamma_Hand_per_GeV"],
+        )
+        self.assertAlmostEqual(
+            first["Virtual_photon_data_xsec_err"],
+            0.2 * first["Virtual_photon_reduction_factor_GeV"],
+        )
+        self.assertEqual(first["Virtual_photon_xsec_units"], "ub/GeV/sr")
         self.assertAlmostEqual(first["Lab_reconstruction_residual"], 0.0)
 
     def test_upstream_warning_remains_warning(self):
@@ -71,6 +83,25 @@ class ExtractReducedXsecTests(unittest.TestCase):
         )
         self.assertTrue(all(row["Reduction_status"] == "WARNING" for row in points))
         self.assertTrue(all("ADVISORY" in row["Reduction_reason"] for row in points))
+
+    def test_ld2_uses_the_same_central_proton_mass_convention(self):
+        ld2_member = member(); ld2_member["Target"] = "LD2"
+        ld2_sources = source_rows()
+        for row in ld2_sources:
+            row["Target"] = "LD2"
+        points = stage.extract_member(
+            ld2_member, ld2_sources, Path("unused"), model_loader
+        )
+        self.assertTrue(all(point["Target_mass_GeV"] == points[0]["Target_mass_GeV"]
+                            for point in points))
+        self.assertEqual(
+            points[0]["Target_mass_convention"],
+            "CENTRAL_STATIONARY_PROTON_MASS_FOR_LH2_AND_LD2",
+        )
+        self.assertEqual(
+            points[0]["Radiative_treatment"],
+            "RADIATED_MC_YIELD_WITH_CENTRAL_BORN_MODEL",
+        )
 
     def test_upstream_structural_error_remains_error(self):
         points = stage.extract_member(
@@ -84,7 +115,7 @@ class ExtractReducedXsecTests(unittest.TestCase):
         rows = source_rows(); rows[0]["Data_by_MC"] = "nan"
         points = stage.extract_member(member(), rows, Path("unused"), model_loader)
         self.assertEqual(points[0]["Reduction_status"], "INVALID")
-        self.assertIn("NONFINITE_REDUCED_RESULT", points[0]["Reduction_reason"])
+        self.assertIn("NONFINITE_VIRTUAL_PHOTON_RESULT", points[0]["Reduction_reason"])
 
     def test_family_source_mismatch_fails_closed(self):
         bad = member(); bad["Member_phase"] = "phase1"

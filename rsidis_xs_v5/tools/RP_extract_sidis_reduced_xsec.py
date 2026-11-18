@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract table-only reduced SIDIS cross sections for epsilon-family members."""
+"""Extract table-only Born SIDIS virtual-photon cross sections."""
 
 from __future__ import annotations
 
@@ -18,9 +18,15 @@ from RP_sidis_binning import (
     AZIMUTHAL_PHI_EDGES as PHI_EDGES,
     AZIMUTHAL_PT_EDGES as PT_EDGES,
 )
-from RP_sidis_reduced_kinematics import CONVENTION_VERSION, calculate_reduced_kinematics
+from RP_sidis_reduced_kinematics import (
+    CONVENTION_VERSION,
+    CROSS_SECTION_LEVEL,
+    RADIATIVE_TREATMENT,
+    TARGET_MASS_CONVENTION,
+    calculate_reduced_kinematics,
+)
 
-POLICY_VERSION = "RP_EXTRACT_SIDIS_REDUCED_XSEC_V1"
+POLICY_VERSION = "RP_EXTRACT_SIDIS_VIRTUAL_PHOTON_XSEC_V2"
 MODEL_POLICY = "CALC_SEMI_XSEC_AT_15_PHI_BIN_CENTERS"
 FAMILY_FIELDS = (
     "Epsilon_family_id", "Epsilon_family_policy_version", "Family_status",
@@ -45,27 +51,34 @@ SOURCE_FIELDS = (
     "Data_by_MC_err", "Combination_status", "Combination_reason",
 )
 KINEMATIC_FIELDS = (
-    "Reduced_xsec_policy_version", "Convention_version", "Model_phi_policy",
-    "Model_Pt_GeV", "nu_GeV", "Eprime_GeV", "theta_e_rad", "y", "gamma",
-    "epsilon", "E_h_GeV", "p_h_GeV", "theta_pq_central_rad",
-    "cos_theta_pq", "Hadronic_jacobian_GeV", "K_base_ub_GeV",
-    "A_lab_per_GeV", "K_red_ub",
+    "Reduced_xsec_policy_version", "Convention_version",
+    "Target_mass_convention", "Cross_section_level", "Radiative_treatment",
+    "Model_phi_policy", "Model_Pt_GeV", "Target_mass_GeV", "nu_GeV",
+    "Eprime_GeV", "theta_e_rad", "y", "gamma", "epsilon", "W2_GeV2",
+    "K_Hand_GeV", "Gamma_Hand_per_GeV", "Epi_GeV", "Ppi_GeV",
+    "theta_pq_central_rad", "cos_theta_pq", "dEpi_dPpi",
+    "SIMC_internal_hadronic_jacobian_GeV",
+    "Virtual_photon_reduction_factor_GeV",
 )
 RESULT_FIELDS = (
-    "SIMC_lab_xsec", "SIMC_lab_xsec_units", "SIMC_multiplicity",
-    "Extracted_lab_xsec", "Extracted_lab_xsec_err", "Reduced_model_xsec",
-    "Reduced_data_xsec", "Reduced_data_xsec_err", "Reduced_xsec_units",
-    "Reduced_model_by_multiplicity", "Lab_reconstruction_residual",
+    "SIMC_lab_xsec_dEpi", "Extracted_lab_xsec_dEpi",
+    "Extracted_lab_xsec_dEpi_err", "Lab_xsec_dEpi_units",
+    "SIMC_lab_xsec_dPpi", "Extracted_lab_xsec_dPpi",
+    "Extracted_lab_xsec_dPpi_err", "Lab_xsec_dPpi_units",
+    "SIMC_multiplicity", "Virtual_photon_model_xsec",
+    "Virtual_photon_data_xsec", "Virtual_photon_data_xsec_err",
+    "Virtual_photon_xsec_units", "Lab_reconstruction_residual",
     "Reduction_status", "Reduction_reason",
 )
 POINT_FIELDS = [*FAMILY_FIELDS, *PROVENANCE_FIELDS, *BIN_FIELDS,
                 *SOURCE_FIELDS, *KINEMATIC_FIELDS, *RESULT_FIELDS]
 SUMMARY_FIELDS = [
     *FAMILY_FIELDS, *PROVENANCE_FIELDS, "epsilon", "N_points", "N_OK",
-    "N_WARNING", "N_INVALID", "N_ERROR", "K_red_min_ub", "K_red_max_ub",
-    "Reduced_model_by_multiplicity_mean",
-    "Reduced_model_by_multiplicity_max_relative_spread", "Summary_status",
-    "Summary_reason",
+    "N_WARNING", "N_INVALID", "N_ERROR", "Gamma_Hand_min_per_GeV",
+    "Gamma_Hand_max_per_GeV", "dEpi_dPpi_min", "dEpi_dPpi_max",
+    "Virtual_photon_reduction_factor_min_GeV",
+    "Virtual_photon_reduction_factor_max_GeV",
+    "Max_abs_lab_reconstruction_residual", "Summary_status", "Summary_reason",
 ]
 
 
@@ -148,10 +161,10 @@ def reduction_decision(source: Mapping[str, object], reduced_data: float,
         reasons.add("UPSTREAM_COMBINATION_ERROR")
         return "ERROR", ";".join(sorted(reasons))
     if not finite(reduced_data) or not finite(reduced_error) or reduced_error < 0:
-        reasons.add("NONFINITE_REDUCED_RESULT")
+        reasons.add("NONFINITE_VIRTUAL_PHOTON_RESULT")
         return "INVALID", ";".join(sorted(reasons))
     if reduced_data <= 0:
-        reasons.add("NONPOSITIVE_REDUCED_DATA")
+        reasons.add("NONPOSITIVE_VIRTUAL_PHOTON_DATA")
     status = "WARNING" if upstream == "WARNING" or reasons else "OK"
     return status, ";".join(sorted(reasons))
 
@@ -191,12 +204,17 @@ def extract_member(member: Mapping[str, object],
             ratio = number(source.get("Data_by_MC")); ratio_error = number(source.get("Data_by_MC_err"))
             lab_data = ratio * sigma if finite(ratio) else math.nan
             lab_error = ratio_error * sigma if finite(ratio_error) else math.nan
-            normalization = kin.reduced_normalization
-            reduced_model = sigma / normalization
-            reduced_data = lab_data / normalization
-            reduced_error = lab_error / normalization
-            residual = reduced_data * normalization - lab_data if finite(reduced_data) else math.nan
-            status, reason = reduction_decision(source, reduced_data, reduced_error)
+            dEpi_dPpi = kin.dEpi_dPpi
+            reduction_factor = kin.virtual_photon_reduction_factor
+            model_dPpi = sigma * dEpi_dPpi
+            data_dPpi = lab_data * dEpi_dPpi
+            error_dPpi = lab_error * dEpi_dPpi
+            virtual_model = sigma * reduction_factor
+            virtual_data = lab_data * reduction_factor
+            virtual_error = lab_error * reduction_factor
+            reconstructed = virtual_data / reduction_factor if finite(virtual_data) else math.nan
+            residual = reconstructed - lab_data if finite(reconstructed) else math.nan
+            status, reason = reduction_decision(source, virtual_data, virtual_error)
             row = {field: member.get(field, "") for field in FAMILY_FIELDS}
             row.update({field: source.get(field, "") for field in (
                 *PROVENANCE_FIELDS, *BIN_FIELDS, *SOURCE_FIELDS,
@@ -204,25 +222,35 @@ def extract_member(member: Mapping[str, object],
             row.update({
                 "Reduced_xsec_policy_version": POLICY_VERSION,
                 "Convention_version": CONVENTION_VERSION,
+                "Target_mass_convention": TARGET_MASS_CONVENTION,
+                "Cross_section_level": CROSS_SECTION_LEVEL,
+                "Radiative_treatment": RADIATIVE_TREATMENT,
                 "Model_phi_policy": MODEL_POLICY, "Model_Pt_GeV": pt,
+                "Target_mass_GeV": kin.target_mass,
                 "nu_GeV": kin.nu, "Eprime_GeV": kin.eprime,
                 "theta_e_rad": kin.theta_e, "y": kin.y, "gamma": kin.gamma,
-                "epsilon": kin.epsilon, "E_h_GeV": kin.hadron_energy,
-                "p_h_GeV": kin.hadron_momentum,
+                "epsilon": kin.epsilon, "W2_GeV2": kin.W2,
+                "K_Hand_GeV": kin.hand_equivalent_energy,
+                "Gamma_Hand_per_GeV": kin.hand_flux,
+                "Epi_GeV": kin.pion_energy, "Ppi_GeV": kin.pion_momentum,
                 "theta_pq_central_rad": kin.theta_pq,
                 "cos_theta_pq": kin.cos_theta_pq,
-                "Hadronic_jacobian_GeV": kin.hadronic_jacobian,
-                "K_base_ub_GeV": kin.base_normalization,
-                "A_lab_per_GeV": kin.lab_structure_factor,
-                "K_red_ub": normalization, "SIMC_lab_xsec": sigma,
-                "SIMC_lab_xsec_units": "ub/GeV2/sr2",
+                "dEpi_dPpi": dEpi_dPpi,
+                "SIMC_internal_hadronic_jacobian_GeV": kin.simc_internal_hadronic_jacobian,
+                "Virtual_photon_reduction_factor_GeV": reduction_factor,
+                "SIMC_lab_xsec_dEpi": sigma,
+                "Extracted_lab_xsec_dEpi": lab_data,
+                "Extracted_lab_xsec_dEpi_err": lab_error,
+                "Lab_xsec_dEpi_units": "ub/GeV2/sr2",
+                "SIMC_lab_xsec_dPpi": model_dPpi,
+                "Extracted_lab_xsec_dPpi": data_dPpi,
+                "Extracted_lab_xsec_dPpi_err": error_dPpi,
+                "Lab_xsec_dPpi_units": "ub/GeV2/sr2",
                 "SIMC_multiplicity": multiplicity,
-                "Extracted_lab_xsec": lab_data, "Extracted_lab_xsec_err": lab_error,
-                "Reduced_model_xsec": reduced_model,
-                "Reduced_data_xsec": reduced_data,
-                "Reduced_data_xsec_err": reduced_error,
-                "Reduced_xsec_units": "GeV^-2",
-                "Reduced_model_by_multiplicity": reduced_model / multiplicity,
+                "Virtual_photon_model_xsec": virtual_model,
+                "Virtual_photon_data_xsec": virtual_data,
+                "Virtual_photon_data_xsec_err": virtual_error,
+                "Virtual_photon_xsec_units": "ub/GeV/sr",
                 "Lab_reconstruction_residual": residual,
                 "Reduction_status": status, "Reduction_reason": reason,
             })
@@ -232,23 +260,25 @@ def extract_member(member: Mapping[str, object],
 
 def summarize_member(rows: Sequence[Mapping[str, object]]) -> dict[str, object]:
     first = rows[0]; counts = Counter(str(row["Reduction_status"]) for row in rows)
-    closures = [number(row["Reduced_model_by_multiplicity"]) for row in rows]
-    mean = sum(closures) / len(closures)
-    spread = max(abs(value - mean) for value in closures) / abs(mean) if mean else math.inf
+    residuals = [abs(number(row["Lab_reconstruction_residual"])) for row in rows]
+    max_residual = max(residuals)
     reasons = []
     if counts["ERROR"]: reasons.append("REDUCTION_ERRORS_PRESENT")
     if counts["INVALID"]: reasons.append("INVALID_POINTS_PRESENT")
     if counts["WARNING"]: reasons.append("REDUCTION_WARNINGS_PRESENT")
-    if spread > 1.0e-10: reasons.append("MODEL_CLOSURE_SPREAD")
+    if max_residual > 1.0e-12: reasons.append("LAB_RECONSTRUCTION_RESIDUAL")
     row = {field: first.get(field, "") for field in (*FAMILY_FIELDS, *PROVENANCE_FIELDS)}
     row.update({
         "epsilon": first["epsilon"], "N_points": len(rows),
         "N_OK": counts["OK"], "N_WARNING": counts["WARNING"],
         "N_INVALID": counts["INVALID"], "N_ERROR": counts["ERROR"],
-        "K_red_min_ub": min(number(item["K_red_ub"]) for item in rows),
-        "K_red_max_ub": max(number(item["K_red_ub"]) for item in rows),
-        "Reduced_model_by_multiplicity_mean": mean,
-        "Reduced_model_by_multiplicity_max_relative_spread": spread,
+        "Gamma_Hand_min_per_GeV": min(number(item["Gamma_Hand_per_GeV"]) for item in rows),
+        "Gamma_Hand_max_per_GeV": max(number(item["Gamma_Hand_per_GeV"]) for item in rows),
+        "dEpi_dPpi_min": min(number(item["dEpi_dPpi"]) for item in rows),
+        "dEpi_dPpi_max": max(number(item["dEpi_dPpi"]) for item in rows),
+        "Virtual_photon_reduction_factor_min_GeV": min(number(item["Virtual_photon_reduction_factor_GeV"]) for item in rows),
+        "Virtual_photon_reduction_factor_max_GeV": max(number(item["Virtual_photon_reduction_factor_GeV"]) for item in rows),
+        "Max_abs_lab_reconstruction_residual": max_residual,
         "Summary_status": "ERROR" if counts["ERROR"] else "WARNING" if reasons else "OK",
         "Summary_reason": ";".join(reasons),
     })
